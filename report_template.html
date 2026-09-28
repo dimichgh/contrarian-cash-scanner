@@ -1,0 +1,531 @@
+<title>Contrarian Cash Scan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --surface-2: #edf1f6;
+  --ink: #10151f;
+  --ink-2: #414b5e;
+  --muted: #667085;
+  --rule: #dde2ea;
+  --accent: #2a78d6;
+  --accent-ink: #1c5cab;
+  --accent-soft: #e2edfb;
+  --tA: #104281; --tA-ink: #ffffff;
+  --tB: #3987e5; --tB-ink: #ffffff;
+  --tC: #86b6ef; --tC-ink: #0d2a4f;
+  --good: #0ca30c;
+  --warn: #fab219;
+  --crit: #d03b3b;
+  --track: #e6eaf0;
+  --shadow: 0 1px 2px rgba(16, 21, 31, .06), 0 4px 16px rgba(16, 21, 31, .05);
+  --display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0c1016; --surface: #141a22; --surface-2: #1a212b; --ink: #e7ebf1; --ink-2: #b6becc;
+    --muted: #8b95a7; --rule: #283040; --accent: #3987e5; --accent-ink: #86b6ef; --accent-soft: #15243a;
+    --tA: #b7d3f6; --tA-ink: #0b1f3a; --tB: #5598e7; --tB-ink: #06172d; --tC: #184f95; --tC-ink: #e7ebf1;
+    --track: #232b37; --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0c1016; --surface: #141a22; --surface-2: #1a212b; --ink: #e7ebf1; --ink-2: #b6becc;
+  --muted: #8b95a7; --rule: #283040; --accent: #3987e5; --accent-ink: #86b6ef; --accent-soft: #15243a;
+  --tA: #b7d3f6; --tA-ink: #0b1f3a; --tB: #5598e7; --tB-ink: #06172d; --tC: #184f95; --tC-ink: #e7ebf1;
+  --track: #232b37; --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 64px; display: grid; gap: 56px; }
+a { color: var(--accent-ink); text-underline-offset: 2px; }
+a:hover { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+h1, h2, h3 { font-family: var(--display); font-stretch: 85%; text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 800; line-height: 1.02; }
+h2 { font-size: 1.55rem; font-weight: 700; line-height: 1.15; }
+h3 { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-stretch: 100%; }
+p { margin: 0; }
+.eyebrow { font: 500 .75rem/1.3 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.lede { max-width: 68ch; color: var(--ink-2); font-size: 1.05rem; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.sub { color: var(--muted); font-size: .85rem; }
+section { display: grid; gap: 18px; }
+.sec-head { display: grid; gap: 6px; max-width: 76ch; }
+.sec-head p { color: var(--ink-2); }
+
+/* masthead */
+.mast { display: grid; gap: 16px; }
+.funnel { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.funnel li { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 14px; display: grid; gap: 2px; min-width: 150px; flex: 1 1 150px; }
+.funnel b { font: 600 1.35rem/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.funnel span { color: var(--muted); font-size: .82rem; line-height: 1.35; }
+.funnel li.hl { border-color: var(--accent); background: var(--accent-soft); }
+
+/* scatter */
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow); }
+.chart-panel { padding: 16px 16px 10px; display: grid; gap: 10px; position: relative; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .82rem; color: var(--ink-2); align-items: center; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.legend .dash { width: 18px; height: 0; border-top: 2px dashed var(--muted); border-radius: 0; vertical-align: 3px; }
+#scatter svg { display: block; width: 100%; height: auto; overflow: visible; }
+#scatter .grid line { stroke: var(--rule); stroke-width: 1; }
+#scatter .axis text { fill: var(--muted); font: 11px var(--mono); }
+#scatter .axis-title { fill: var(--ink-2); font: 500 11.5px var(--body); }
+#scatter .ref { stroke: var(--muted); stroke-dasharray: 4 4; stroke-width: 1.5; }
+#scatter .ref-label { fill: var(--muted); font: 11px var(--mono); }
+#scatter .dot { stroke: var(--surface); stroke-width: 2; transition: r .12s; }
+#scatter .hit { fill: transparent; cursor: pointer; }
+#scatter .lbl { fill: var(--ink-2); font: 500 10.5px var(--mono); pointer-events: none; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: 8px; box-shadow: var(--shadow); padding: 8px 10px; font-size: .8rem; line-height: 1.4; min-width: 170px; z-index: 5; }
+.tip b { font-family: var(--mono); }
+
+/* controls */
+.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.seg button { font: 500 .85rem var(--body); color: var(--ink-2); background: none; border: 0; padding: 7px 12px; cursor: pointer; border-right: 1px solid var(--rule); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+select, input[type="search"] { font: .85rem var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 7px 10px; }
+input[type="search"] { width: 180px; max-width: 100%; }
+.count { color: var(--muted); font-size: .85rem; margin-left: auto; }
+
+/* table */
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+thead th { position: sticky; top: env(safe-area-inset-top, 0px); background: var(--surface); z-index: 1; }
+th { text-align: left; font: 600 .72rem/1.2 var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 10px 8px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th.r, td.r { text-align: right; }
+th button { all: unset; cursor: pointer; }
+th button:focus-visible { outline: 2px solid var(--accent); }
+th[aria-sort="descending"] button::after { content: " ↓"; color: var(--ink); }
+th[aria-sort="ascending"] button::after { content: " ↑"; color: var(--ink); }
+td { padding: 9px 8px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+tr.main { cursor: pointer; }
+tr.main:hover td { background: var(--surface-2); }
+tr.main.open td { background: var(--surface-2); border-bottom-color: transparent; }
+.tk { display: grid; gap: 1px; min-width: 150px; }
+.tk b { font: 600 .92rem var(--mono); }
+.tk span { color: var(--muted); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 210px; }
+.xbtn { all: unset; cursor: pointer; width: 22px; height: 22px; display: inline-grid; place-items: center; border-radius: 5px; color: var(--muted); }
+.xbtn:focus-visible { outline: 2px solid var(--accent); }
+.xbtn svg { transition: transform .15s; }
+tr.open .xbtn svg { transform: rotate(90deg); }
+.scorecell { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+.bar { height: 6px; border-radius: 3px; background: var(--track); flex: 1; min-width: 50px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.tier { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 5px; font: 700 .78rem var(--mono); }
+.tier.A { background: var(--tA); color: var(--tA-ink); }
+.tier.B { background: var(--tB); color: var(--tB-ink); }
+.tier.C { background: var(--tC); color: var(--tC-ink); }
+.pips { display: inline-flex; gap: 2px; margin-right: 6px; vertical-align: middle; }
+.pips i { width: 5px; height: 12px; border-radius: 1.5px; background: var(--track); }
+.pips i.on { background: var(--ink); }
+.pips i.na { background: none; border: 1px dashed var(--muted); opacity: .6; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--ink-2); white-space: nowrap; }
+.chip i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.chip.up i { background: var(--good); }
+.chip.low i { background: var(--accent); }
+.chip.fall i { background: var(--warn); }
+.chip.mid i { background: var(--muted); opacity: .6; }
+.dim { color: var(--muted); font-size: .78rem; }
+.pos { color: var(--ink); }
+.neg { color: var(--ink); }
+
+/* detail */
+tr.detail td { padding: 0 8px 18px; background: var(--surface-2); }
+.detail-grid { display: grid; grid-template-columns: minmax(200px, 1fr) minmax(260px, 1.5fr) minmax(220px, 1fr); gap: 22px; padding: 14px 6px 4px; }
+.detail-grid > div { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.meters { display: grid; gap: 7px; }
+.meter { display: grid; grid-template-columns: 118px 1fr 30px; gap: 8px; align-items: center; font-size: .82rem; color: var(--ink-2); }
+.meter .bar { height: 7px; }
+.meter .num { text-align: right; font-size: .8rem; color: var(--ink); }
+ul.bul { margin: 0; padding-left: 18px; display: grid; gap: 5px; font-size: .86rem; }
+ul.bul.risk li::marker { color: var(--crit); }
+ul.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .84rem; }
+ul.checks li { display: grid; grid-template-columns: 18px 1fr; gap: 4px; color: var(--ink-2); }
+ul.checks li.on { color: var(--ink); }
+ul.checks .m { font-family: var(--mono); font-weight: 600; }
+ul.checks li.on .m { color: var(--good); }
+ul.checks li.off .m { color: var(--muted); }
+ul.checks li.na { color: var(--muted); }
+.kv { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .8rem; color: var(--muted); }
+.kv b { color: var(--ink); font-family: var(--mono); font-weight: 500; }
+
+/* factor + calls tables */
+.plain th { position: static; background: none; }
+.plain td { vertical-align: top; }
+.plain .w { font: 600 1rem var(--mono); }
+.plain .fname { font-family: var(--display); font-stretch: 90%; font-weight: 700; font-size: 1rem; white-space: nowrap; }
+.plain .quote { color: var(--ink-2); font-size: .84rem; max-width: 46ch; }
+.plain .metric { font: .8rem var(--mono); color: var(--muted); max-width: 26ch; }
+.ret { font: 600 .9rem var(--mono); }
+.caveats { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.caveats .panel { padding: 14px 16px; display: grid; gap: 6px; box-shadow: none; }
+.caveats h4 { margin: 0; font: 700 1rem var(--display); font-stretch: 90%; }
+.caveats p { font-size: .88rem; color: var(--ink-2); }
+pre { margin: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font: .84rem/1.6 var(--mono); color: var(--ink); }
+pre .c { color: var(--muted); }
+footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule); padding-top: 16px; display: grid; gap: 4px; }
+
+@media (max-width: 860px) {
+  .detail-grid { grid-template-columns: 1fr; }
+  .count { margin-left: 0; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <p class="eyebrow" id="asof">US stocks &amp; ADRs · market cap above $2B</p>
+    <h1>Contrarian Cash Scan</h1>
+    <p class="lede">A ranking of US-listed companies against the checklist <a href="https://www.tradingview.com/u/arden_trading/" target="_blank" rel="noopener">arden_trading</a> uses in long-term TradingView theses on PEP, CMCSA, T, PYPL, SONY, F and INTC. The pattern: a hated, beaten-down company that still produces a lot of free cash, pays it out, trades below its peers, and has insiders or short sellers moving the right way.</p>
+    <ol class="funnel" id="funnel"></ol>
+  </header>
+
+  <section aria-labelledby="map-h">
+    <div class="sec-head">
+      <h2 id="map-h">Where the top 150 sit</h2>
+      <p>Further right means more free cash per dollar of market value. Lower means further below the 52-week high. The author's picks tend to live in the lower right, past the Treasury line. Click a dot to open that company below.</p>
+    </div>
+    <div class="panel chart-panel">
+      <div class="legend" id="legend"></div>
+      <div id="scatter" role="img" aria-label="Scatter plot of free cash flow yield against drop from 52-week high for the top 150 candidates"></div>
+      <div class="tip" id="tip" hidden></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="rank-h">
+    <div class="sec-head">
+      <h2 id="rank-h">Ranked candidates</h2>
+      <p>Score is 85% fundamentals (seven weighted factors) and up to 15 points of smart-money signals. Tier counts how many of the author's ten checks a stock passes; Tier A passes seven or more. Click a row for the full case.</p>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Tier filter">
+        <button type="button" id="f-A" data-tier="A" aria-pressed="true">Tier A</button>
+        <button type="button" id="f-AB" data-tier="AB" aria-pressed="false">A + B</button>
+        <button type="button" id="f-all" data-tier="all" aria-pressed="false">Top 150</button>
+      </div>
+      <label class="sub" for="f-timing">Timing
+        <select id="f-timing">
+          <option value="all">Any</option>
+          <option>Turning up</option>
+          <option>Near lows</option>
+          <option>Still falling</option>
+          <option>Mid-range</option>
+        </select>
+      </label>
+      <label class="sub" for="f-sector">Sector <select id="f-sector"><option value="all">All sectors</option></select></label>
+      <input type="search" id="f-q" placeholder="Ticker or name" aria-label="Search ticker or company">
+      <span class="count" id="count"></span>
+    </div>
+    <div class="panel table-wrap">
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th aria-label="Expand"></th>
+            <th data-k="rank" class="r"><button type="button">#</button></th>
+            <th>Company</th>
+            <th data-k="score"><button type="button">Score</button></th>
+            <th>Tier</th>
+            <th data-k="checks"><button type="button">Checks</button></th>
+            <th>Timing</th>
+            <th data-k="fcf" class="r"><button type="button">FCF yld</button></th>
+            <th data-k="shy" class="r"><button type="button">Paid to wait</button></th>
+            <th data-k="pe" class="r"><button type="button">Fwd P/E</button></th>
+            <th data-k="dd" class="r"><button type="button">Off 52w hi</button></th>
+            <th data-k="up" class="r"><button type="button">Target</button></th>
+          </tr>
+        </thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div>
+    <p class="sub">Timing follows the author's entry habit: first tranche near the lows, more after a close back above the 50-day average. “Still falling” means RSI under 35 and down over 8% in a month: ladder in small. Smart-money checks (the last three) run only on the top 120; dashed pips mean not checked.</p>
+  </section>
+
+  <section aria-labelledby="fac-h">
+    <div class="sec-head">
+      <h2 id="fac-h">The author's checklist, as the scanner reads it</h2>
+      <p>Every factor below appears in at least two of the articles. The weight is its share of the 85-point fundamental score.</p>
+    </div>
+    <div class="panel table-wrap">
+      <table class="plain">
+        <thead><tr><th>Factor</th><th class="r">Weight</th><th>What the author looks at</th><th>In the articles</th><th>Scanner metric</th></tr></thead>
+        <tbody id="factors"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="calls-h">
+    <div class="sec-head">
+      <h2 id="calls-h">The author's calls, checked today</h2>
+      <p>The price the author stated when publishing, against the latest close. Price change only, dividends excluded. Nine calls is a small sample, so read this as context, not a track record.</p>
+    </div>
+    <div class="panel table-wrap">
+      <table class="plain">
+        <thead><tr><th>Published</th><th>Ticker</th><th class="r">Stated</th><th class="r">Now</th><th class="r">Change</th><th>Thesis</th><th>Scanner today</th></tr></thead>
+        <tbody id="calls"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="cav-h">
+    <div class="sec-head">
+      <h2 id="cav-h">Check these by hand</h2>
+      <p>The scanner finds candidates. These parts of the author's process need a person reading filings and news.</p>
+    </div>
+    <div class="caveats">
+      <div class="panel"><h4>A catalyst</h4><p>Every pick had one: a spin-off (CMCSA, SONY), a new CEO (PYPL, INTC), an activist (Elliott at PEP), a finished restructuring (T), a product event (GTA VI for SONY). No catalyst means cheap can stay cheap.</p></div>
+      <div class="panel"><h4>Sum of the parts</h4><p>The author valued SONY, F and T segment by segment (Ford Pro alone worth more than Ford). The scanner only sees the consolidated company.</p></div>
+      <div class="panel"><h4>One-off cash</h4><p>FCF yields above ~25% (APTV, CMCSA, TDC, ADT) often include disposals or working-capital swings. The author warned that CMCSA's screener P/E of 4.6 was an illusion. Compare with company guidance.</p></div>
+      <div class="panel"><h4>Captive lenders</h4><p>Automakers and equipment makers carry their finance arm's debt. For them the scanner scores leverage as neutral instead of penalising it.</p></div>
+      <div class="panel"><h4>Macro</h4><p>Treasury yields against the dividend (PEP), the yen (SONY) and oil (energy) drove several calls. None of that is modelled.</p></div>
+      <div class="panel"><h4>Structural decline</h4><p>The author asks whether a falling metric is a cycle or the new normal (CMCSA broadband losses, PEP snack volumes). Shrinking revenue is flagged in risks, but the call is yours.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="run-h">
+    <div class="sec-head">
+      <h2 id="run-h">Run it again</h2>
+      <p>Both scripts sit next to <code>requirements.txt</code> in the project folder. A full scan takes about two minutes and needs no API keys.</p>
+    </div>
+<pre><span class="c"># one-time setup</span>
+python3 -m venv .venv &amp;&amp; .venv/bin/pip install -r requirements.txt
+
+<span class="c"># full scan: universe, scoring, enrichment → output/arden_scan.csv + .json</span>
+.venv/bin/python arden_scanner.py
+
+<span class="c"># rebuild this page from the latest scan</span>
+.venv/bin/python make_report.py
+
+<span class="c"># options</span>
+.venv/bin/python arden_scanner.py --min-mcap 10e9      <span class="c"># large caps only</span>
+.venv/bin/python arden_scanner.py --enrich 200         <span class="c"># deep-check more names</span>
+.venv/bin/python arden_scanner.py --tickers PEP T VZ   <span class="c"># score specific names vs the universe</span></pre>
+  </section>
+
+  <footer>
+    <p>Data: TradingView screener (fundamentals, estimates, technicals), Yahoo Finance (daily bars), OpenInsider (Form 4 purchases), FINRA (short interest).</p>
+    <p>This is a screening tool built from public articles, not investment advice. The framework belongs to its author; the scoring and weights are this scanner's interpretation.</p>
+  </footer>
+</div>
+
+<script>
+const D = /*__DATA__*/null;
+
+const fmt = {
+  pct: (v, d = 1) => v == null ? "–" : `${v.toFixed(d)}%`,
+  sgn: (v, d = 0) => v == null ? "–" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(d)}%`,
+  x: (v, d = 1) => v == null ? "–" : v.toFixed(d),
+  money: v => v == null ? "–" : `$${v.toFixed(2)}`,
+};
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const TIMING = { "Turning up": ["up", "↗"], "Near lows": ["low", "◎"], "Still falling": ["fall", "↘"], "Mid-range": ["mid", "–"] };
+const PILLARS = [["cash", "Cash machine"], ["valuation", "Cheap vs peers"], ["shareholder", "Paid to wait"],
+  ["capitulation", "Capitulation"], ["balance", "Balance sheet"], ["business", "Business works"], ["sentiment", "Contrarian consensus"]];
+
+/* ---------- masthead ---------- */
+document.getElementById("asof").textContent =
+  `US stocks & ADRs · market cap above $2B · data as of ${new Date(D.date + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
+document.getElementById("funnel").innerHTML = [
+  [D.universe.toLocaleString(), "companies scanned"],
+  [D.passed.toLocaleString(), "pass the gates: positive FCF, beaten down, not banks or funds"],
+  [D.enriched, "deep-checked for insider buys, short covering, earnings reaction"],
+  [D.tierA, `Tier A: pass 7 or more of the author's 10 checks`, "hl"],
+].map(([b, s, c]) => `<li class="${c || ""}"><b>${b}</b><span>${s}</span></li>`).join("");
+
+/* ---------- state ---------- */
+const S = { tier: "A", timing: "all", sector: "all", q: "", key: "score", dir: -1, open: new Set() };
+const sectors = [...new Set(D.rows.map(r => r.sec))].sort();
+document.getElementById("f-sector").insertAdjacentHTML("beforeend", sectors.map(s => `<option>${esc(s)}</option>`).join(""));
+
+function visible() {
+  const q = S.q.trim().toLowerCase();
+  return D.rows.filter(r =>
+    (S.tier === "all" || (S.tier === "A" ? r.tier === "A" : r.tier !== "C")) &&
+    (S.timing === "all" || r.timing === S.timing) &&
+    (S.sector === "all" || r.sec === S.sector) &&
+    (!q || r.t.toLowerCase().includes(q) || r.n.toLowerCase().includes(q))
+  ).sort((a, b) => {
+    const va = a[S.key] ?? (S.dir < 0 ? -1e9 : 1e9), vb = b[S.key] ?? (S.dir < 0 ? -1e9 : 1e9);
+    return (va - vb) * S.dir || a.rank - b.rank;
+  });
+}
+
+/* ---------- table ---------- */
+function pips(r) {
+  const hit = new Set(r.hit);
+  return `<span class="pips" aria-hidden="true">${D.checks.map((c, i) =>
+    `<i class="${hit.has(c) ? "on" : (!r.enriched && i >= 7 ? "na" : "")}"></i>`).join("")}</span>`;
+}
+function chip(t) { const [c, g] = TIMING[t]; return `<span class="chip ${c}"><i></i>${g} ${t}</span>`; }
+
+function detail(r) {
+  const hit = new Set(r.hit);
+  const meters = PILLARS.map(([k, l]) =>
+    `<div class="meter"><span>${l}</span><span class="bar"><i style="width:${r.p[k]}%"></i></span><span class="num">${r.p[k]}</span></div>`).join("");
+  const checks = D.checks.map((c, i) => {
+    const na = !r.enriched && i >= 7, on = hit.has(c);
+    return `<li class="${na ? "na" : on ? "on" : "off"}"><span class="m">${na ? "·" : on ? "✓" : "✕"}</span><span>${esc(c)}${na ? " (not checked)" : ""}</span></li>`;
+  }).join("");
+  const tv = `https://www.tradingview.com/symbols/${r.ex}-${r.t.replace(".", "_")}/`;
+  return `<div class="detail-grid">
+    <div><h3>Factor scores (percentile)</h3><div class="meters">${meters}</div>
+      <div class="kv"><span>Smart-money points <b>${r.enr > 0 ? "+" : ""}${fmt.x(r.enr, 0)}</b> / 15</span></div>
+      <div class="kv"><span>Price <b>${fmt.money(r.px)}</b></span><span>Mkt cap <b>$${fmt.x(r.cap)}B</b></span>
+        <span>ND/EBITDA <b>${fmt.x(r.nd)}×</b></span><span>Beta <b>${fmt.x(r.beta, 2)}</b></span>
+        <span>Rev growth <b>${fmt.sgn(r.rev, 1)}</b></span><span>5-yr <b>${fmt.sgn(r.p5)}</b></span></div></div>
+    <div><h3>Why it qualifies</h3><ul class="bul">${r.why.map(b => `<li>${esc(b)}</li>`).join("") || "<li>No standout factor.</li>"}</ul>
+      <h3>Risks</h3><ul class="bul risk">${r.risk.map(b => `<li>${esc(b)}</li>`).join("") || "<li>None flagged by the data. Check the catalyst and the story by hand.</li>"}</ul></div>
+    <div><h3>Author's checks · ${r.checks}/10</h3><ul class="checks">${checks}</ul>
+      <p class="sub">${esc(r.ind)} · <a href="${tv}" target="_blank" rel="noopener">Open ${esc(r.t)} on TradingView ↗</a></p></div>
+  </div>`;
+}
+
+function renderTable() {
+  const rows = visible();
+  document.getElementById("count").textContent = `${rows.length} of ${D.rows.length} shown`;
+  document.getElementById("tb").innerHTML = rows.map(r => {
+    const open = S.open.has(r.t);
+    const pe = r.pe == null || r.pe <= 0 ? "–" : `${fmt.x(r.pe)} <span class="dim">/ ${fmt.x(r.pem, 0)}</span>`;
+    return `<tr class="main${open ? " open" : ""}" data-t="${r.t}">
+      <td><button type="button" class="xbtn" aria-expanded="${open}" aria-label="Show details for ${esc(r.t)}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M3 1.5 6.5 5 3 8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></td>
+      <td class="r num dim">${r.rank}</td>
+      <td><div class="tk"><b>${esc(r.t)}</b><span title="${esc(r.n)}">${esc(r.n)}</span></div></td>
+      <td><div class="scorecell"><span class="num">${fmt.x(r.score)}</span><span class="bar"><i style="width:${r.score}%"></i></span></div></td>
+      <td><span class="tier ${r.tier}">${r.tier}</span></td>
+      <td class="num">${pips(r)}${r.checks}</td>
+      <td>${chip(r.timing)}</td>
+      <td class="r num">${fmt.pct(r.fcf)}</td>
+      <td class="r num">${fmt.pct(r.shy)}</td>
+      <td class="r num">${pe}</td>
+      <td class="r num">${fmt.sgn(r.dd)}</td>
+      <td class="r num">${fmt.sgn(r.up)}</td>
+    </tr>${open ? `<tr class="detail"><td colspan="12">${detail(r)}</td></tr>` : ""}`;
+  }).join("") || `<tr><td colspan="12" class="sub">No candidates match these filters. Widen the tier or clear the search.</td></tr>`;
+  document.querySelectorAll("#tbl th[data-k]").forEach(th =>
+    th.setAttribute("aria-sort", th.dataset.k === S.key ? (S.dir < 0 ? "descending" : "ascending") : "none"));
+}
+
+document.getElementById("tb").addEventListener("click", e => {
+  if (e.target.closest("a")) return;
+  const tr = e.target.closest("tr.main"); if (!tr) return;
+  const t = tr.dataset.t; S.open.has(t) ? S.open.delete(t) : S.open.add(t); renderTable();
+  document.querySelector(`tr.main[data-t="${t}"] .xbtn`)?.focus({ preventScroll: true });
+});
+document.querySelectorAll("#tbl th[data-k] button").forEach(b => b.addEventListener("click", () => {
+  const k = b.parentElement.dataset.k;
+  if (S.key === k) S.dir *= -1; else { S.key = k; S.dir = ["rank", "pe", "dd"].includes(k) ? 1 : -1; }
+  renderTable();
+}));
+document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+  S.tier = b.dataset.tier;
+  document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderTable();
+}));
+document.getElementById("f-timing").addEventListener("change", e => { S.timing = e.target.value; renderTable(); });
+document.getElementById("f-sector").addEventListener("change", e => { S.sector = e.target.value; renderTable(); });
+document.getElementById("f-q").addEventListener("input", e => { S.q = e.target.value; renderTable(); });
+
+function openRow(t) {
+  const r = D.rows.find(x => x.t === t);
+  if (!visible().some(x => x.t === t)) {
+    S.tier = "all"; S.timing = "all"; S.sector = "all"; S.q = "";
+    document.getElementById("f-timing").value = "all"; document.getElementById("f-sector").value = "all";
+    document.getElementById("f-q").value = "";
+    document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", x.dataset.tier === "all"));
+  }
+  S.open.add(r.t); renderTable();
+  document.querySelector(`tr.main[data-t="${t}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+/* ---------- scatter ---------- */
+const legend = document.getElementById("legend");
+legend.innerHTML = ["A", "B", "C"].map(t =>
+  `<span><i style="background:var(--t${t})"></i>Tier ${t}</span>`).join("") +
+  `<span><i class="dash"></i>10-year Treasury ${D.tenY}%</span><span class="sub">FCF yield capped at 40% on the chart</span>`;
+
+function drawScatter() {
+  const host = document.getElementById("scatter");
+  const W = Math.max(320, host.clientWidth), H = W < 560 ? 300 : 360;
+  const m = { l: 46, r: 16, t: 12, b: 40 };
+  const X0 = 0, X1 = 40, Y0 = 0, Y1 = -85;
+  const sx = v => m.l + (Math.min(Math.max(v, X0), X1) - X0) / (X1 - X0) * (W - m.l - m.r);
+  const sy = v => m.t + (Math.max(Math.min(v, Y0), Y1) - Y0) / (Y1 - Y0) * (H - m.t - m.b);
+  const xt = [0, 10, 20, 30, 40], yt = [0, -20, -40, -60, -80];
+  const pts = D.rows.filter(r => r.fcf != null && r.dd != null).slice().sort((a, b) => b.tier.localeCompare(a.tier));
+  const rad = { A: 6, B: 4.5, C: 3.5 };
+  const labelled = new Set(D.rows.filter(r => r.tier === "A").slice(0, 8).map(r => r.t));
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">`;
+  s += `<g class="grid">${xt.map(v => `<line x1="${sx(v)}" x2="${sx(v)}" y1="${m.t}" y2="${H - m.b}"/>`).join("")}${yt.map(v => `<line x1="${m.l}" x2="${W - m.r}" y1="${sy(v)}" y2="${sy(v)}"/>`).join("")}</g>`;
+  s += `<g class="axis">${xt.map(v => `<text x="${sx(v)}" y="${H - m.b + 16}" text-anchor="middle">${v}%</text>`).join("")}${yt.map(v => `<text x="${m.l - 8}" y="${sy(v) + 4}" text-anchor="end">${v === 0 ? "0" : "−" + Math.abs(v)}%</text>`).join("")}</g>`;
+  s += `<text class="axis-title" x="${W - m.r}" y="${H - 6}" text-anchor="end">FCF yield (free cash flow ÷ market cap) →</text>`;
+  s += `<text class="axis-title" x="${m.l + 4}" y="${H - m.b - 8}">↓ further below 52-week high</text>`;
+  s += `<line class="ref" x1="${sx(D.tenY)}" x2="${sx(D.tenY)}" y1="${m.t}" y2="${H - m.b}"/>`;
+  s += `<text class="ref-label" x="${sx(D.tenY) + 5}" y="${m.t + 10}">10Y</text>`;
+  pts.forEach(r => {
+    const cx = sx(r.fcf), cy = sy(r.dd);
+    s += `<circle class="dot" cx="${cx}" cy="${cy}" r="${rad[r.tier]}" fill="var(--t${r.tier})"/>`;
+  });
+  const boxes = [];  // skip a label that would collide with one already placed
+  D.rows.filter(r => labelled.has(r.t) && r.fcf != null && r.dd != null).forEach(r => {
+    const cx = sx(r.fcf), cy = sy(r.dd), w = r.t.length * 6.6;
+    for (const left of [cx > W - 70, !(cx > W - 70)]) {
+      const x0 = left ? cx - 9 - w : cx + 9, box = [x0, cy - 7, x0 + w, cy + 7];
+      if (box[0] < m.l || box[2] > W - m.r) continue;
+      if (boxes.some(b => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1])) continue;
+      boxes.push(box);
+      s += `<text class="lbl" x="${left ? cx - 9 : cx + 9}" y="${cy + 3.5}" text-anchor="${left ? "end" : "start"}">${r.t}</text>`;
+      break;
+    }
+  });
+  pts.forEach(r => { s += `<circle class="hit" data-t="${r.t}" cx="${sx(r.fcf)}" cy="${sy(r.dd)}" r="11"/>`; });
+  host.innerHTML = s + "</svg>";
+
+  const tip = document.getElementById("tip"), panel = host.parentElement;
+  host.querySelectorAll(".hit").forEach(c => {
+    const r = D.rows.find(x => x.t === c.dataset.t);
+    const dot = [...host.querySelectorAll(".dot")].find(d => d.getAttribute("cx") === c.getAttribute("cx") && d.getAttribute("cy") === c.getAttribute("cy"));
+    c.addEventListener("pointerenter", () => {
+      if (dot) dot.setAttribute("r", rad[r.tier] + 2.5);
+      tip.innerHTML = `<b>${esc(r.t)}</b> · Tier ${r.tier} · score ${fmt.x(r.score)}<br><span class="sub">${esc(r.n)}</span><br>FCF yield <b>${fmt.pct(r.fcf)}</b> · off high <b>${fmt.sgn(r.dd)}</b><br>Paid to wait <b>${fmt.pct(r.shy)}</b> · target <b>${fmt.sgn(r.up)}</b>`;
+      tip.hidden = false;
+      const pr = panel.getBoundingClientRect(), cr = c.getBoundingClientRect();
+      let x = cr.left - pr.left + 16, y = cr.top - pr.top - 10;
+      if (x + 200 > pr.width) x = cr.left - pr.left - 200;
+      tip.style.left = `${Math.max(8, x)}px`; tip.style.top = `${Math.max(8, y)}px`;
+    });
+    c.addEventListener("pointerleave", () => { tip.hidden = true; if (dot) dot.setAttribute("r", rad[r.tier]); });
+    c.addEventListener("click", () => openRow(r.t));
+  });
+}
+
+/* ---------- factors + calls ---------- */
+document.getElementById("factors").innerHTML = D.factors.map(f => `<tr>
+  <td class="fname">${esc(f.name)}</td>
+  <td class="r w">${f.w == null ? "+15" : f.w}</td>
+  <td>${esc(f.what)}</td>
+  <td class="quote">${esc(f.quote)}</td>
+  <td class="metric">${esc(f.metric)}</td></tr>`).join("");
+
+document.getElementById("calls").innerHTML = D.calls.map(c => `<tr>
+  <td class="num dim">${c.date}</td>
+  <td class="num"><b>${esc(c.t)}</b></td>
+  <td class="r num">${c.entry == null ? "–" : fmt.money(c.entry)}</td>
+  <td class="r num">${c.now == null ? "–" : fmt.money(c.now)}</td>
+  <td class="r ret">${fmt.sgn(c.ret)}</td>
+  <td class="quote">${esc(c.note)}</td>
+  <td class="dim">${esc(c.status)}</td></tr>`).join("");
+
+renderTable();
+drawScatter();
+let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(drawScatter, 120); });
+</script>
