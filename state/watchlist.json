@@ -1,0 +1,2306 @@
+{
+ "ACI": {
+  "ticker": "ACI",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Albertsons Companies, Inc.",
+  "sector": "Retail Trade",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 62.5,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Near lows",
+   "fcf": 10.0,
+   "shy": 18.7,
+   "pe": 6.5,
+   "dd": -41.8,
+   "up": 21.9,
+   "nd": 3.6,
+   "why": [
+    "FCF yield 10.0% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 18.7%/yr to holders (dividend 5.5% + buyback 13.2%)",
+    "Fwd P/E 6.5 vs sector median 16.6",
+    "42% below 52w high, 7% above 52w low",
+    "5-year return -63% — long capitulation"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 3.6x (author's CMCSA trigger was 2.9x)"
+   ]
+  },
+  "scan_rank": 54,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "ACN": {
+  "ticker": "ACN",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Accenture Plc",
+  "sector": "Technology Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 68.8,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Mid-range",
+   "fcf": 11.8,
+   "shy": 4.2,
+   "pe": 12.6,
+   "dd": -40.1,
+   "up": 9.3,
+   "nd": -0.1,
+   "why": [
+    "FCF yield 11.8% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 4.2%/yr to holders (dividend 3.7% + buyback 0.5%)",
+    "Fwd P/E 12.6 vs sector median 19.5",
+    "40% below 52w high, 48% above 52w low",
+    "5-year return -47% — long capitulation"
+   ],
+   "risk": []
+  },
+  "scan_rank": 11,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "ADBE": {
+  "ticker": "ADBE",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Adobe Inc.",
+  "sector": "Technology Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 66.8,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Still falling",
+   "fcf": 11.8,
+   "shy": 6.3,
+   "pe": 9.4,
+   "dd": -36.5,
+   "up": 17.9,
+   "nd": 0.1,
+   "why": [
+    "FCF yield 11.8% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 6.3%/yr to holders (dividend 0.0% + buyback 6.3%)",
+    "Fwd P/E 9.4 vs sector median 19.5",
+    "36% below 52w high, 22% above 52w low",
+    "5-year return -61% — long capitulation"
+   ],
+   "risk": []
+  },
+  "scan_rank": 20,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "ADT": {
+  "ticker": "ADT",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "ADT, Inc.",
+  "sector": "Commercial Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 72.5,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Still falling",
+   "fcf": 38.6,
+   "shy": 12.0,
+   "pe": 6.7,
+   "dd": -30.3,
+   "up": 33.0,
+   "nd": 2.6,
+   "why": [
+    "FCF yield 38.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 12.0%/yr to holders (dividend 3.4% + buyback 8.5%)",
+    "Fwd P/E 6.7 vs sector median 14.8",
+    "30% below 52w high, 1% above 52w low",
+    "Analysts: 5 Hold / 2 Buy / 1 Sell, avg target +33%"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 2.6x (author's CMCSA trigger was 2.9x)",
+    "FCF yield looks too high — check for one-offs (the author's 'P/E illusion' warning)"
+   ]
+  },
+  "scan_rank": 3,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "AEO": {
+  "ticker": "AEO",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "American Eagle Outfitters, Inc.",
+  "sector": "Retail Trade",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 62.2,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Turning up",
+   "fcf": 11.8,
+   "shy": 13.4,
+   "pe": 8.1,
+   "dd": -39.2,
+   "up": 6.1,
+   "nd": 2.4,
+   "why": [
+    "FCF yield 11.8% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 13.4%/yr to holders (dividend 3.0% + buyback 10.4%)",
+    "Fwd P/E 8.1 vs sector median 16.6",
+    "39% below 52w high, 23% above 52w low",
+    "5-year return -37% — long capitulation"
+   ],
+   "risk": [
+    "High beta 1.55"
+   ]
+  },
+  "scan_rank": 59,
+  "scanned": "2026-09-29",
+  "hold": true
+ },
+ "APTV": {
+  "ticker": "APTV",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Aptiv PLC",
+  "sector": "Producer Manufacturing",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 82.8,
+   "tier": "A",
+   "checks": 8,
+   "timing": "Near lows",
+   "fcf": 29.6,
+   "shy": 9.5,
+   "pe": 7.6,
+   "dd": -44.4,
+   "up": 52.6,
+   "nd": 1.8,
+   "why": [
+    "FCF yield 29.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 9.5%/yr to holders (dividend 0.0% + buyback 9.5%)",
+    "Fwd P/E 7.6 vs sector median 19.6",
+    "44% below 52w high, 2% above 52w low",
+    "5-year return -67% — long capitulation"
+   ],
+   "risk": [
+    "Revenue shrinking -5.4% y/y — value-trap risk",
+    "FCF yield looks too high — check for one-offs (the author's 'P/E illusion' warning)"
+   ]
+  },
+  "scan_rank": 1,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "BBWI": {
+  "ticker": "BBWI",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Bath & Body Works, Inc.",
+  "sector": "Retail Trade",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 63.4,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Mid-range",
+   "fcf": 31.6,
+   "shy": 11.8,
+   "pe": 6.0,
+   "dd": -40.9,
+   "up": 36.3,
+   "nd": 3.0,
+   "why": [
+    "FCF yield 31.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 11.8%/yr to holders (dividend 4.9% + buyback 6.9%)",
+    "Fwd P/E 6.0 vs sector median 16.6",
+    "41% below 52w high, 13% above 52w low",
+    "5-year return -76% — long capitulation"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 3.0x (author's CMCSA trigger was 2.9x)",
+    "Revenue shrinking -2.2% y/y — value-trap risk",
+    "High beta 2.15",
+    "FCF yield looks too high — check for one-offs (the author's 'P/E illusion' warning)"
+   ]
+  },
+  "scan_rank": 46,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "BILL": {
+  "ticker": "BILL",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "BILL Holdings, Inc.",
+  "sector": "Technology Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 63.5,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Still falling",
+   "fcf": 10.0,
+   "shy": 10.6,
+   "pe": 11.0,
+   "dd": -27.3,
+   "up": 38.2,
+   "nd": -1.3,
+   "why": [
+    "FCF yield 10.0% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 10.6%/yr to holders (dividend 0.0% + buyback 10.6%)",
+    "Fwd P/E 11.0 vs sector median 19.5",
+    "27% below 52w high, 32% above 52w low",
+    "5-year return -84% — long capitulation"
+   ],
+   "risk": []
+  },
+  "scan_rank": 45,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "BWA": {
+  "ticker": "BWA",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "BorgWarner Inc.",
+  "sector": "Producer Manufacturing",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 63.2,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Mid-range",
+   "fcf": 9.8,
+   "shy": 6.4,
+   "pe": 11.7,
+   "dd": -22.5,
+   "up": 33.0,
+   "nd": 0.8,
+   "why": [
+    "FCF yield 9.8% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 6.4%/yr to holders (dividend 1.1% + buyback 5.3%)",
+    "Fwd P/E 11.7 vs sector median 19.6",
+    "23% below 52w high, 51% above 52w low",
+    "Analysts: 6 Hold / 9 Buy / 0 Sell, avg target +33%"
+   ],
+   "risk": []
+  },
+  "scan_rank": 48,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "CARG": {
+  "ticker": "CARG",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "CarGurus, Inc.",
+  "sector": "Technology Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 66.5,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Still falling",
+   "fcf": 10.6,
+   "shy": 9.4,
+   "pe": 11.7,
+   "dd": -25.3,
+   "up": 36.3,
+   "nd": 0.2,
+   "why": [
+    "FCF yield 10.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 9.4%/yr to holders (dividend 0.0% + buyback 9.4%)",
+    "Fwd P/E 11.7 vs sector median 19.5",
+    "25% below 52w high, 17% above 52w low",
+    "Analysts: 6 Hold / 8 Buy / 0 Sell, avg target +36%"
+   ],
+   "risk": []
+  },
+  "scan_rank": 22,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "CHTR": {
+  "ticker": "CHTR",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Charter Communications, Inc.",
+  "sector": "Consumer Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 69.4,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Still falling",
+   "fcf": 22.3,
+   "shy": 10.8,
+   "pe": 2.7,
+   "dd": -61.0,
+   "up": 83.5,
+   "nd": 4.3,
+   "why": [
+    "FCF yield 22.3% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 10.8%/yr to holders (dividend 0.0% + buyback 10.8%)",
+    "Fwd P/E 2.7 vs sector median 17.1",
+    "61% below 52w high, 1% above 52w low",
+    "5-year return -85% — long capitulation"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 4.3x (author's CMCSA trigger was 2.9x)",
+    "Revenue shrinking -1.5% y/y — value-trap risk"
+   ]
+  },
+  "scan_rank": 7,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "CMCSA": {
+  "ticker": "CMCSA",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Comcast Corporation",
+  "sector": "Consumer Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 72.3,
+   "tier": "A",
+   "checks": 8,
+   "timing": "Still falling",
+   "fcf": 26.4,
+   "shy": 10.9,
+   "pe": 6.3,
+   "dd": -33.7,
+   "up": 35.4,
+   "nd": 2.4,
+   "why": [
+    "FCF yield 26.4% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 10.9%/yr to holders (dividend 6.0% + buyback 4.9%)",
+    "Fwd P/E 6.3 vs sector median 17.1",
+    "34% below 52w high, 2% above 52w low",
+    "5-year return -58% — long capitulation"
+   ],
+   "risk": [
+    "FCF yield looks too high — check for one-offs (the author's 'P/E illusion' warning)"
+   ]
+  },
+  "scan_rank": 4,
+  "scanned": "2026-09-29",
+  "author": {
+   "date": "2026-07-23",
+   "entry": 21.92,
+   "note": "Sold on a beat; spin-off 2027; accumulate $21–23"
+  },
+  "hold": false
+ },
+ "CROX": {
+  "ticker": "CROX",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Crocs, Inc.",
+  "sector": "Consumer Non-Durables",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 64.5,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Mid-range",
+   "fcf": 12.0,
+   "shy": 11.1,
+   "pe": 8.8,
+   "dd": -13.4,
+   "up": 13.0,
+   "nd": 1.6,
+   "why": [
+    "FCF yield 12.0% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 11.1%/yr to holders (dividend 0.0% + buyback 11.1%)",
+    "Fwd P/E 8.8 vs sector median 14.7",
+    "Insiders bought $612.6K on the open market (last 90d, 2 buyer(s))"
+   ],
+   "risk": [
+    "Revenue shrinking -2.0% y/y — value-trap risk"
+   ]
+  },
+  "scan_rank": 38,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "CRUS": {
+  "ticker": "CRUS",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Cirrus Logic, Inc.",
+  "sector": "Electronic Technology",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 66.8,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Mid-range",
+   "fcf": 9.6,
+   "shy": 3.2,
+   "pe": 14.2,
+   "dd": -33.7,
+   "up": 38.0,
+   "nd": -1.4,
+   "why": [
+    "FCF yield 9.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Fwd P/E 14.2 vs sector median 29.0",
+    "34% below 52w high, 12% above 52w low",
+    "Analysts: 2 Hold / 5 Buy / 0 Sell, avg target +38%",
+    "Beat EPS by 1% yet stock moved -7.5% — capitulation signature"
+   ],
+   "risk": []
+  },
+  "scan_rank": 19,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "CTSH": {
+  "ticker": "CTSH",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Cognizant Technology Solutions Corporation",
+  "sector": "Technology Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 63.9,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Mid-range",
+   "fcf": 10.2,
+   "shy": 5.5,
+   "pe": 9.9,
+   "dd": -34.8,
+   "up": 13.2,
+   "nd": 0.3,
+   "why": [
+    "FCF yield 10.2% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 5.5%/yr to holders (dividend 2.3% + buyback 3.2%)",
+    "Fwd P/E 9.9 vs sector median 19.5",
+    "35% below 52w high, 53% above 52w low",
+    "Short interest -20% over ~6 weeks — shorts leaving"
+   ],
+   "risk": [
+    "Missed EPS last quarter (-1%)"
+   ]
+  },
+  "scan_rank": 43,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "DECK": {
+  "ticker": "DECK",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Deckers Outdoor Corporation",
+  "sector": "Consumer Non-Durables",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 68.9,
+   "tier": "A",
+   "checks": 8,
+   "timing": "Near lows",
+   "fcf": 10.5,
+   "shy": 6.8,
+   "pe": 10.4,
+   "dd": -35.9,
+   "up": 52.7,
+   "nd": -0.9,
+   "why": [
+    "FCF yield 10.5% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 6.8%/yr to holders (dividend 0.0% + buyback 6.8%)",
+    "Fwd P/E 10.4 vs sector median 14.7",
+    "36% below 52w high, 1% above 52w low",
+    "Analysts: 11 Hold / 12 Buy / 3 Sell, avg target +53%"
+   ],
+   "risk": [
+    "Short interest rising 49%"
+   ]
+  },
+  "scan_rank": 10,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "DOX": {
+  "ticker": "DOX",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Amdocs Limited",
+  "sector": "Technology Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 67.4,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Mid-range",
+   "fcf": 10.3,
+   "shy": 7.7,
+   "pe": 7.7,
+   "dd": -32.9,
+   "up": 47.5,
+   "nd": 0.9,
+   "why": [
+    "FCF yield 10.3% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 7.7%/yr to holders (dividend 3.8% + buyback 3.9%)",
+    "Fwd P/E 7.7 vs sector median 19.5",
+    "33% below 52w high, 15% above 52w low",
+    "Analysts: 3 Hold / 3 Buy / 0 Sell, avg target +47%"
+   ],
+   "risk": [
+    "Missed EPS last quarter (-0%)"
+   ]
+  },
+  "scan_rank": 16,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "EEFT": {
+  "ticker": "EEFT",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Euronet Worldwide, Inc.",
+  "sector": "Commercial Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 61.7,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Near lows",
+   "fcf": 10.1,
+   "shy": 10.1,
+   "pe": 6.1,
+   "dd": -27.7,
+   "up": 28.5,
+   "nd": 0.9,
+   "why": [
+    "FCF yield 10.1% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 10.1%/yr to holders (dividend 0.0% + buyback 10.1%)",
+    "Fwd P/E 6.1 vs sector median 14.8",
+    "28% below 52w high, 4% above 52w low",
+    "5-year return -50% — long capitulation"
+   ],
+   "risk": [
+    "Missed EPS last quarter (-4%)",
+    "Short interest rising 25%"
+   ]
+  },
+  "scan_rank": 66,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "EPAM": {
+  "ticker": "EPAM",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "EPAM Systems, Inc.",
+  "sector": "Technology Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 67.8,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Mid-range",
+   "fcf": 8.7,
+   "shy": 4.6,
+   "pe": 8.2,
+   "dd": -51.7,
+   "up": 12.2,
+   "nd": -0.9,
+   "why": [
+    "FCF yield 8.7% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 4.6%/yr to holders (dividend 0.0% + buyback 4.6%)",
+    "Fwd P/E 8.2 vs sector median 19.5",
+    "52% below 52w high, 47% above 52w low",
+    "5-year return -82% — long capitulation"
+   ],
+   "risk": []
+  },
+  "scan_rank": 13,
+  "scanned": "2026-09-29",
+  "hold": true
+ },
+ "ERIC": {
+  "ticker": "ERIC",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Telefonaktiebolaget LM Ericsson Sponsored ADR",
+  "sector": "Electronic Technology",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 62.4,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Mid-range",
+   "fcf": 10.3,
+   "shy": 2.2,
+   "pe": 16.7,
+   "dd": -31.6,
+   "up": 8.8,
+   "nd": -0.4,
+   "why": [
+    "FCF yield 10.3% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Fwd P/E 16.7 vs sector median 29.0",
+    "32% below 52w high, 16% above 52w low",
+    "Beat EPS by 5% yet stock moved -14.1% — capitulation signature"
+   ],
+   "risk": []
+  },
+  "scan_rank": 56,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "EXPE": {
+  "ticker": "EXPE",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Expedia Group, Inc.",
+  "sector": "Consumer Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 62.6,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Mid-range",
+   "fcf": 14.1,
+   "shy": 5.8,
+   "pe": 12.7,
+   "dd": -22.7,
+   "up": 31.0,
+   "nd": -1.1,
+   "why": [
+    "FCF yield 14.1% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 5.8%/yr to holders (dividend 0.7% + buyback 5.1%)",
+    "Fwd P/E 12.7 vs sector median 17.1",
+    "23% below 52w high, 43% above 52w low",
+    "Analysts: 22 Hold / 16 Buy / 1 Sell, avg target +31%"
+   ],
+   "risk": []
+  },
+  "scan_rank": 53,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "F": {
+  "ticker": "F",
+  "added": "2026-09-29",
+  "source": "author",
+  "status": "active",
+  "exchange": "NYSE",
+  "misses": 0,
+  "author": {
+   "date": "2026-03-08",
+   "entry": 12.15,
+   "note": "Chairman bought, quants long; base $17–18"
+  },
+  "hold": false
+ },
+ "FBIN": {
+  "ticker": "FBIN",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Fortune Brands Innovations, Inc.",
+  "sector": "Producer Manufacturing",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 62.2,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Still falling",
+   "fcf": 8.7,
+   "shy": 5.6,
+   "pe": 11.5,
+   "dd": -40.7,
+   "up": 46.6,
+   "nd": 3.1,
+   "why": [
+    "FCF yield 8.7% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 5.6%/yr to holders (dividend 2.6% + buyback 3.0%)",
+    "Fwd P/E 11.5 vs sector median 19.6",
+    "41% below 52w high, 19% above 52w low",
+    "5-year return -51% — long capitulation"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 3.1x (author's CMCSA trigger was 2.9x)",
+    "Revenue shrinking -2.3% y/y — value-trap risk",
+    "High beta 1.68"
+   ]
+  },
+  "scan_rank": 58,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "FIS": {
+  "ticker": "FIS",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Fidelity National Information Services, Inc.",
+  "sector": "Technology Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 66.3,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Still falling",
+   "fcf": 16.6,
+   "shy": 7.9,
+   "pe": 5.5,
+   "dd": -50.4,
+   "up": 42.5,
+   "nd": 4.0,
+   "why": [
+    "FCF yield 16.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 7.9%/yr to holders (dividend 4.7% + buyback 3.2%)",
+    "Fwd P/E 5.5 vs sector median 19.5",
+    "50% below 52w high, 0% above 52w low",
+    "5-year return -72% — long capitulation"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 4.0x (author's CMCSA trigger was 2.9x)"
+   ]
+  },
+  "scan_rank": 24,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "FISV": {
+  "ticker": "FISV",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Fiserv, Inc.",
+  "sector": "Commercial Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 61.0,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Still falling",
+   "fcf": 16.2,
+   "shy": 5.3,
+   "pe": 6.3,
+   "dd": -64.7,
+   "up": 25.1,
+   "nd": 3.6,
+   "why": [
+    "FCF yield 16.2% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 5.3%/yr to holders (dividend 0.0% + buyback 5.3%)",
+    "Fwd P/E 6.3 vs sector median 14.8",
+    "65% below 52w high, 3% above 52w low",
+    "5-year return -58% — long capitulation"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 3.6x (author's CMCSA trigger was 2.9x)",
+    "Revenue shrinking -1.2% y/y — value-trap risk",
+    "Missed EPS last quarter (-4%)",
+    "Short interest rising 43%"
+   ]
+  },
+  "scan_rank": 69,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "FMS": {
+  "ticker": "FMS",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Fresenius Medical Care AG Sponsored ADR",
+  "sector": "Health Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 62.9,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Mid-range",
+   "fcf": 17.4,
+   "shy": 7.5,
+   "pe": 9.8,
+   "dd": -17.0,
+   "up": -9.4,
+   "nd": 2.7,
+   "why": [
+    "FCF yield 17.4% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 7.5%/yr to holders (dividend 2.7% + buyback 4.8%)",
+    "Fwd P/E 9.8 vs sector median 18.2",
+    "5-year return -36% — long capitulation",
+    "Beat EPS by 5% yet stock moved -6.4% — capitulation signature"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 2.7x (author's CMCSA trigger was 2.9x)"
+   ]
+  },
+  "scan_rank": 50,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "FOUR": {
+  "ticker": "FOUR",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Shift4 Payments, Inc.",
+  "sector": "Commercial Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 67.0,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Still falling",
+   "fcf": 14.8,
+   "shy": 6.0,
+   "pe": 7.1,
+   "dd": -54.3,
+   "up": 46.9,
+   "nd": 3.5,
+   "why": [
+    "FCF yield 14.8% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 6.0%/yr to holders (dividend 0.0% + buyback 6.0%)",
+    "Fwd P/E 7.1 vs sector median 14.8",
+    "54% below 52w high, 7% above 52w low",
+    "5-year return -55% — long capitulation"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 3.5x (author's CMCSA trigger was 2.9x)"
+   ]
+  },
+  "scan_rank": 18,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "FSLR": {
+  "ticker": "FSLR",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "First Solar, Inc.",
+  "sector": "Electronic Technology",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 60.5,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Still falling",
+   "fcf": 8.1,
+   "shy": 0.0,
+   "pe": 9.9,
+   "dd": -46.1,
+   "up": 62.5,
+   "nd": -0.6,
+   "why": [
+    "FCF yield 8.1% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Fwd P/E 9.9 vs sector median 29.0",
+    "46% below 52w high, 1% above 52w low",
+    "Analysts: 10 Hold / 23 Buy / 0 Sell, avg target +62%"
+   ],
+   "risk": []
+  },
+  "scan_rank": 72,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "G": {
+  "ticker": "G",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Genpact Limited",
+  "sector": "Commercial Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 61.4,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Still falling",
+   "fcf": 10.4,
+   "shy": 4.6,
+   "pe": 7.9,
+   "dd": -33.0,
+   "up": 29.4,
+   "nd": 1.0,
+   "why": [
+    "FCF yield 10.4% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 4.6%/yr to holders (dividend 2.2% + buyback 2.5%)",
+    "Fwd P/E 7.9 vs sector median 14.8",
+    "33% below 52w high, 21% above 52w low",
+    "5-year return -33% — long capitulation"
+   ],
+   "risk": []
+  },
+  "scan_rank": 68,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "GEN": {
+  "ticker": "GEN",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Gen Digital Inc.",
+  "sector": "Technology Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 64.8,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Still falling",
+   "fcf": 12.4,
+   "shy": 5.4,
+   "pe": 7.1,
+   "dd": -34.1,
+   "up": 60.7,
+   "nd": 2.9,
+   "why": [
+    "FCF yield 12.4% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 5.4%/yr to holders (dividend 2.3% + buyback 3.1%)",
+    "Fwd P/E 7.1 vs sector median 19.5",
+    "34% below 52w high, 17% above 52w low",
+    "Analysts: 7 Hold / 4 Buy / 0 Sell, avg target +61%"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 2.9x (author's CMCSA trigger was 2.9x)"
+   ]
+  },
+  "scan_rank": 35,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "GFI": {
+  "ticker": "GFI",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Gold Fields Limited Sponsored ADR",
+  "sector": "Non-Energy Minerals",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 60.1,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Still falling",
+   "fcf": 12.7,
+   "shy": 3.0,
+   "pe": 7.3,
+   "dd": -42.9,
+   "up": 44.5,
+   "nd": 0.1,
+   "why": [
+    "FCF yield 12.7% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Fwd P/E 7.3 vs sector median 13.9",
+    "43% below 52w high, 13% above 52w low",
+    "Analysts: 6 Hold / 7 Buy / 1 Sell, avg target +44%"
+   ],
+   "risk": [
+    "High beta 2.02",
+    "Missed EPS last quarter (-11%)"
+   ]
+  },
+  "scan_rank": 75,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "GIB": {
+  "ticker": "GIB",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "CGI Inc.",
+  "sector": "Technology Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 62.2,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Mid-range",
+   "fcf": 12.6,
+   "shy": 4.4,
+   "pe": 10.7,
+   "dd": -28.9,
+   "up": 26.4,
+   "nd": 1.1,
+   "why": [
+    "FCF yield 12.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 4.4%/yr to holders (dividend 0.7% + buyback 3.7%)",
+    "Fwd P/E 10.7 vs sector median 19.5",
+    "29% below 52w high, 14% above 52w low",
+    "Analysts: 8 Hold / 6 Buy / 0 Sell, avg target +26%"
+   ],
+   "risk": []
+  },
+  "scan_rank": 61,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "GNTX": {
+  "ticker": "GNTX",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Gentex Corporation",
+  "sector": "Producer Manufacturing",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 65.6,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Near lows",
+   "fcf": 10.6,
+   "shy": 7.3,
+   "pe": 10.6,
+   "dd": -21.6,
+   "up": 13.5,
+   "nd": -0.4,
+   "why": [
+    "FCF yield 10.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 7.3%/yr to holders (dividend 2.1% + buyback 5.2%)",
+    "Fwd P/E 10.6 vs sector median 19.6",
+    "22% below 52w high, 9% above 52w low",
+    "5-year return -33% — long capitulation"
+   ],
+   "risk": []
+  },
+  "scan_rank": 30,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "HRB": {
+  "ticker": "HRB",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "H&R Block, Inc.",
+  "sector": "Consumer Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 64.7,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Still falling",
+   "fcf": 15.2,
+   "shy": 11.3,
+   "pe": 6.6,
+   "dd": -31.2,
+   "up": 28.1,
+   "nd": 1.1,
+   "why": [
+    "FCF yield 15.2% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 11.3%/yr to holders (dividend 4.0% + buyback 7.3%)",
+    "Fwd P/E 6.6 vs sector median 17.1",
+    "31% below 52w high, 43% above 52w low",
+    "Analysts: 3 Hold / 1 Buy / 1 Sell, avg target +28%"
+   ],
+   "risk": []
+  },
+  "scan_rank": 36,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "INFY": {
+  "ticker": "INFY",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Infosys Limited Sponsored ADR",
+  "sector": "Technology Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 66.2,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Still falling",
+   "fcf": 9.3,
+   "shy": 6.6,
+   "pe": 13.2,
+   "dd": -64.9,
+   "up": 17.3,
+   "nd": -0.5,
+   "why": [
+    "FCF yield 9.3% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 6.6%/yr to holders (dividend 4.3% + buyback 2.3%)",
+    "Fwd P/E 13.2 vs sector median 19.5",
+    "65% below 52w high, 2% above 52w low",
+    "5-year return -53% — long capitulation"
+   ],
+   "risk": [
+    "Revenue shrinking -0.6% y/y — value-trap risk",
+    "Missed EPS last quarter (-1%)"
+   ]
+  },
+  "scan_rank": 25,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "INTC": {
+  "ticker": "INTC",
+  "added": "2026-09-29",
+  "source": "author",
+  "status": "active",
+  "exchange": "NASDAQ",
+  "misses": 0,
+  "author": {
+   "date": "2025-05-15",
+   "entry": 20.0,
+   "note": "Recovery option on US fabs; fair value $36–37"
+  },
+  "hold": true
+ },
+ "INTU": {
+  "ticker": "INTU",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Intuit Inc.",
+  "sector": "Technology Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 73.8,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Still falling",
+   "fcf": 12.0,
+   "shy": 5.6,
+   "pe": 11.7,
+   "dd": -61.6,
+   "up": 47.5,
+   "nd": 0.2,
+   "why": [
+    "FCF yield 12.0% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 5.6%/yr to holders (dividend 1.7% + buyback 3.8%)",
+    "Fwd P/E 11.7 vs sector median 19.5",
+    "62% below 52w high, 7% above 52w low",
+    "5-year return -52% — long capitulation"
+   ],
+   "risk": [
+    "Missed EPS last quarter (-39%)"
+   ]
+  },
+  "scan_rank": 2,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "JD": {
+  "ticker": "JD",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "JD.com, Inc. Sponsored ADR",
+  "sector": "Retail Trade",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 69.4,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Near lows",
+   "fcf": 14.6,
+   "shy": 9.9,
+   "pe": 8.1,
+   "dd": -27.8,
+   "up": 48.5,
+   "nd": -10.3,
+   "why": [
+    "FCF yield 14.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 9.9%/yr to holders (dividend 3.7% + buyback 6.2%)",
+    "Fwd P/E 8.1 vs sector median 16.6",
+    "28% below 52w high, 9% above 52w low",
+    "5-year return -65% — long capitulation"
+   ],
+   "risk": []
+  },
+  "scan_rank": 6,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "LCII": {
+  "ticker": "LCII",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "LCI Industries",
+  "sector": "Producer Manufacturing",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 69.2,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Still falling",
+   "fcf": 13.8,
+   "shy": 10.4,
+   "pe": 10.0,
+   "dd": -46.4,
+   "up": 49.3,
+   "nd": 2.2,
+   "why": [
+    "FCF yield 13.8% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 10.4%/yr to holders (dividend 5.4% + buyback 5.0%)",
+    "Fwd P/E 10.0 vs sector median 19.6",
+    "46% below 52w high, 3% above 52w low",
+    "5-year return -35% — long capitulation"
+   ],
+   "risk": []
+  },
+  "scan_rank": 9,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "LDOS": {
+  "ticker": "LDOS",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Leidos Holdings, Inc.",
+  "sector": "Technology Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 61.5,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Mid-range",
+   "fcf": 14.1,
+   "shy": 5.0,
+   "pe": 9.9,
+   "dd": -40.5,
+   "up": 28.9,
+   "nd": 2.4,
+   "why": [
+    "FCF yield 14.1% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 5.0%/yr to holders (dividend 1.4% + buyback 3.6%)",
+    "Fwd P/E 9.9 vs sector median 19.5",
+    "41% below 52w high, 24% above 52w low",
+    "Analysts: 13 Hold / 7 Buy / 0 Sell, avg target +29%"
+   ],
+   "risk": []
+  },
+  "scan_rank": 67,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "LEA": {
+  "ticker": "LEA",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Lear Corporation",
+  "sector": "Producer Manufacturing",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 64.2,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Mid-range",
+   "fcf": 14.3,
+   "shy": 8.0,
+   "pe": 8.0,
+   "dd": -20.0,
+   "up": 24.4,
+   "nd": 1.6,
+   "why": [
+    "FCF yield 14.3% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 8.0%/yr to holders (dividend 2.5% + buyback 5.5%)",
+    "Fwd P/E 8.0 vs sector median 19.6",
+    "20% below 52w high, 25% above 52w low",
+    "Analysts: 12 Hold / 4 Buy / 0 Sell, avg target +24%"
+   ],
+   "risk": []
+  },
+  "scan_rank": 42,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "LRN": {
+  "ticker": "LRN",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Stride, Inc.",
+  "sector": "Consumer Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 65.3,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Still falling",
+   "fcf": 13.6,
+   "shy": 4.7,
+   "pe": 10.3,
+   "dd": -50.6,
+   "up": 54.2,
+   "nd": -0.7,
+   "why": [
+    "FCF yield 13.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 4.7%/yr to holders (dividend 0.0% + buyback 4.7%)",
+    "Fwd P/E 10.3 vs sector median 17.1",
+    "51% below 52w high, 26% above 52w low",
+    "Analysts: 2 Hold / 3 Buy / 0 Sell, avg target +54%"
+   ],
+   "risk": []
+  },
+  "scan_rank": 32,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "LULU": {
+  "ticker": "LULU",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "lululemon athletica inc.",
+  "sector": "Consumer Non-Durables",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 65.7,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Near lows",
+   "fcf": 11.6,
+   "shy": 4.1,
+   "pe": 10.5,
+   "dd": -55.5,
+   "up": -2.2,
+   "nd": 0.3,
+   "why": [
+    "FCF yield 11.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 4.1%/yr to holders (dividend 0.0% + buyback 4.1%)",
+    "Fwd P/E 10.5 vs sector median 14.7",
+    "55% below 52w high, 5% above 52w low",
+    "5-year return -76% — long capitulation"
+   ],
+   "risk": [
+    "Short interest rising 40%"
+   ]
+  },
+  "scan_rank": 29,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "MMS": {
+  "ticker": "MMS",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "MAXIMUS, Inc.",
+  "sector": "Commercial Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 67.2,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Still falling",
+   "fcf": 15.9,
+   "shy": 11.6,
+   "pe": 6.5,
+   "dd": -47.9,
+   "up": 77.5,
+   "nd": 2.2,
+   "why": [
+    "FCF yield 15.9% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 11.6%/yr to holders (dividend 2.5% + buyback 9.2%)",
+    "Fwd P/E 6.5 vs sector median 14.8",
+    "48% below 52w high, 2% above 52w low",
+    "5-year return -39% — long capitulation"
+   ],
+   "risk": [
+    "Revenue shrinking -3.3% y/y — value-trap risk"
+   ]
+  },
+  "scan_rank": 17,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "MTCH": {
+  "ticker": "MTCH",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Match Group, Inc.",
+  "sector": "Technology Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 64.4,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Mid-range",
+   "fcf": 12.6,
+   "shy": 9.5,
+   "pe": 14.2,
+   "dd": -12.1,
+   "up": 6.0,
+   "nd": 2.7,
+   "why": [
+    "FCF yield 12.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 9.5%/yr to holders (dividend 1.9% + buyback 7.5%)",
+    "Fwd P/E 14.2 vs sector median 19.5",
+    "5-year return -76% — long capitulation",
+    "Beat EPS by 7% yet stock moved -5.9% — capitulation signature"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 2.7x (author's CMCSA trigger was 2.9x)"
+   ]
+  },
+  "scan_rank": 40,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "NICE": {
+  "ticker": "NICE",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "NICE Ltd. Sponsored ADR",
+  "sector": "Technology Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 68.7,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Turning up",
+   "fcf": 9.6,
+   "shy": 4.5,
+   "pe": 9.8,
+   "dd": -26.9,
+   "up": 17.2,
+   "nd": -0.3,
+   "why": [
+    "FCF yield 9.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 4.5%/yr to holders (dividend 0.0% + buyback 4.5%)",
+    "Fwd P/E 9.8 vs sector median 19.5",
+    "27% below 52w high, 31% above 52w low",
+    "5-year return -61% — long capitulation"
+   ],
+   "risk": []
+  },
+  "scan_rank": 12,
+  "scanned": "2026-09-29",
+  "hold": true
+ },
+ "NVO": {
+  "ticker": "NVO",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Novo Nordisk A/S Sponsored ADR",
+  "sector": "Health Technology",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 63.1,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Still falling",
+   "fcf": 6.9,
+   "shy": 3.2,
+   "pe": 11.4,
+   "dd": -39.7,
+   "up": 15.0,
+   "nd": 0.5,
+   "why": [
+    "FCF yield 6.9% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Fwd P/E 11.4 vs sector median 20.0",
+    "40% below 52w high, 10% above 52w low",
+    "Beat EPS by 24% yet stock moved -5.4% — capitulation signature"
+   ],
+   "risk": []
+  },
+  "scan_rank": 49,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "OSK": {
+  "ticker": "OSK",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Oshkosh Corp",
+  "sector": "Consumer Durables",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 64.4,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Still falling",
+   "fcf": 13.5,
+   "shy": 4.8,
+   "pe": 12.4,
+   "dd": -26.4,
+   "up": 27.1,
+   "nd": 0.6,
+   "why": [
+    "FCF yield 13.5% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 4.8%/yr to holders (dividend 1.7% + buyback 3.1%)",
+    "Fwd P/E 12.4 vs sector median 16.5",
+    "26% below 52w high, 14% above 52w low",
+    "Analysts: 7 Hold / 7 Buy / 0 Sell, avg target +27%"
+   ],
+   "risk": []
+  },
+  "scan_rank": 41,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "OTEX": {
+  "ticker": "OTEX",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Open Text Corporation",
+  "sector": "Technology Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 66.5,
+   "tier": "C",
+   "checks": 4,
+   "timing": "Mid-range",
+   "fcf": 14.6,
+   "shy": 9.7,
+   "pe": 5.8,
+   "dd": -44.3,
+   "up": 24.3,
+   "nd": 2.8,
+   "why": [
+    "FCF yield 14.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 9.7%/yr to holders (dividend 4.8% + buyback 5.0%)",
+    "Fwd P/E 5.8 vs sector median 19.5",
+    "44% below 52w high, 12% above 52w low",
+    "5-year return -56% — long capitulation"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 2.8x (author's CMCSA trigger was 2.9x)",
+    "Revenue shrinking -3.6% y/y — value-trap risk"
+   ]
+  },
+  "scan_rank": 23,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "PEP": {
+  "ticker": "PEP",
+  "added": "2026-09-29",
+  "source": "author",
+  "status": "active",
+  "exchange": "NASDAQ",
+  "misses": 0,
+  "author": {
+   "date": "2026-09-19",
+   "entry": null,
+   "note": "Buy zone $120–125 (not reached yet); target $180–200"
+  },
+  "hold": false
+ },
+ "PHIN": {
+  "ticker": "PHIN",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "PHINIA Inc.",
+  "sector": "Producer Manufacturing",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 61.8,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Still falling",
+   "fcf": 11.2,
+   "shy": 10.8,
+   "pe": 10.2,
+   "dd": -30.1,
+   "up": 54.8,
+   "nd": 1.4,
+   "why": [
+    "FCF yield 11.2% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 10.8%/yr to holders (dividend 1.8% + buyback 9.0%)",
+    "Fwd P/E 10.2 vs sector median 19.6",
+    "30% below 52w high, 20% above 52w low",
+    "Analysts: 2 Hold / 4 Buy / 0 Sell, avg target +55%"
+   ],
+   "risk": [
+    "Missed EPS last quarter (-3%)"
+   ]
+  },
+  "scan_rank": 65,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "PINS": {
+  "ticker": "PINS",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Pinterest, Inc.",
+  "sector": "Technology Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 61.8,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Mid-range",
+   "fcf": 12.3,
+   "shy": 1.4,
+   "pe": 9.1,
+   "dd": -48.0,
+   "up": 58.9,
+   "nd": -0.2,
+   "why": [
+    "FCF yield 12.3% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Fwd P/E 9.1 vs sector median 19.5",
+    "48% below 52w high, 33% above 52w low",
+    "5-year return -65% — long capitulation",
+    "Analysts: 21 Hold / 17 Buy / 0 Sell, avg target +59%"
+   ],
+   "risk": []
+  },
+  "scan_rank": 64,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "PLNT": {
+  "ticker": "PLNT",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Planet Fitness, Inc.",
+  "sector": "Consumer Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 60.4,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Still falling",
+   "fcf": 8.6,
+   "shy": 4.6,
+   "pe": 12.5,
+   "dd": -64.6,
+   "up": 63.7,
+   "nd": 4.3,
+   "why": [
+    "FCF yield 8.6% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 4.6%/yr to holders (dividend 0.0% + buyback 4.6%)",
+    "Fwd P/E 12.5 vs sector median 17.1",
+    "65% below 52w high, 9% above 52w low",
+    "5-year return -49% — long capitulation"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 4.3x (author's CMCSA trigger was 2.9x)"
+   ]
+  },
+  "scan_rank": 73,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "POST": {
+  "ticker": "POST",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Post Holdings, Inc.",
+  "sector": "Consumer Non-Durables",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 65.0,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Near lows",
+   "fcf": 16.8,
+   "shy": 9.6,
+   "pe": 9.8,
+   "dd": -36.2,
+   "up": 40.5,
+   "nd": 5.1,
+   "why": [
+    "FCF yield 16.8% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 9.6%/yr to holders (dividend 0.0% + buyback 9.6%)",
+    "Fwd P/E 9.8 vs sector median 14.7",
+    "36% below 52w high, 3% above 52w low",
+    "Analysts: 2 Hold / 5 Buy / 0 Sell, avg target +40%"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 5.1x (author's CMCSA trigger was 2.9x)"
+   ]
+  },
+  "scan_rank": 34,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "PVH": {
+  "ticker": "PVH",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "PVH Corp.",
+  "sector": "Consumer Non-Durables",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 62.2,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Mid-range",
+   "fcf": 20.5,
+   "shy": 14.2,
+   "pe": 6.3,
+   "dd": -24.8,
+   "up": 15.5,
+   "nd": 3.1,
+   "why": [
+    "FCF yield 20.5% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 14.2%/yr to holders (dividend 0.2% + buyback 14.0%)",
+    "Fwd P/E 6.3 vs sector median 14.7",
+    "25% below 52w high, 27% above 52w low",
+    "5-year return -33% — long capitulation"
+   ],
+   "risk": [
+    "Leverage: net debt/EBITDA 3.1x (author's CMCSA trigger was 2.9x)",
+    "High beta 2.06"
+   ]
+  },
+  "scan_rank": 60,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "PYPL": {
+  "ticker": "PYPL",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "PayPal Holdings, Inc.",
+  "sector": "Commercial Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 67.7,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Mid-range",
+   "fcf": 14.2,
+   "shy": 8.1,
+   "pe": 10.1,
+   "dd": -31.5,
+   "up": 4.1,
+   "nd": 0.4,
+   "why": [
+    "FCF yield 14.2% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 8.1%/yr to holders (dividend 0.8% + buyback 7.4%)",
+    "Fwd P/E 10.1 vs sector median 14.8",
+    "31% below 52w high, 41% above 52w low",
+    "5-year return -80% — long capitulation"
+   ],
+   "risk": []
+  },
+  "scan_rank": 14,
+  "scanned": "2026-09-29",
+  "author": {
+   "date": "2026-06-16",
+   "entry": 41.5,
+   "note": "17% FCF yield, 11% share shrink; base $60–80"
+  },
+  "hold": false
+ },
+ "SBSW": {
+  "ticker": "SBSW",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Sibanye Stillwater Limited Sponsored ADR",
+  "sector": "Non-Energy Minerals",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 62.6,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Mid-range",
+   "fcf": 11.3,
+   "shy": 2.3,
+   "pe": 4.3,
+   "dd": -52.4,
+   "up": 40.0,
+   "nd": 0.3,
+   "why": [
+    "FCF yield 11.3% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Fwd P/E 4.3 vs sector median 13.9",
+    "52% below 52w high, 29% above 52w low",
+    "Analysts: 4 Hold / 6 Buy / 1 Sell, avg target +40%",
+    "Short interest -28% over ~6 weeks — shorts leaving"
+   ],
+   "risk": [
+    "High beta 2.19"
+   ]
+  },
+  "scan_rank": 52,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "SFD": {
+  "ticker": "SFD",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Smithfield Foods, Inc.",
+  "sector": "Consumer Non-Durables",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 65.3,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Still falling",
+   "fcf": 10.5,
+   "shy": 6.2,
+   "pe": 8.6,
+   "dd": -35.8,
+   "up": 40.7,
+   "nd": 0.6,
+   "why": [
+    "FCF yield 10.5% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 6.2%/yr to holders (dividend 6.2% + buyback 0.0%)",
+    "Fwd P/E 8.6 vs sector median 14.7",
+    "36% below 52w high, 2% above 52w low",
+    "Analysts: 1 Hold / 5 Buy / 0 Sell, avg target +41%"
+   ],
+   "risk": [
+    "Short interest rising 28%"
+   ]
+  },
+  "scan_rank": 31,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "SONY": {
+  "ticker": "SONY",
+  "added": "2026-09-29",
+  "source": "author",
+  "status": "active",
+  "exchange": "NYSE",
+  "misses": 0,
+  "author": {
+   "date": "2026-06-28",
+   "entry": 19.7,
+   "note": "Sum of parts $26–28; yen upside"
+  },
+  "hold": false
+ },
+ "T": {
+  "ticker": "T",
+  "added": "2026-09-29",
+  "source": "author",
+  "status": "active",
+  "exchange": "NYSE",
+  "misses": 0,
+  "author": {
+   "date": "2026-06-07",
+   "entry": 24.0,
+   "note": "3-year target $28–32; preferred entry $19–20"
+  },
+  "hold": true
+ },
+ "TDC": {
+  "ticker": "TDC",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Teradata Corporation",
+  "sector": "Technology Services",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 69.3,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Mid-range",
+   "fcf": 27.7,
+   "shy": 2.7,
+   "pe": 10.5,
+   "dd": -31.7,
+   "up": 17.3,
+   "nd": -1.4,
+   "why": [
+    "FCF yield 27.7% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Fwd P/E 10.5 vs sector median 19.5",
+    "32% below 52w high, 40% above 52w low",
+    "5-year return -48% — long capitulation",
+    "Beat EPS by 24% yet stock moved -18.3% — capitulation signature"
+   ],
+   "risk": [
+    "FCF yield looks too high — check for one-offs (the author's 'P/E illusion' warning)"
+   ]
+  },
+  "scan_rank": 8,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "TIMB": {
+  "ticker": "TIMB",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "TIM S.A. Sponsored ADR",
+  "sector": "Communications",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 66.6,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Near lows",
+   "fcf": 19.8,
+   "shy": 7.8,
+   "pe": 10.0,
+   "dd": -37.5,
+   "up": 36.0,
+   "nd": 0.9,
+   "why": [
+    "FCF yield 19.8% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 7.8%/yr to holders (dividend 6.5% + buyback 1.3%)",
+    "EV/EBITDA 4.1 vs sector median 7.4",
+    "37% below 52w high, 3% above 52w low",
+    "Analysts: 10 Hold / 4 Buy / 0 Sell, avg target +36%"
+   ],
+   "risk": [
+    "Missed EPS last quarter (-3%)"
+   ]
+  },
+  "scan_rank": 21,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "TLK": {
+  "ticker": "TLK",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "PT Telkom Indonesia (Persero) Tbk Sponsored ADR",
+  "sector": "Communications",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 66.1,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Still falling",
+   "fcf": 19.2,
+   "shy": 7.5,
+   "pe": 11.6,
+   "dd": -43.7,
+   "up": 44.1,
+   "nd": 0.3,
+   "why": [
+    "FCF yield 19.2% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 7.5%/yr to holders (dividend 7.5% + buyback 0.0%)",
+    "EV/EBITDA 3.5 vs sector median 7.4",
+    "44% below 52w high, 0% above 52w low",
+    "5-year return -46% — long capitulation"
+   ],
+   "risk": [
+    "Revenue shrinking -3.4% y/y — value-trap risk"
+   ]
+  },
+  "scan_rank": 27,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "TTD": {
+  "ticker": "TTD",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Trade Desk, Inc.",
+  "sector": "Technology Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 67.6,
+   "tier": "C",
+   "checks": 4,
+   "timing": "Still falling",
+   "fcf": 14.9,
+   "shy": 4.3,
+   "pe": 31.4,
+   "dd": -78.1,
+   "up": 8.4,
+   "nd": -1.5,
+   "why": [
+    "FCF yield 14.9% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 4.3%/yr to holders (dividend 0.0% + buyback 4.3%)",
+    "EV/EBITDA 6.7 vs sector median 18.2",
+    "78% below 52w high, 1% above 52w low",
+    "5-year return -83% — long capitulation"
+   ],
+   "risk": [
+    "Missed EPS last quarter (-21%)"
+   ]
+  },
+  "scan_rank": 15,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "UDMY": {
+  "ticker": "UDMY",
+  "added": "2026-09-29",
+  "source": "author",
+  "status": "active",
+  "exchange": "NASDAQ",
+  "misses": 0,
+  "author": {
+   "date": "2025-10-27",
+   "entry": 6.92,
+   "note": "First positive FCF, CEO buying; fair value $11–12"
+  }
+ },
+ "VIV": {
+  "ticker": "VIV",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Telefonica Brasil SA Sponsored ADR",
+  "sector": "Communications",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 62.8,
+   "tier": "B",
+   "checks": 6,
+   "timing": "Near lows",
+   "fcf": 11.1,
+   "shy": 5.2,
+   "pe": 11.9,
+   "dd": -34.6,
+   "up": 30.2,
+   "nd": 0.4,
+   "why": [
+    "FCF yield 11.1% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 5.2%/yr to holders (dividend 3.4% + buyback 1.8%)",
+    "EV/EBITDA 4.4 vs sector median 7.4",
+    "35% below 52w high, 1% above 52w low",
+    "Analysts: 6 Hold / 5 Buy / 3 Sell, avg target +30%"
+   ],
+   "risk": [
+    "Missed EPS last quarter (-11%)"
+   ]
+  },
+  "scan_rank": 51,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "VSNT": {
+  "ticker": "VSNT",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Versant Media Group, Inc.",
+  "sector": "Consumer Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 63.3,
+   "tier": "B",
+   "checks": 5,
+   "timing": "Still falling",
+   "fcf": 38.0,
+   "shy": 0.2,
+   "pe": 8.0,
+   "dd": -45.0,
+   "up": 39.7,
+   "nd": 0.6,
+   "why": [
+    "FCF yield 38.0% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Fwd P/E 8.0 vs sector median 17.1",
+    "45% below 52w high, 19% above 52w low",
+    "5-year return -41% — long capitulation",
+    "Analysts: 4 Hold / 3 Buy / 0 Sell, avg target +40%"
+   ],
+   "risk": [
+    "Revenue shrinking -3.6% y/y — value-trap risk",
+    "FCF yield looks too high — check for one-offs (the author's 'P/E illusion' warning)"
+   ]
+  },
+  "scan_rank": 47,
+  "scanned": "2026-09-29"
+ },
+ "XOP": {
+  "ticker": "XOP",
+  "added": "2026-09-29",
+  "source": "author",
+  "status": "active",
+  "exchange": "AMEX",
+  "misses": 0,
+  "author": {
+   "date": "2025-09-19",
+   "entry": 130.0,
+   "note": "Contrarian energy long; fair value $143–160"
+  },
+  "hold": false
+ },
+ "YETI": {
+  "ticker": "YETI",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "YETI Holdings, Inc.",
+  "sector": "Producer Manufacturing",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 60.7,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Mid-range",
+   "fcf": 8.1,
+   "shy": 9.6,
+   "pe": 14.5,
+   "dd": -19.7,
+   "up": 26.8,
+   "nd": 0.7,
+   "why": [
+    "FCF yield 8.1% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 9.6%/yr to holders (dividend 0.0% + buyback 9.6%)",
+    "Fwd P/E 14.5 vs sector median 19.6",
+    "5-year return -53% — long capitulation",
+    "Analysts: 6 Hold / 10 Buy / 0 Sell, avg target +27%"
+   ],
+   "risk": []
+  },
+  "scan_rank": 71,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "ZG": {
+  "ticker": "ZG",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Zillow Group, Inc.",
+  "sector": "Technology Services",
+  "exchange": "NASDAQ",
+  "thesis": {
+   "score": 65.0,
+   "tier": "A",
+   "checks": 7,
+   "timing": "Still falling",
+   "fcf": 4.1,
+   "shy": 14.9,
+   "pe": 12.6,
+   "dd": -64.2,
+   "up": 64.2,
+   "nd": -0.4,
+   "why": [
+    "Returns 14.9%/yr to holders (dividend 0.0% + buyback 14.9%)",
+    "Fwd P/E 12.6 vs sector median 19.5",
+    "64% below 52w high, 1% above 52w low",
+    "5-year return -69% — long capitulation",
+    "Analysts: 15 Hold / 13 Buy / 0 Sell, avg target +64%"
+   ],
+   "risk": []
+  },
+  "scan_rank": 33,
+  "scanned": "2026-09-29",
+  "hold": false
+ },
+ "ZTS": {
+  "ticker": "ZTS",
+  "added": "2026-09-29",
+  "source": "scan",
+  "status": "active",
+  "misses": 0,
+  "name": "Zoetis, Inc.",
+  "sector": "Health Technology",
+  "exchange": "NYSE",
+  "thesis": {
+   "score": 69.8,
+   "tier": "A",
+   "checks": 8,
+   "timing": "Near lows",
+   "fcf": 8.0,
+   "shy": 8.2,
+   "pe": 11.4,
+   "dd": -52.0,
+   "up": 26.8,
+   "nd": 1.9,
+   "why": [
+    "FCF yield 8.0% vs 10Y Treasury 4.3% and S&P ~4–5%",
+    "Returns 8.2%/yr to holders (dividend 2.9% + buyback 5.3%)",
+    "Fwd P/E 11.4 vs sector median 20.0",
+    "52% below 52w high, 3% above 52w low",
+    "5-year return -64% — long capitulation"
+   ],
+   "risk": []
+  },
+  "scan_rank": 5,
+  "scanned": "2026-09-29",
+  "hold": false
+ }
+}

@@ -66,6 +66,65 @@ Options:
 7. **Timing**: *Near lows* (first-tranche zone), *Turning up* (back above the 50-day average),
    *Still falling* (RSI < 35 and −8% in a month), *Mid-range*.
 
+## Breakout monitor
+
+The scanner finds the names; the monitor (`monitor/`) watches them every trading day for the moment
+the price turns and starts the move up, rates how close each one is to that move, and re-learns its
+own rules every week.
+
+```bash
+.venv/bin/python -m monitor daily            # score the watchlist → reports/summary.md + reports/dashboard.html
+.venv/bin/python -m monitor daily --rescan   # force a full re-scan first (runs weekly on its own)
+.venv/bin/python -m monitor daily --learn    # force a re-fit of the engine (runs weekly on its own)
+.venv/bin/python -m monitor add PEP --note "buy zone 120–125"
+.venv/bin/python -m monitor remove XOP
+.venv/bin/python -m monitor list
+.venv/bin/python -m pytest tests             # offline tests
+```
+
+**Watchlist.** Seeded from the scan: every Tier A name, Tier B names scoring 60+, and the top 25
+whatever their tier, plus the author's own calls. A weekly re-scan adds new names that qualify and
+drops scan names that miss three re-scans in a row, unless their move is already under way.
+
+**Stages**, from daily bars alone:
+
+| Stage | Meaning |
+|---|---|
+| Falling | Still making new 120-day lows |
+| Basing | Lows holding 15+ sessions, 50-day average flattening |
+| Setup | Within 4% under the trigger level, lows holding: closest to a breakout |
+| Triggered | Fresh close through the trigger level (default: the 50-day average, the author's confirmation tranche) on 1.2x volume after 10+ of the prior 20 sessions below it |
+| Running | Held above the level since the trigger, or above a rising 50-day average |
+| Extended | Running but 20%+ above the 50-day average or RSI over 75 |
+| Failed | Closed 3%+ back under the level within 20 sessions of a trigger |
+
+A move into Triggered, Setup, Running or Failed raises a signal. A trigger is **strong** when its
+readiness clears a bar the engine learns.
+
+**Readiness (0–100)** is the engine's probability that the stock reaches its target before its stop
+within 40 trading days, as a percentile of every setup in the training history. Target and stop are
+sized to the stock's own volatility (0.9× and 0.55× its normal 40-day swing: about +10% / −6% for a
+typical value stock), so the engine looks for direction rather than for volatility.
+
+**How it improves.** Each week it replays five years of daily bars for the watchlist and the scan's
+top 300 names, labels every day by what happened next, and:
+
+1. refits the readiness weights (a logistic regression on 16 price and volume features, shrunk toward
+   hand-set expert weights; how far it may move from them is chosen on a held-out final year);
+2. replays 48 variants of the trigger rule (level, volume, time below the level, age of the low) and
+   switches rule only when the challenger also wins on the held-out year;
+3. picks the readiness bar for a strong trigger on the held-out year (at least 30 events).
+
+Every daily call is stored, and the dashboard scores those calls against what the price actually did.
+
+**State** lives in `state/` and is committed after each run: `watchlist.json`, `engine.json` (the
+current rule and weights), `engine_history.jsonl` (one line per learning cycle), `alerts.jsonl`,
+`history/YYYY-MM.csv` (daily calls) and `scan_latest.csv`.
+
+**Scheduled runs.** `scripts/cloud_run.sh` runs the monitor, commits `state/` and pushes it to the
+current branch (or `$MONITOR_BRANCH`), then prints the summary. A Claude cloud routine calls it after
+each US close; its prompt is in `scripts/routine_prompt.md`.
+
 ## Data sources
 
 | Source | Used for |

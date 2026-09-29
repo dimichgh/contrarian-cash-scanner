@@ -1,0 +1,469 @@
+<title>Contrarian Breakout Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Same visual system as the Contrarian Cash Scan page: summary strip, signals, ranked table, engine, record. */
+:root {
+  --bg: #f4f6f9; --surface: #ffffff; --surface-2: #edf1f6; --ink: #10151f; --ink-2: #414b5e; --muted: #667085;
+  --rule: #dde2ea; --accent: #2a78d6; --accent-ink: #1c5cab; --accent-soft: #e2edfb; --track: #e6eaf0;
+  --neg: #c8641f;
+  --good: #0a8f0a; --good-soft: #e3f5e3; --warn: #c98a00; --warn-soft: #fcf1d6; --crit: #d03b3b; --crit-soft: #fbe6e6;
+  --shadow: 0 1px 2px rgba(16, 21, 31, .06), 0 4px 16px rgba(16, 21, 31, .05);
+  --display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0c1016; --surface: #141a22; --surface-2: #1a212b; --ink: #e7ebf1; --ink-2: #b6becc; --muted: #8b95a7;
+    --rule: #283040; --accent: #5598e7; --accent-ink: #86b6ef; --accent-soft: #15243a; --track: #232b37;
+    --neg: #e08a4f;
+    --good: #3fbf3f; --good-soft: #10261a; --warn: #f0b429; --warn-soft: #2a2211; --crit: #ef6b6b; --crit-soft: #2c1616;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0c1016; --surface: #141a22; --surface-2: #1a212b; --ink: #e7ebf1; --ink-2: #b6becc; --muted: #8b95a7;
+  --rule: #283040; --accent: #5598e7; --accent-ink: #86b6ef; --accent-soft: #15243a; --track: #232b37;
+  --neg: #e08a4f;
+  --good: #3fbf3f; --good-soft: #10261a; --warn: #f0b429; --warn-soft: #2a2211; --crit: #ef6b6b; --crit-soft: #2c1616;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 64px; display: grid; gap: 48px; }
+a { color: var(--accent-ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+h1, h2, h3 { font-family: var(--display); font-stretch: 85%; text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: clamp(2.1rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.02; }
+h2 { font-size: 1.5rem; font-weight: 700; line-height: 1.15; }
+h3 { font: 700 .78rem/1.3 var(--body); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+p { margin: 0; }
+.eyebrow { font: 500 .75rem/1.3 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.lede { max-width: 70ch; color: var(--ink-2); font-size: 1.03rem; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.sub { color: var(--muted); font-size: .85rem; }
+section { display: grid; gap: 16px; min-width: 0; }
+.sec-head { display: grid; gap: 6px; max-width: 76ch; }
+.sec-head p { color: var(--ink-2); }
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow); }
+
+/* stage ladder */
+.ladder { display: flex; flex-wrap: wrap; gap: 4px; align-items: stretch; }
+.rung { all: unset; box-sizing: border-box; cursor: pointer; flex: 1 1 0; min-width: 118px; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+.rung b { font: 600 1.4rem/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.rung span { font-size: .8rem; color: var(--muted); line-height: 1.3; }
+.rung[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.rung:focus-visible { outline: 2px solid var(--accent); }
+.arrow { align-self: center; color: var(--muted); font-size: .9rem; }
+
+/* stage chips: color + label, never color alone */
+.chip { display: inline-flex; align-items: center; gap: 6px; font: 600 .72rem/1 var(--body); letter-spacing: .05em; text-transform: uppercase; padding: 4px 8px 4px 7px; border-radius: 999px; white-space: nowrap; border: 1px solid transparent; }
+.chip i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.st-TRIGGERED { color: var(--good); background: var(--good-soft); border-color: var(--good); }
+.st-SETUP { color: var(--accent-ink); background: var(--accent-soft); }
+.st-RUNNING { color: var(--good); background: var(--good-soft); }
+.st-EXTENDED { color: var(--warn); background: var(--warn-soft); }
+.st-BASING { color: var(--ink-2); background: var(--surface-2); }
+.st-FAILED { color: var(--crit); background: var(--crit-soft); }
+.st-FALLING { color: var(--muted); background: var(--surface-2); }
+
+/* signals */
+.signals { display: grid; gap: 8px; }
+.sig { display: grid; grid-template-columns: 116px 70px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; }
+.sig .tk { font: 600 1rem var(--mono); }
+.sig .txt { color: var(--ink-2); font-size: .9rem; min-width: 0; }
+.sig .rd { font: 500 .85rem var(--mono); color: var(--muted); white-space: nowrap; }
+.sig.weak { opacity: .8; }
+.empty { padding: 16px; color: var(--muted); }
+
+/* controls + table */
+.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+select, input[type="search"] { font: .85rem var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 7px 10px; }
+input[type="search"] { width: 190px; max-width: 100%; }
+.count { color: var(--muted); font-size: .85rem; margin-left: auto; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+th { text-align: left; font: 600 .7rem/1.2 var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 10px 8px; border-bottom: 1px solid var(--rule); white-space: nowrap; background: var(--surface); }
+th.r, td.r { text-align: right; }
+th button { all: unset; cursor: pointer; }
+th button:focus-visible { outline: 2px solid var(--accent); }
+th[aria-sort="descending"] button::after { content: " ↓"; color: var(--ink); }
+th[aria-sort="ascending"] button::after { content: " ↑"; color: var(--ink); }
+td { padding: 8px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+tr.main { cursor: pointer; }
+tr.main:hover td, tr.main.open td { background: var(--surface-2); }
+tr.main.open td { border-bottom-color: transparent; }
+.co { display: grid; gap: 1px; min-width: 140px; }
+.co b { font: 600 .92rem var(--mono); }
+.co span { color: var(--muted); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.xbtn { all: unset; width: 20px; height: 20px; display: inline-grid; place-items: center; color: var(--muted); }
+.xbtn svg { transition: transform .15s; }
+tr.open .xbtn svg { transform: rotate(90deg); }
+.ready { display: flex; align-items: center; gap: 8px; min-width: 110px; }
+.bar { height: 6px; border-radius: 3px; background: var(--track); flex: 1; min-width: 44px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.spark { display: block; }
+.spark .ln { fill: none; stroke: var(--ink-2); stroke-width: 1.5; stroke-linejoin: round; }
+.spark .ar { fill: var(--accent-soft); stroke: none; }
+.spark .lv { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 3 3; }
+.spark .pt { stroke: var(--surface); stroke-width: 1.5; }
+.gap-up { color: var(--good); }
+.dim { color: var(--muted); font-size: .78rem; }
+.tier { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 5px; font: 700 .74rem var(--mono); background: var(--surface-2); color: var(--ink-2); }
+.tier.A { background: var(--ink); color: var(--surface); }
+tr.detail td { padding: 0 8px 16px; background: var(--surface-2); }
+.dgrid { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(260px, 1.4fr) minmax(200px, 1fr); gap: 22px; padding: 12px 6px 4px; }
+.dgrid > div { display: grid; gap: 8px; align-content: start; min-width: 0; }
+ul.bul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: .86rem; }
+ul.bul.risk li::marker { color: var(--crit); }
+.contrib { display: grid; gap: 5px; font-size: .84rem; }
+.contrib div { display: grid; grid-template-columns: 1fr 64px; gap: 8px; align-items: center; }
+.cbar { height: 6px; background: var(--track); border-radius: 3px; position: relative; }
+.cbar i { position: absolute; top: 0; height: 100%; border-radius: 3px; }
+.kv { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .8rem; color: var(--muted); }
+.kv b { color: var(--ink); font-family: var(--mono); font-weight: 500; }
+
+/* engine */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.tile { padding: 14px 16px; display: grid; gap: 4px; box-shadow: none; }
+.tile b { font: 600 1.5rem/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.tile span { color: var(--muted); font-size: .82rem; line-height: 1.35; }
+.two { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.two > * { min-width: 0; }
+.weights { padding: 14px 16px; display: grid; gap: 7px; }
+.wrow { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.2fr) 52px; gap: 10px; align-items: center; font-size: .84rem; color: var(--ink-2); }
+.wtrack { position: relative; height: 12px; }
+.wtrack .axis { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--rule); }
+.wtrack .w { position: absolute; top: 3px; height: 6px; border-radius: 3px; }
+.wtrack .w.pos { background: var(--accent); }
+.wtrack .w.neg { background: var(--neg); }
+.wtrack .pr { position: absolute; top: 0; width: 2px; height: 12px; background: var(--ink); opacity: .55; border-radius: 1px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .8rem; color: var(--ink-2); align-items: center; }
+.legend i { display: inline-block; width: 12px; height: 6px; border-radius: 3px; margin-right: 6px; vertical-align: 1px; }
+.legend i.pr { width: 2px; height: 12px; background: var(--ink); opacity: .55; vertical-align: -2px; }
+.mini { padding: 4px 8px 8px; }
+.mini td, .mini th { padding: 7px 8px; }
+.note { padding: 14px 16px; display: grid; gap: 8px; box-shadow: none; font-size: .9rem; color: var(--ink-2); }
+.note ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.out-win { color: var(--good); font-weight: 600; }
+.out-loss { color: var(--crit); font-weight: 600; }
+footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule); padding-top: 16px; display: grid; gap: 4px; }
+@media (max-width: 860px) {
+  .dgrid, .two { grid-template-columns: 1fr; }
+  .sig { grid-template-columns: 1fr auto; }
+  .sig .txt { grid-column: 1 / -1; }
+  .arrow { display: none; }
+  .count { margin-left: 0; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:14px">
+    <p class="eyebrow" id="asof"></p>
+    <h1>Breakout Monitor</h1>
+    <p class="lede">Watches the beaten-down cash machines from the Contrarian Cash Scan for the day their price turns and starts the move up. Each name gets a stage, the exact price that would trigger an entry signal, and a readiness score the engine re-learns every week from five years of history.</p>
+    <div class="ladder" id="ladder" role="group" aria-label="Filter by stage"></div>
+  </header>
+
+  <section aria-labelledby="sig-h">
+    <div class="sec-head">
+      <h2 id="sig-h">Signals from the last close</h2>
+      <p id="sig-sub"></p>
+    </div>
+    <div class="signals" id="signals"></div>
+  </section>
+
+  <section aria-labelledby="rank-h">
+    <div class="sec-head">
+      <h2 id="rank-h">Watchlist by readiness</h2>
+      <p>Readiness is the engine's estimate that the stock reaches its target before its stop within 40 trading days, shown as a percentile of every setup in its training history: 90 means a top-decile setup. Target and stop are sized to each stock's own volatility: about +10% and −6% for a typical value stock, more for a volatile one. The trigger level is the close that fires an entry signal. Click a row for the reasons.</p>
+    </div>
+    <div class="controls">
+      <label class="sub" for="f-stage">Stage <select id="f-stage"><option value="all">All stages</option></select></label>
+      <label class="sub" for="f-src">Source
+        <select id="f-src"><option value="all">All</option><option value="scan">Scan</option><option value="author">Author's calls</option><option value="manual">Added by hand</option></select>
+      </label>
+      <input type="search" id="f-q" placeholder="Ticker or name" aria-label="Search ticker or company">
+      <span class="count" id="count"></span>
+    </div>
+    <div class="panel table-wrap">
+      <table id="tbl">
+        <thead><tr>
+          <th aria-label="Expand"></th>
+          <th>Company</th>
+          <th data-k="stage"><button type="button">Stage</button></th>
+          <th data-k="ready"><button type="button">Readiness</button></th>
+          <th data-k="level" class="r"><button type="button">Trigger</button></th>
+          <th data-k="gap" class="r"><button type="button">Distance</button></th>
+          <th>60 sessions</th>
+          <th data-k="rs20" class="r"><button type="button">vs S&amp;P 1m</button></th>
+          <th data-k="score" class="r"><button type="button">Thesis</button></th>
+        </tr></thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div>
+    <p class="sub">Distance is the close against the trigger level: negative means that far below it. For names already triggered or running, the level shown is the one they broke through. The chart shows the last 60 closes with the level dashed.</p>
+  </section>
+
+  <section aria-labelledby="eng-h">
+    <div class="sec-head">
+      <h2 id="eng-h">What the engine has learned</h2>
+      <p id="eng-sub"></p>
+    </div>
+    <div class="tiles" id="tiles"></div>
+    <div class="two">
+      <div class="panel weights">
+        <h3>Readiness weights</h3>
+        <div class="legend"><span><i style="background:var(--accent)"></i>Learned, pushes readiness up</span><span><i style="background:var(--neg)"></i>Learned, pulls it down</span><span><i class="pr"></i>Starting expert weight</span></div>
+        <div id="weights" style="display:grid;gap:7px"></div>
+      </div>
+      <div style="display:grid;gap:16px">
+        <div class="panel mini table-wrap">
+          <table><caption class="sub" style="text-align:left;padding:8px 8px 0">Trigger signals on the held-out year, by readiness at the time</caption>
+            <thead><tr><th>Readiness</th><th class="r">Triggers</th><th class="r">Hit target first</th><th class="r">Avg outcome</th></tr></thead>
+            <tbody id="thresh"></tbody></table>
+        </div>
+        <div class="panel mini table-wrap">
+          <table><caption class="sub" style="text-align:left;padding:8px 8px 0">Trust in data vs the expert prior (held-out AUC)</caption>
+            <thead><tr><th>Prior strength</th><th class="r">AUC</th></tr></thead>
+            <tbody id="lams"></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="panel mini table-wrap">
+      <table><caption class="sub" style="text-align:left;padding:8px 8px 0">Learning cycles</caption>
+        <thead><tr><th>Date</th><th class="r">Version</th><th>Trigger rule</th><th class="r">Readiness AUC</th><th class="r">Trigger hit rate</th><th>Changed</th></tr></thead>
+        <tbody id="cycles"></tbody></table>
+    </div>
+  </section>
+
+  <section aria-labelledby="rec-h">
+    <div class="sec-head">
+      <h2 id="rec-h">Track record</h2>
+      <p id="rec-sub"></p>
+    </div>
+    <div class="panel table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Ticker</th><th>Signal</th><th class="r">Close</th><th class="r">Level</th><th class="r">Readiness</th><th>Outcome</th></tr></thead>
+        <tbody id="alerts"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="how-h">
+    <div class="sec-head"><h2 id="how-h">How the engine improves itself</h2></div>
+    <div class="panel note">
+      <ol>
+        <li><b>Every trading day</b> it scores each name from its daily bars, records the call, and raises a signal when a name moves into a new stage.</li>
+        <li><b>Every week</b> it re-runs the full fundamental scan: new names that qualify join the watchlist, and names that miss three scans in a row leave it unless their move is under way.</li>
+        <li><b>Every week</b> it replays five years of history for about 300 names, labels every day by what happened next, refits the readiness weights, and re-tests every variant of the trigger rule.</li>
+        <li><b>Changes need proof.</b> A new rule or a new level of trust in the data replaces the old one only if it does better on the final year, which the fit never sees.</li>
+        <li><b>It keeps score.</b> Every call it made is checked against what the price actually did, so the track record above is out of sample.</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>
+    <p>Prices: Yahoo Finance daily bars. Fundamentals and thesis: the Contrarian Cash Scan (TradingView, OpenInsider, FINRA).</p>
+    <p>A monitoring tool built on public data, not investment advice.</p>
+  </footer>
+</div>
+
+<script>
+const D = /*__DATA__*/null;
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const pct = (x, d = 0) => x == null ? "n/a" : (x * 100).toFixed(d) + "%";
+const sgn = (x, d = 1) => x == null ? "n/a" : (x > 0 ? "+" : "") + x.toFixed(d) + "%";
+const ORDER = ["FALLING", "BASING", "SETUP", "TRIGGERED", "RUNNING", "EXTENDED", "FAILED"];
+const TEXT = Object.fromEntries(D.stages);
+const chip = (s) => `<span class="chip st-${s}"><i></i>${s.toLowerCase()}</span>`;
+const stageRank = (s) => D.stages.findIndex((x) => x[0] === s);
+
+$("#asof").textContent = `Close of ${D.asof} · engine v${D.version} · ${D.rows.length} names`;
+
+// stage ladder (pipeline order)
+let stageFilter = "all";
+function drawLadder() {
+  const n = (s) => D.rows.filter((r) => r.stage === s).length;
+  $("#ladder").innerHTML = ORDER.map((s, i) =>
+    (i && i < 6 ? '<span class="arrow" aria-hidden="true">→</span>' : "") +
+    `<button type="button" class="rung" data-s="${s}" aria-pressed="${stageFilter === s}" title="${esc(TEXT[s])}">
+      <span>${chip(s)}</span><b>${n(s)}</b><span>${esc(TEXT[s])}</span></button>`).join("");
+  document.querySelectorAll(".rung").forEach((b) => b.addEventListener("click", () => {
+    stageFilter = stageFilter === b.dataset.s ? "all" : b.dataset.s;
+    $("#f-stage").value = stageFilter; drawLadder(); drawTable();
+  }));
+}
+
+// signals
+(function signals() {
+  const today = D.alerts.filter((a) => a.date === D.asof);
+  $("#sig-sub").textContent = today.length
+    ? `Stage changes at the close of ${D.asof}. A trigger counts as strong when readiness is at or above the bar the engine learned (${D.trigger.min_ready || 0}).`
+    : `No stage changes at the close of ${D.asof}. The most recent signals are in the track record below.`;
+  const order = ["TRIGGERED", "SETUP", "RUNNING", "FAILED"];
+  today.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type) || b.ready - a.ready);
+  $("#signals").innerHTML = today.length ? today.map((a) => `
+    <div class="panel sig${a.strong === false ? " weak" : ""}">
+      <span>${chip(a.type)}</span><span class="tk">${esc(a.t)}</span>
+      <span class="txt">$${a.close.toFixed(2)}: ${esc(a.text)}${a.strong === false ? " · weak: readiness under the learned bar" : ""}</span>
+      <span class="rd">readiness ${a.ready}</span>
+    </div>`).join("") : '<div class="panel empty">Nothing moved into a new stage today.</div>';
+})();
+
+// table
+const stageSel = $("#f-stage");
+D.stages.forEach(([s]) => stageSel.insertAdjacentHTML("beforeend", `<option value="${s}">${s[0] + s.slice(1).toLowerCase()}</option>`));
+let sortK = "ready", sortDir = -1;
+const open = new Set();
+const val = (r, k) => k === "stage" ? -stageRank(r.stage) : k === "score" ? (r.thesis?.score ?? -1) : r[k];
+
+function spark(r) {
+  const sp = r.spark.match(/../g).map(Number);
+  const w = 132, h = 30, pad = 3, n = sp.length;
+  const x = (i) => (i / (n - 1)) * (w - 2 * pad) + pad, y = (v) => h - pad - (v / 99) * (h - 2 * pad);
+  const pts = sp.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const lv = Math.max(0, Math.min(99, r.spark_level));
+  const col = r.stage === "TRIGGERED" || r.stage === "RUNNING" ? "var(--good)" : r.stage === "FAILED" ? "var(--crit)" : "var(--ink)";
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Last 60 closes; trigger level $${r.level}">
+    <title>Last 60 closes · trigger level $${r.level.toFixed(2)} · close $${r.close.toFixed(2)}</title>
+    <polygon class="ar" points="${x(0)},${h - pad} ${pts} ${x(n - 1)},${h - pad}"/>
+    <line class="lv" x1="${pad}" x2="${w - pad}" y1="${y(lv)}" y2="${y(lv)}"/>
+    <polyline class="ln" points="${pts}"/>
+    <circle class="pt" cx="${x(n - 1)}" cy="${y(sp[n - 1])}" r="3.5" fill="${col}"/></svg>`;
+}
+
+function detail(r) {
+  const cmax = Math.max(0.05, ...r.contrib.map((c) => Math.abs(c[1])));
+  const th = r.thesis;
+  const why = th ? th.why : [], risk = th ? th.risk : [];
+  return `<div class="dgrid">
+    <div><h3>Why readiness is ${r.ready}</h3>
+      <div class="contrib">${r.contrib.map(([f, v]) => `<div><span>${esc(f)}</span>
+        <span class="cbar"><i style="left:0;width:${(Math.abs(v) / cmax * 100).toFixed(0)}%;background:${v > 0 ? "var(--accent)" : "var(--neg)"}"></i></span></div>`).join("") || '<span class="dim">No single feature stands out.</span>'}</div>
+      <div class="kv">
+        <span>Target <b>+${r.target}%</b> before stop <b>−${r.stop}%</b></span><span>P(target first) <b>${pct(r.prob)}</b></span><span>RSI <b>${r.rsi}</b></span>
+        <span>50d slope <b>${sgn(r.slope, 2)}</b>/2wk</span><span>Lows held <b>${r.low_age ?? "n/a"}</b> sessions</span>
+        <span>1m return <b>${sgn(r.ret20)}</b></span><span>Off 52w high <b>${sgn(r.dd52)}</b></span>
+        <span>Volume today <b>${r.vol_ratio ?? "n/a"}x</b> avg</span>
+      </div></div>
+    <div><h3>The thesis</h3>
+      ${why.length ? `<ul class="bul">${why.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : '<p class="dim">Not in the latest scan.</p>'}
+      ${risk.length ? `<h3>Risks</h3><ul class="bul risk">${risk.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</div>
+    <div><h3>On the list</h3>
+      <div class="kv" style="display:grid;gap:4px">
+        <span>Source <b>${esc(r.source === "author" ? "author's call" : r.source)}</b></span>
+        <span>Added <b>${esc(r.added)}</b></span>
+        <span>Close <b>$${r.close.toFixed(2)}</b> · 50d <b>$${r.sma50.toFixed(2)}</b>${r.sma200 ? ` · 200d <b>$${r.sma200.toFixed(2)}</b>` : ""}</span>
+        ${th ? `<span>Scan score <b>${th.score}</b> · tier <b>${th.tier}</b> · <b>${th.checks}</b>/10 checks</span>
+        <span>FCF yield <b>${th.fcf ?? "n/a"}%</b> · paid to wait <b>${th.shy ?? "n/a"}%</b> · fwd P/E <b>${th.pe ?? "n/a"}</b></span>` : ""}
+        ${r.author ? `<span>Author, ${esc(r.author.date)}: <b>${esc(r.author.note)}</b></span>` : ""}
+      </div>
+      <p class="dim">${esc(TEXT[r.stage])}.</p></div>
+  </div>`;
+}
+
+function drawTable() {
+  const q = $("#f-q").value.trim().toLowerCase(), src = $("#f-src").value;
+  const rows = D.rows.filter((r) => (stageFilter === "all" || r.stage === stageFilter)
+    && (src === "all" || r.source === src)
+    && (!q || r.t.toLowerCase().includes(q) || (r.name || "").toLowerCase().includes(q)));
+  rows.sort((a, b) => ((val(a, sortK) ?? -1e9) > (val(b, sortK) ?? -1e9) ? 1 : -1) * sortDir);
+  $("#count").textContent = `${rows.length} of ${D.rows.length} names`;
+  document.querySelectorAll("th[data-k]").forEach((th) =>
+    th.setAttribute("aria-sort", th.dataset.k === sortK ? (sortDir < 0 ? "descending" : "ascending") : "none"));
+  $("#tb").innerHTML = rows.map((r) => {
+    const o = open.has(r.t), th = r.thesis;
+    return `<tr class="main${o ? " open" : ""}" data-t="${r.t}" tabindex="0" aria-expanded="${o}">
+      <td><span class="xbtn"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M3 1l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span></td>
+      <td><div class="co"><b>${esc(r.t)}</b><span>${esc(r.name)}</span></div></td>
+      <td>${chip(r.stage)}</td>
+      <td><div class="ready"><span class="num" style="min-width:24px">${r.ready}</span><span class="bar"><i style="width:${r.ready}%"></i></span></div></td>
+      <td class="r num">$${r.level.toFixed(2)}</td>
+      <td class="r num${r.gap >= 0 ? " gap-up" : ""}">${sgn(r.gap)}</td>
+      <td>${spark(r)}</td>
+      <td class="r num">${sgn(r.rs20)}</td>
+      <td class="r">${th ? `<span class="num">${th.score}</span> <span class="tier ${th.tier}">${th.tier}</span>` : `<span class="dim">${r.source === "author" ? "author" : "n/a"}</span>`}</td>
+    </tr>${o ? `<tr class="detail"><td colspan="9">${detail(r)}</td></tr>` : ""}`;
+  }).join("") || '<tr><td colspan="9" class="empty">No names match these filters.</td></tr>';
+}
+$("#tb").addEventListener("click", (e) => {
+  const tr = e.target.closest("tr.main"); if (!tr) return;
+  const t = tr.dataset.t; open.has(t) ? open.delete(t) : open.add(t); drawTable();
+});
+$("#tb").addEventListener("keydown", (e) => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches("tr.main")) { e.preventDefault(); e.target.click(); }
+});
+document.querySelectorAll("th[data-k] button").forEach((b) => b.addEventListener("click", () => {
+  const k = b.parentElement.dataset.k;
+  if (sortK === k) sortDir = -sortDir; else { sortK = k; sortDir = k === "gap" ? -1 : -1; }
+  drawTable();
+}));
+stageSel.addEventListener("change", () => { stageFilter = stageSel.value; drawLadder(); drawTable(); });
+$("#f-src").addEventListener("change", drawTable);
+$("#f-q").addEventListener("input", drawTable);
+
+// engine
+(function engine() {
+  const mm = D.metrics.model, tm = D.metrics.trigger, all = tm.all;
+  $("#eng-sub").textContent = `Version ${D.version}, last re-fit ${D.updated} on ${D.metrics.tickers} names. The target: a rise of ${D.label.up}× the stock's normal ${D.label.horizon}-day swing before a fall of ${D.label.down}×, within ${D.label.horizon} trading days. Current trigger rule: ${D.rule}.`;
+  const tiles = [
+    [mm.test_auc.toFixed(3), `Readiness AUC on the held-out year. 0.5 is a coin flip; the expert weights alone scored ${mm.prior_only_auc.toFixed(3)}.`],
+    [pct(all.hit_rate), `of ${all.n.toLocaleString()} past triggers reached their target before their stop, against ${pct(all.base_hit_rate)} for a random day.`],
+    [(D.trigger.min_ready || 0) + "+", "Readiness a trigger needs to count as strong, picked on the held-out year."],
+    [pct(mm.base_rate), `of all ${(mm.n_train + mm.n_test).toLocaleString()} sampled days in the data were followed by a real move.`],
+  ];
+  $("#tiles").innerHTML = tiles.map(([b, s]) => `<div class="panel tile"><b>${b}</b><span>${esc(s)}</span></div>`).join("");
+  const wmax = Math.max(0.05, ...D.learned.map((x) => Math.max(Math.abs(x.w), Math.abs(x.prior))));
+  const pos = (v) => 50 + (v / wmax) * 50;
+  $("#weights").innerHTML = D.learned.map((x) => {
+    const a = pos(Math.min(0, x.w)), b = pos(Math.max(0, x.w));
+    return `<div class="wrow" title="learned ${x.w.toFixed(3)} · expert ${x.prior.toFixed(2)}"><span>${esc(x.f)}</span>
+      <span class="wtrack"><span class="axis"></span><span class="w ${x.w >= 0 ? "pos" : "neg"}" style="left:${a}%;width:${Math.max(0.5, b - a)}%"></span>
+      <span class="pr" style="left:calc(${pos(x.prior)}% - 1px)"></span></span>
+      <span class="num" style="text-align:right">${x.w >= 0 ? "+" : ""}${x.w.toFixed(2)}</span></div>`;
+  }).join("");
+  const rf = tm.ready_filter?.by_threshold || {};
+  $("#thresh").innerHTML = Object.entries(rf).map(([t, s]) => `<tr${+t === (D.trigger.min_ready || 0) ? ' style="font-weight:600"' : ""}>
+    <td>${t === "0" ? "Any" : t + "+"}</td><td class="r num">${s.n}</td><td class="r num">${pct(s.hit_rate)}</td>
+    <td class="r num">${s.expectancy == null ? "n/a" : sgn(s.expectancy * 100, 2)}</td></tr>`).join("");
+  const names = {"30.0": "Mostly data", "300.0": "Leaning on data", "3000.0": "Balanced", "30000.0": "Mostly the prior"};
+  $("#lams").innerHTML = Object.entries(mm.test_auc_by_lam).map(([k, v]) => `<tr${+k === mm.lam ? ' style="font-weight:600"' : ""}>
+    <td>${names[k] || k}${+k === mm.lam ? " (in use)" : ""}</td><td class="r num">${v.toFixed(3)}</td></tr>`).join("") +
+    `<tr><td>Expert prior only</td><td class="r num">${mm.prior_only_auc.toFixed(3)}</td></tr>`;
+  const rule = (r) => `${r.pivot}, vol ${r.vol_mult || "any"}, ${r.min_below}+ below, lows ${r.min_low_age}+`;
+  $("#cycles").innerHTML = D.history.slice().reverse().map((h) => {
+    const ch = [h.model.changed && "readiness weights", h.trigger.changed && "trigger rule", h.trigger.ready_filter?.changed && "strong-trigger bar"].filter(Boolean);
+    return `<tr><td class="num">${h.date}</td><td class="r num">v${h.version}</td><td class="num" style="font-size:.8rem">${esc(rule(h.trigger.rule))}</td>
+      <td class="r num">${h.model.test_auc.toFixed(3)}</td><td class="r num">${pct(h.trigger.all.hit_rate)}</td><td>${ch.length ? esc(ch.join(", ")) : '<span class="dim">kept</span>'}</td></tr>`;
+  }).join("");
+})();
+
+// track record
+(function record() {
+  const tr = D.record.triggers || {}, sn = D.record.snapshots || {};
+  const bits = [];
+  bits.push(tr.resolved ? `${tr.resolved} trigger signals have resolved: ${pct(tr.hit_rate)} reached their target before their stop, average outcome ${sgn(tr.avg_ret)}.`
+    : "No trigger signal has resolved yet: an outcome is known once the price reaches its target or its stop, or after 40 trading days.");
+  if (sn.resolved) bits.push(`Across ${sn.resolved.toLocaleString()} resolved daily calls, ${pct(sn.hit_rate)} were followed by a real move${sn.n_ready80 ? `, and ${pct(sn.hit_rate_ready80)} of the ${sn.n_ready80} with readiness 80+` : ""}.`);
+  $("#rec-sub").textContent = bits.join(" ");
+  const res = Object.fromEntries((tr.recent || []).map((r) => [r.date + r.t, r]));
+  $("#alerts").innerHTML = D.alerts.slice(0, 40).map((a) => {
+    const r = res[a.date + a.t];
+    const out = a.type !== "TRIGGERED" ? '<span class="dim">tracked on triggers</span>'
+      : r ? `<span class="${r.y ? "out-win" : "out-loss"}">${r.y ? "hit target" : "missed"}</span> <span class="num">${sgn(r.ret)}</span> <span class="dim">in ${r.bars} sessions</span>`
+      : '<span class="dim">open</span>';
+    return `<tr><td class="num">${a.date}</td><td class="num"><b>${esc(a.t)}</b></td><td>${chip(a.type)}${a.strong === false ? ' <span class="dim">weak</span>' : ""}</td>
+      <td class="r num">$${a.close.toFixed(2)}</td><td class="r num">$${a.level.toFixed(2)}</td><td class="r num">${a.ready}</td><td>${out}</td></tr>`;
+  }).join("") || '<tr><td colspan="7" class="empty">No signals yet.</td></tr>';
+})();
+
+drawLadder();
+drawTable();
+</script>
