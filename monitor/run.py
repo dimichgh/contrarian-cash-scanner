@@ -63,9 +63,47 @@ def score_ticker(t: str, b: pd.DataFrame, spy: pd.Series, eng: dict) -> tuple[di
         "ret20": round(float(last["f_ret20"]) * 100, 1), "dd52": round(float(last["f_dd_52w"]) * 100, 1),
         "spark": "".join(f"{norm(x):02d}" for x in window), "spark_level": norm(level),
         "prev_stage": st["stage"].iloc[-2] if len(st) > 1 else None,
+        "trade": since_trigger(f, st, spy, eng),
         "contrib": _contributions(m, f.iloc[-1]),
     }
     return row, st
+
+
+def since_trigger(f: pd.DataFrame, st: pd.DataFrame, spy: pd.Series, eng: dict, lookback: int = 90) -> dict | None:
+    """How the most recent trigger (within `lookback` sessions) has played out, as a trade from its close."""
+    days = st.index[st["trigger"]]
+    if not len(days):
+        return None
+    d = days[-1]
+    i = f.index.get_loc(d)
+    n = len(f) - 1 - i
+    if n > lookback:
+        return None
+    label = eng["label"]
+    c = f["close"]
+    entry, now, path = float(c.iloc[i]), float(c.iloc[-1]), c.iloc[i:]
+    o = outcomes(c, label).loc[d]
+    target, stop = float(o["target"]), float(o["stop"])
+    if pd.isna(o["y"]):
+        status, done = "open", None
+    elif o["y"] == 1:
+        status, done = "hit target", int(o["bars"])
+    elif o["ret"] <= -stop + 1e-9:
+        status, done = "stopped out", int(o["bars"])
+    else:
+        status, done = "timed out", int(o["bars"])
+    sp = spy.reindex(c.index).ffill()
+    spy_chg = float(sp.iloc[-1] / sp.iloc[i] - 1)
+    m = eng["model"]
+    ready = int(readiness(m, predict(m, f.loc[[d], m["features"]].to_numpy())[0]))
+    r2 = lambda x: round(x * 100, 1)
+    return {"date": str(d.date()), "sessions": n, "days": (f.index[-1] - d).days, "entry": round(entry, 2),
+            "level": round(float(st.at[d, "pivot"]), 2), "change": r2(now / entry - 1),
+            "best": r2(float(path.max()) / entry - 1), "worst": r2(float(path.min()) / entry - 1),
+            "spy": r2(spy_chg), "excess": r2(now / entry - 1 - spy_chg),
+            "target_px": round(entry * (1 + target), 2), "stop_px": round(entry * (1 - stop), 2),
+            "target": r2(target), "stop": r2(stop), "status": status, "resolved_in": done,
+            "ready_at": ready, "strong": ready >= eng["trigger"].get("min_ready", 0)}
 
 
 def _contributions(m: dict, last: pd.Series) -> list:

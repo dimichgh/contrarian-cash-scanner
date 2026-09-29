@@ -51,6 +51,17 @@ def summary(res: dict) -> str:
     top = [r for r in rows if r["stage"] not in ("RUNNING", "EXTENDED")][:8]
     if top:
         lines.append("Highest readiness: " + ", ".join(f"{r['t']} {r['ready']} ({r['stage'].lower()})" for r in top))
+    trades = sorted((r for r in rows if r.get("trade")), key=lambda r: r["trade"]["sessions"])
+    open_ = [r for r in trades if r["trade"]["status"] == "open"]
+    if open_:
+        lines += ["", "Since the trigger (open): " + ", ".join(
+            f"{r['t']} {r['trade']['change']:+.1f}% in {r['trade']['sessions']}d "
+            f"(S&P {r['trade']['spy']:+.1f}%, best {r['trade']['best']:+.1f}%)" for r in open_)]
+    closed = [r for r in trades if r["trade"]["status"] != "open"
+              and r["trade"]["sessions"] - r["trade"]["resolved_in"] <= 5]
+    if closed:
+        lines.append("Resolved this week: " + ", ".join(
+            f"{r['t']} {r['trade']['status']} ({r['trade']['change']:+.1f}% now)" for r in closed))
     counts = {s: sum(r["stage"] == s for r in rows) for s in STAGES}
     lines += ["", f"Watchlist: {len(rows)} names · " + " · ".join(f"{k.lower()} {v}" for k, v in counts.items() if v)]
     if res["added"]:

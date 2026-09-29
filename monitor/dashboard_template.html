@@ -80,6 +80,20 @@ section { display: grid; gap: 16px; min-width: 0; }
 .sig.weak { opacity: .8; }
 .empty { padding: 16px; color: var(--muted); }
 
+/* trades since trigger */
+.rng { position: relative; width: 150px; height: 14px; }
+.rng .tr { position: absolute; left: 0; right: 0; top: 6px; height: 2px; background: var(--track); border-radius: 1px; }
+.rng .sl, .rng .tg { position: absolute; top: 2px; width: 2px; height: 10px; border-radius: 1px; }
+.rng .sl { left: 0; background: var(--crit); }
+.rng .tg { right: 0; background: var(--good); }
+.rng .en { position: absolute; top: 3px; width: 1px; height: 8px; background: var(--muted); }
+.rng .nw { position: absolute; top: 2px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--ink); border: 2px solid var(--surface); }
+.status { font-size: .8rem; font-weight: 600; white-space: nowrap; }
+.status.open { color: var(--accent-ink); }
+.status.win { color: var(--good); }
+.status.loss { color: var(--crit); }
+.status.flat { color: var(--muted); }
+
 /* controls + table */
 .controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
 select, input[type="search"] { font: .85rem var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 7px 10px; }
@@ -176,6 +190,24 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
       <p id="sig-sub"></p>
     </div>
     <div class="signals" id="signals"></div>
+  </section>
+
+  <section aria-labelledby="trade-h">
+    <div class="sec-head">
+      <h2 id="trade-h">Since the trigger</h2>
+      <p>Every name's latest trigger from the last 90 trading days, followed as a trade from the trigger-day close: how long ago, how far it has moved, the best and worst close since, the S&amp;P 500 over the same days, and where the price sits between its stop and its target.</p>
+    </div>
+    <div class="panel table-wrap">
+      <table>
+        <thead><tr>
+          <th>Company</th><th>Triggered</th><th class="r">Sessions</th><th class="r">Entry</th><th class="r">Now</th>
+          <th class="r">Change</th><th class="r">Best</th><th class="r">Worst</th><th class="r">S&amp;P</th><th class="r">vs S&amp;P</th>
+          <th>Stop → target</th><th>Status</th><th>Stage now</th>
+        </tr></thead>
+        <tbody id="trades"></tbody>
+      </table>
+    </div>
+    <p class="sub">A trade resolves when the close reaches its target (green tick) or its stop (red tick), or after 40 sessions. Grey tick: entry; dot: last close. Readiness at the trigger is scored by the current engine unless the monitor logged the signal live.</p>
   </section>
 
   <section aria-labelledby="rank-h">
@@ -315,6 +347,33 @@ function drawLadder() {
       <span class="txt">$${a.close.toFixed(2)}: ${esc(a.text)}${a.strong === false ? " · weak: readiness under the learned bar" : ""}</span>
       <span class="rd">readiness ${a.ready}</span>
     </div>`).join("") : '<div class="panel empty">Nothing moved into a new stage today.</div>';
+})();
+
+// trades since trigger
+(function trades() {
+  const live = Object.fromEntries(D.alerts.filter((a) => a.type === "TRIGGERED").map((a) => [a.date + a.t, a]));
+  const rows = D.rows.filter((r) => r.trade).sort((a, b) => a.trade.sessions - b.trade.sessions);
+  const cls = {"open": "open", "hit target": "win", "stopped out": "loss", "timed out": "flat"};
+  $("#trades").innerHTML = rows.map((r) => {
+    const t = r.trade, a = live[t.date + r.t];
+    const ready = a ? a.ready : t.ready_at, strong = a ? a.strong !== false : t.strong;
+    const lo = t.stop_px, hi = t.target_px, now = r.close;
+    const x = (v) => Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100)).toFixed(1);
+    const st = t.status === "open" ? "open" : `${t.status} in ${t.resolved_in}`;
+    return `<tr>
+      <td><div class="co"><b>${esc(r.t)}</b><span>${esc(r.name)}</span></div></td>
+      <td><span class="num" style="white-space:nowrap">${t.date}</span><div class="dim">readiness ${ready}${strong ? "" : " · weak"}${a ? "" : " · backfilled"}</div></td>
+      <td class="r num">${t.sessions}<div class="dim">${t.days} days</div></td>
+      <td class="r num">$${t.entry.toFixed(2)}</td><td class="r num">$${now.toFixed(2)}</td>
+      <td class="r num"><b>${sgn(t.change)}</b></td><td class="r num">${sgn(t.best)}</td><td class="r num">${sgn(t.worst)}</td>
+      <td class="r num">${sgn(t.spy)}</td><td class="r num">${sgn(t.excess)}</td>
+      <td><div class="rng" title="stop $${lo.toFixed(2)} (−${t.stop}%) · entry $${t.entry.toFixed(2)} · target $${hi.toFixed(2)} (+${t.target}%)">
+        <span class="tr"></span><span class="sl"></span><span class="tg"></span>
+        <span class="en" style="left:${x(t.entry)}%"></span><span class="nw" style="left:${x(now)}%"></span></div>
+        <div class="dim num">$${lo.toFixed(2)} → $${hi.toFixed(2)}</div></td>
+      <td><span class="status ${cls[t.status]}">${esc(st)}</span></td>
+      <td>${chip(r.stage)}</td></tr>`;
+  }).join("") || '<tr><td colspan="13" class="empty">No trigger in the last 90 trading days.</td></tr>';
 })();
 
 // table

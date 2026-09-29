@@ -107,3 +107,18 @@ def test_watchlist_merge_adds_refreshes_and_drops(monkeypatch):
     assert dropped == ["BBB"] and wl["AAA"]["status"] == "active"
     added, _ = W.merge_scan(wl, scan(["BBB"], ["A"], [70]), d + dt.timedelta(days=60))
     assert added == ["BBB"] and wl["BBB"]["status"] == "active"
+
+
+def test_since_trigger_tracks_the_trade(spy):
+    from monitor.run import since_trigger
+    b = base_then_breakout()
+    f = features(b, spy)
+    p = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10, min_ready=0)
+    st = stages(f, p)
+    m = {"features": C.FEATURES, "coef": [0.0] * len(C.FEATURES), "intercept": 0.0,
+         "mean": [0.0] * len(C.FEATURES), "std": [1.0] * len(C.FEATURES), "quantiles": list(np.linspace(0, 1, 101))}
+    t = since_trigger(f, st, spy, {"label": C.LABEL, "model": m, "trigger": p})
+    assert t["date"] == str(b.index[280].date()) and t["sessions"] == 39
+    assert t["entry"] == 62.0 and t["change"] == pytest.approx((75 / 62 - 1) * 100, abs=0.1)
+    assert t["worst"] == 0.0 and t["best"] == t["change"]
+    assert t["status"] == "hit target" and t["stop_px"] < 62 < t["target_px"]

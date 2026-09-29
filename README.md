@@ -117,6 +117,11 @@ top 300 names, labels every day by what happened next, and:
 
 Every daily call is stored, and the dashboard scores those calls against what the price actually did.
 
+**Since the trigger.** Each name's latest trigger from the last 90 sessions is followed as a trade from
+the trigger-day close: sessions and days since, entry and last price, change, best and worst close
+since, the S&P 500 over the same days and the difference, its stop and target prices, and whether it
+is still open, hit its target, was stopped out or timed out after 40 sessions.
+
 **State** lives in `state/` and is committed after each run: `watchlist.json`, `engine.json` (the
 current rule and weights), `engine_history.jsonl` (one line per learning cycle), `alerts.jsonl`,
 `history/YYYY-MM.csv` (daily calls) and `scan_latest.csv`.
