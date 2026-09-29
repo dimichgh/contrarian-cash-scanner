@@ -154,6 +154,25 @@ def learn_min_ready(frames, rule: dict, holdout: dict, test_start, label_end, cu
                     "by_threshold": {str(t): {k: by[t][k] for k in ("n", "hit_rate", "expectancy")} for t in by}}
 
 
+def trigger_timing(frames, rule: dict, label_end) -> dict:
+    """How long past triggers took to resolve: the basis for each open trade's target window."""
+    ev = pd.concat([fr.loc[trigger_events(fr, rule) & (fr.index <= label_end), ["y", "ret", "bars", "stop"]]
+                    for fr in frames.values()]).dropna()
+    win = ev[ev["y"] == 1]
+    stop = ev[(ev["y"] == 0) & (ev["ret"] <= -ev["stop"] + 1e-9)]
+    if len(win) < 20:
+        return {"n": len(ev), "wins": len(win)}
+    q = win["bars"].quantile([0.25, 0.5, 0.75])
+    share = lambda x: round(len(x) / len(ev), 3)
+    return {"n": len(ev), "wins": len(win), "hit": share(win), "stopped": share(stop),
+            "timed_out": round(1 - share(win) - share(stop), 3),
+            "p25": int(q[0.25]), "median": int(q[0.5]), "p75": int(q[0.75]),
+            "within10": round(float((win["bars"] <= 10).mean()), 3),
+            "within20": round(float((win["bars"] <= 20).mean()), 3),
+            "stop_median": int(stop["bars"].median()) if len(stop) else None,
+            "avg_gain": round(float(win["ret"].mean()), 4)}
+
+
 def learn(bars, spy_close, engine: dict | None, today: dt.date) -> dict:
     engine = engine or {}
     label = engine.get("label", C.LABEL)
@@ -169,6 +188,7 @@ def learn(bars, spy_close, engine: dict | None, today: dt.date) -> dict:
     trigger["min_ready"], r_rep = learn_min_ready(frames, trigger, holdout, test_start, label_end,
                                                   cur_trigger.get("min_ready", 0))
     t_rep["ready_filter"] = r_rep
+    t_rep["timing"] = trigger_timing(frames, trigger, label_end)
     changed = m_rep["changed"] or t_rep["changed"] or r_rep["changed"]
     version = engine.get("version", 0) + (1 if changed or not engine else 0)
     entry = {"date": today.isoformat(), "version": version, "tickers": len(frames),

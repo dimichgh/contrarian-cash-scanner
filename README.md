@@ -120,7 +120,11 @@ Every daily call is stored, and the dashboard scores those calls against what th
 **Since the trigger.** Each name's latest trigger from the last 90 sessions is followed as a trade from
 the trigger-day close: sessions and days since, entry and last price, change, best and worst close
 since, the S&P 500 over the same days and the difference, its stop and target prices, and whether it
-is still open, hit its target, was stopped out or timed out after 40 sessions.
+is still open, hit its target, was stopped out or timed out after 40 sessions. Open trades also get a
+target window: the dates between which past triggers that reached their target usually got there
+(the middle half of their times, re-measured at every learning cycle; about 11–26 sessions today),
+and whether the trade is early, in that window or late. Setup names show the stop and target they
+would get if they triggered at their level.
 
 **State** lives in `state/` and is committed after each run: `watchlist.json`, `engine.json` (the
 current rule and weights), `engine_history.jsonl` (one line per learning cycle), `alerts.jsonl`,

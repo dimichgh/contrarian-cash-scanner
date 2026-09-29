@@ -122,3 +122,10 @@ def test_since_trigger_tracks_the_trade(spy):
     assert t["entry"] == 62.0 and t["change"] == pytest.approx((75 / 62 - 1) * 100, abs=0.1)
     assert t["worst"] == 0.0 and t["best"] == t["change"]
     assert t["status"] == "hit target" and t["stop_px"] < 62 < t["target_px"]
+    assert t["window"] is None  # no timing learned yet
+    eng = {"label": C.LABEL, "model": m, "trigger": p,
+           "metrics": {"trigger": {"timing": {"p25": 11, "median": 18, "p75": 26}}}}
+    w = since_trigger(f, st, spy, eng)["window"]
+    trig = b.index[280]
+    assert w["from"] == str((trig + pd.offsets.BDay(11)).date()) and w["to"] == str((trig + pd.offsets.BDay(26)).date())
+    assert w["phase"] == "late"  # 39 sessions after the trigger

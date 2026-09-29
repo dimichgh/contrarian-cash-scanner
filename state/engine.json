@@ -10,11 +10,11 @@
   "confirm": 5,
   "fail_tol": 0.03,
   "setup_gap": 0.04,
+  "min_ready": 80,
   "pivot": "sma50",
   "vol_mult": 1.2,
   "min_below": 10,
-  "min_low_age": 10,
-  "min_ready": 80
+  "min_low_age": 10
  },
  "model": {
   "features": [
@@ -198,7 +198,7 @@
  "metrics": {
   "model": {
    "lam": 30000.0,
-   "changed": true,
+   "changed": false,
    "test_auc": 0.5339,
    "test_auc_by_lam": {
     "30.0": 0.5245,
@@ -269,7 +269,7 @@
    },
    "ready_filter": {
     "min_ready": 80,
-    "changed": true,
+    "changed": false,
     "by_threshold": {
      "0": {
       "n": 446,
@@ -297,6 +297,20 @@
       "expectancy": 0.02113
      }
     }
+   },
+   "timing": {
+    "n": 1885,
+    "wins": 563,
+    "hit": 0.299,
+    "stopped": 0.475,
+    "timed_out": 0.226,
+    "p25": 11,
+    "median": 18,
+    "p75": 26,
+    "within10": 0.233,
+    "within20": 0.586,
+    "stop_median": 12,
+    "avg_gain": 0.1536
    }
   },
   "tickers": 302

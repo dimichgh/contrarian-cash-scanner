@@ -1,6 +1,7 @@
 """Outputs of a run: a short summary (the routine's notification) and the dashboard page."""
 from __future__ import annotations
 
+import datetime as dt
 import json
 import math
 from pathlib import Path
@@ -25,6 +26,10 @@ def rule_text(p: dict) -> str:
     base = f", after {p['min_below']}+ of the prior 20 sessions below it" if p["min_below"] else ""
     ready = f"; strong when readiness is {p['min_ready']}+" if p.get("min_ready") else ""
     return f"Close above the {PIVOT_TEXT[p['pivot']]}{vol}{base}{ready}"
+
+
+def _md(iso: str) -> str:
+    return dt.date.fromisoformat(iso).strftime("%b %-d")
 
 
 def _pct(x):
@@ -54,9 +59,19 @@ def summary(res: dict) -> str:
     trades = sorted((r for r in rows if r.get("trade")), key=lambda r: r["trade"]["sessions"])
     open_ = [r for r in trades if r["trade"]["status"] == "open"]
     if open_:
+        def plan(t):
+            return f"; stop ${t['stop_px']:.2f}, target ${t['target_px']:.2f}"
+
+        def window(t):
+            w = t.get("window")
+            if not w:
+                return ""
+            return (f"; stop ${t['stop_px']:.2f}; target ${t['target_px']:.2f} usually hit {_md(w['from'])}–{_md(w['to'])}"
+                    f" (day {t['sessions']} of a typical {w['p25']}–{w['p75']}, {w['phase']})")
         lines += ["", "Since the trigger (open): " + ", ".join(
             f"{r['t']} {r['trade']['change']:+.1f}% in {r['trade']['sessions']}d "
-            f"(S&P {r['trade']['spy']:+.1f}%, best {r['trade']['best']:+.1f}%)" for r in open_)]
+            f"(S&P {r['trade']['spy']:+.1f}%, best {r['trade']['best']:+.1f}%{window(r['trade']) or plan(r['trade'])})"
+            for r in open_)]
     closed = [r for r in trades if r["trade"]["status"] != "open"
               and r["trade"]["sessions"] - r["trade"]["resolved_in"] <= 5]
     if closed:
@@ -74,6 +89,12 @@ def summary(res: dict) -> str:
     lines.append(f"Engine: readiness AUC {mm['test_auc']:.3f} on the held-out year (expert prior alone {mm['prior_only_auc']:.3f}); "
                  f"trigger: {rule_text(eng['trigger']).lower()} — {_pct(t_all['hit_rate'])} reached their target before their stop "
                  f"vs {_pct(t_all['base_hit_rate'])} for any day ({t_all['n']} past triggers)")
+    timing = tm.get("timing", {})
+    if "median" in timing:
+        lines.append(f"Past triggers that hit target took a median {timing['median']} sessions (middle half "
+                     f"{timing['p25']}–{timing['p75']}); stops came in a median {timing['stop_median']}. "
+                     f"{_pct(timing['hit'])} hit target, {_pct(timing['stopped'])} stopped, "
+                     f"{_pct(timing['timed_out'])} timed out.")
     tr = res["record"].get("triggers", {})
     if tr.get("resolved"):
         st = tr["strong"]

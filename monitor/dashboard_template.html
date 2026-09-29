@@ -81,7 +81,7 @@ section { display: grid; gap: 16px; min-width: 0; }
 .empty { padding: 16px; color: var(--muted); }
 
 /* trades since trigger */
-.rng { position: relative; width: 150px; height: 14px; }
+.rng { position: relative; width: 130px; height: 14px; }
 .rng .tr { position: absolute; left: 0; right: 0; top: 6px; height: 2px; background: var(--track); border-radius: 1px; }
 .rng .sl, .rng .tg { position: absolute; top: 2px; width: 2px; height: 10px; border-radius: 1px; }
 .rng .sl { left: 0; background: var(--crit); }
@@ -200,13 +200,14 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
     <div class="panel table-wrap">
       <table>
         <thead><tr>
-          <th>Company</th><th>Triggered</th><th class="r">Sessions</th><th class="r">Entry</th><th class="r">Now</th>
-          <th class="r">Change</th><th class="r">Best</th><th class="r">Worst</th><th class="r">S&amp;P</th><th class="r">vs S&amp;P</th>
-          <th>Stop → target</th><th>Status</th><th>Stage now</th>
+          <th>Company</th><th>Triggered</th><th class="r">Sessions</th><th class="r">Entry → now</th>
+          <th class="r">Change</th><th class="r">Best / worst</th><th class="r">vs S&amp;P</th>
+          <th>Stop → target</th><th>Status · target window</th>
         </tr></thead>
         <tbody id="trades"></tbody>
       </table>
     </div>
+    <p class="sub" id="timing-note"></p>
     <p class="sub">A trade resolves when the close reaches its target (green tick) or its stop (red tick), or after 40 sessions. Grey tick: entry; dot: last close. Readiness at the trigger is scored by the current engine unless the monitor logged the signal live.</p>
   </section>
 
@@ -354,6 +355,14 @@ function drawLadder() {
   const live = Object.fromEntries(D.alerts.filter((a) => a.type === "TRIGGERED").map((a) => [a.date + a.t, a]));
   const rows = D.rows.filter((r) => r.trade).sort((a, b) => a.trade.sessions - b.trade.sessions);
   const cls = {"open": "open", "hit target": "win", "stopped out": "loss", "timed out": "flat"};
+  const md = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("en-US", {month: "short", day: "numeric"});
+  const win = (t) => {
+    const w = t.window;
+    if (!w) return '<span class="dim">n/a</span>';
+    if (t.status !== "open") return `<span class="dim">typical ${w.p25}–${w.p75} sessions</span>`;
+    return `<span class="num" style="white-space:nowrap;font-size:.8rem">${md(w.from)} – ${md(w.to)}</span>
+      <div class="dim" style="white-space:nowrap">day ${t.sessions} of ${w.p25}–${w.p75} · ${w.phase}</div>`;
+  };
   $("#trades").innerHTML = rows.map((r) => {
     const t = r.trade, a = live[t.date + r.t];
     const ready = a ? a.ready : t.ready_at, strong = a ? a.strong !== false : t.strong;
@@ -361,19 +370,26 @@ function drawLadder() {
     const x = (v) => Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100)).toFixed(1);
     const st = t.status === "open" ? "open" : `${t.status} in ${t.resolved_in}`;
     return `<tr>
-      <td><div class="co"><b>${esc(r.t)}</b><span>${esc(r.name)}</span></div></td>
+      <td><div class="co" style="min-width:110px"><b>${esc(r.t)}</b><span style="max-width:130px">${esc(r.name)}</span></div></td>
       <td><span class="num" style="white-space:nowrap">${t.date}</span><div class="dim">readiness ${ready}${strong ? "" : " · weak"}${a ? "" : " · backfilled"}</div></td>
       <td class="r num">${t.sessions}<div class="dim">${t.days} days</div></td>
-      <td class="r num">$${t.entry.toFixed(2)}</td><td class="r num">$${now.toFixed(2)}</td>
-      <td class="r num"><b>${sgn(t.change)}</b></td><td class="r num">${sgn(t.best)}</td><td class="r num">${sgn(t.worst)}</td>
-      <td class="r num">${sgn(t.spy)}</td><td class="r num">${sgn(t.excess)}</td>
+      <td class="r num" style="white-space:nowrap">$${t.entry.toFixed(2)} → $${now.toFixed(2)}</td>
+      <td class="r num"><b>${sgn(t.change)}</b></td>
+      <td class="r num" style="white-space:nowrap">${sgn(t.best)} / ${sgn(t.worst)}</td>
+      <td class="r num">${sgn(t.excess)}<div class="dim" style="white-space:nowrap">S&amp;P ${sgn(t.spy)}</div></td>
       <td><div class="rng" title="stop $${lo.toFixed(2)} (−${t.stop}%) · entry $${t.entry.toFixed(2)} · target $${hi.toFixed(2)} (+${t.target}%)">
         <span class="tr"></span><span class="sl"></span><span class="tg"></span>
         <span class="en" style="left:${x(t.entry)}%"></span><span class="nw" style="left:${x(now)}%"></span></div>
-        <div class="dim num">$${lo.toFixed(2)} → $${hi.toFixed(2)}</div></td>
-      <td><span class="status ${cls[t.status]}">${esc(st)}</span></td>
-      <td>${chip(r.stage)}</td></tr>`;
-  }).join("") || '<tr><td colspan="13" class="empty">No trigger in the last 90 trading days.</td></tr>';
+        <div class="dim num" style="font-size:.74rem">stop $${lo.toFixed(2)} · target&nbsp;$${hi.toFixed(2)}</div></td>
+      <td><span class="status ${cls[t.status]}">${esc(st)}</span><div>${win(t)}</div></td></tr>`;
+  }).join("") || '<tr><td colspan="10" class="empty">No trigger in the last 90 trading days.</td></tr>';
+})();
+
+(function timingNote() {
+  const tm = D.metrics.trigger.timing || {};
+  $("#timing-note").textContent = tm.median == null ? "" :
+    `Target window: in history, triggers that reached their target took a median ${tm.median} trading days (middle half ${tm.p25}–${tm.p75}, so roughly ${Math.round(tm.p25 * 7 / 5)}–${Math.round(tm.p75 * 7 / 5)} calendar days); ` +
+    `${pct(tm.within20)} of them got there within 20. Stops came sooner, in a median ${tm.stop_median}. Only ${pct(tm.hit)} of triggers reached target at all; ${pct(tm.stopped)} were stopped and ${pct(tm.timed_out)} timed out.`;
 })();
 
 // table
@@ -407,7 +423,9 @@ function detail(r) {
       <div class="contrib">${r.contrib.map(([f, v]) => `<div><span>${esc(f)}</span>
         <span class="cbar"><i style="left:0;width:${(Math.abs(v) / cmax * 100).toFixed(0)}%;background:${v > 0 ? "var(--accent)" : "var(--neg)"}"></i></span></div>`).join("") || '<span class="dim">No single feature stands out.</span>'}</div>
       <div class="kv">
-        <span>Target <b>+${r.target}%</b> before stop <b>−${r.stop}%</b></span><span>P(target first) <b>${pct(r.prob)}</b></span><span>RSI <b>${r.rsi}</b></span>
+        <span>Target <b>+${r.target}%</b> before stop <b>−${r.stop}%</b></span>
+        ${r.trade && r.trade.status === "open" ? `<span>Open trade: stop <b>$${r.trade.stop_px.toFixed(2)}</b> · target <b>$${r.trade.target_px.toFixed(2)}</b></span>`
+          : `<span>If it triggers at $${r.level.toFixed(2)}: stop <b>$${(r.level * (1 - r.stop / 100)).toFixed(2)}</b> · target <b>$${(r.level * (1 + r.target / 100)).toFixed(2)}</b></span>`}<span>P(target first) <b>${pct(r.prob)}</b></span><span>RSI <b>${r.rsi}</b></span>
         <span>50d slope <b>${sgn(r.slope, 2)}</b>/2wk</span><span>Lows held <b>${r.low_age ?? "n/a"}</b> sessions</span>
         <span>1m return <b>${sgn(r.ret20)}</b></span><span>Off 52w high <b>${sgn(r.dd52)}</b></span>
         <span>Volume today <b>${r.vol_ratio ?? "n/a"}x</b> avg</span>
@@ -477,6 +495,7 @@ $("#f-q").addEventListener("input", drawTable);
     [pct(all.hit_rate), `of ${all.n.toLocaleString()} past triggers reached their target before their stop, against ${pct(all.base_hit_rate)} for a random day.`],
     [(D.trigger.min_ready || 0) + "+", "Readiness a trigger needs to count as strong, picked on the held-out year."],
     [pct(mm.base_rate), `of all ${(mm.n_train + mm.n_test).toLocaleString()} sampled days in the data were followed by a real move.`],
+    ...(tm.timing?.median != null ? [[`${tm.timing.median} days`, `Median trading days from trigger to target, for the ${tm.timing.wins.toLocaleString()} past triggers that got there (middle half ${tm.timing.p25}–${tm.timing.p75}).`]] : []),
   ];
   $("#tiles").innerHTML = tiles.map(([b, s]) => `<div class="panel tile"><b>${b}</b><span>${esc(s)}</span></div>`).join("");
   const wmax = Math.max(0.05, ...D.learned.map((x) => Math.max(Math.abs(x.w), Math.abs(x.prior))));

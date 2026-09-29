@@ -97,7 +97,14 @@ def since_trigger(f: pd.DataFrame, st: pd.DataFrame, spy: pd.Series, eng: dict, 
     m = eng["model"]
     ready = int(readiness(m, predict(m, f.loc[[d], m["features"]].to_numpy())[0]))
     r2 = lambda x: round(x * 100, 1)
-    return {"date": str(d.date()), "sessions": n, "days": (f.index[-1] - d).days, "entry": round(entry, 2),
+    tm = eng.get("metrics", {}).get("trigger", {}).get("timing", {})
+    window = None
+    if "median" in tm:
+        day = lambda k: str((d + pd.offsets.BDay(k)).date())  # weekdays; holidays shift it a day or so
+        phase = "early" if n < tm["p25"] else "in window" if n <= tm["p75"] else "late"
+        window = {"from": day(tm["p25"]), "median": day(tm["median"]), "to": day(tm["p75"]),
+                  "p25": tm["p25"], "mid": tm["median"], "p75": tm["p75"], "phase": phase}
+    return {"window": window, "date": str(d.date()), "sessions": n, "days": (f.index[-1] - d).days, "entry": round(entry, 2),
             "level": round(float(st.at[d, "pivot"]), 2), "change": r2(now / entry - 1),
             "best": r2(float(path.max()) / entry - 1), "worst": r2(float(path.min()) / entry - 1),
             "spy": r2(spy_chg), "excess": r2(now / entry - 1 - spy_chg),
@@ -120,9 +127,12 @@ def alert_text(r: dict, p: dict) -> str:
     lvl = PIVOT_TEXT[p["pivot"]]
     if r["stage"] == "TRIGGERED":
         vol = f" on {r['vol_ratio']:.1f}x average volume" if r["vol_ratio"] else ""
-        return f"closed {r['gap']:+.1f}% through the {lvl} (${r['level']:.2f}){vol}"
+        t = r.get("trade") or {}
+        plan = f"; stop ${t['stop_px']:.2f}, target ${t['target_px']:.2f}" if t.get("date") == r["date"] else ""
+        return f"closed {r['gap']:+.1f}% through the {lvl} (${r['level']:.2f}){vol}{plan}"
     if r["stage"] == "SETUP":
-        return f"{abs(r['gap']):.1f}% under the trigger level ${r['level']:.2f} ({lvl}), lows held {r['low_age']} sessions"
+        return (f"{abs(r['gap']):.1f}% under the trigger level ${r['level']:.2f} ({lvl}), lows held {r['low_age']} sessions; "
+                f"if it triggers there: stop ${r['level'] * (1 - r['stop'] / 100):.2f}, target ${r['level'] * (1 + r['target'] / 100):.2f}")
     if r["stage"] == "RUNNING":
         return f"move confirmed: holding {r['gap']:+.1f}% above ${r['level']:.2f}, 50-day average rising {r['slope']:+.1f}%/2wk"
     if r["stage"] == "FAILED":
