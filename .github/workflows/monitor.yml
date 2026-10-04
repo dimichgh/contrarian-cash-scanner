@@ -79,7 +79,7 @@ jobs:
           {
             cat body.md
             echo
-            echo "[Run log]($RUN_URL) · [dashboard.html](${{ github.server_url }}/${{ github.repository }}/blob/main/reports/dashboard.html) (download and open in a browser)"
+            echo "[Dashboard](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/) · [Full scan](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/scan.html) · [Run log]($RUN_URL)"
           } > comment.md
           gh issue comment "$issue" --body-file comment.md
 
@@ -93,3 +93,34 @@ jobs:
           else
             gh issue create --title "Breakout monitor run failed" --assignee "${{ github.repository_owner }}" --body "$msg"
           fi
+
+  # Publishes the pages the run just committed. Needs Settings → Pages → Source: "GitHub Actions".
+  # Kept as its own job so a Pages problem never fails the monitor run or its summary.
+  pages:
+    needs: run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Build the site
+        run: python3 scripts/build_site.py
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

@@ -141,6 +141,11 @@ on the pinned "Breakout monitor: daily summaries" issue, so GitHub notifies you 
 mobile app. A failed run comments there too. Start a run by hand from the Actions tab (Run
 workflow), with optional re-scan or re-fit.
 
+The pages are also published to GitHub Pages after every run:
+`https://dimichgh.github.io/contrarian-cash-scanner/` (the monitor) and `…/scan.html` (the full
+scan). `scripts/build_site.py` wraps the committed `reports/*.html` into the site. One-time setup:
+Settings → Pages → Source: "GitHub Actions". The site is public, like the repo.
+
 To run it yourself instead: `bash scripts/cloud_run.sh` (or `python -m monitor daily` without the
 git steps). Skipped days only delay signals: each run compares against the last recorded one.
 `scripts/routine_prompt.md` keeps the prompt for running it as a Claude cloud routine instead.

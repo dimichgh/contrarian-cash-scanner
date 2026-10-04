@@ -4,3 +4,4 @@ __pycache__/
 output/
 .DS_Store
 reports/run.log
+site/
