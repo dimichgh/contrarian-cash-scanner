@@ -1,0 +1,95 @@
+name: Breakout monitor
+
+on:
+  schedule:
+    # 21:23 UTC on weekdays: 5:23pm ET in summer, 4:23pm ET in winter; after the US close either way.
+    # GitHub can start scheduled runs some minutes late at busy times.
+    - cron: "23 21 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      rescan:
+        description: "Run a full re-scan first"
+        type: boolean
+        default: false
+      learn:
+        description: "Re-fit the engine"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: breakout-monitor
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MONITOR_BRANCH: main
+      GH_TOKEN: ${{ github.token }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Configure git
+        run: |
+          git config user.name "breakout-monitor[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Run the monitor, commit and push its state
+        run: |
+          args=()
+          [ "${{ inputs.rescan }}" = "true" ] && args+=(--rescan)
+          [ "${{ inputs.learn }}" = "true" ] && args+=(--learn)
+          bash scripts/cloud_run.sh "${args[@]}" | tee run_output.txt
+          if grep -q "PUSH FAILED" run_output.txt; then exit 1; fi
+
+      - name: Post the summary
+        run: |
+          grep -v '^DASHBOARD:' reports/summary.md > body.md
+          cat body.md >> "$GITHUB_STEP_SUMMARY"
+          # no new market data (weekend, holiday, rerun): stay quiet unless the run was started by hand
+          if grep -q "No new session since the last run" body.md && [ "${{ github.event_name }}" = "schedule" ]; then
+            exit 0
+          fi
+          issue=$(gh issue list --label breakout-monitor --state open --json number --jq '.[0].number // empty')
+          if [ -z "$issue" ]; then
+            gh label create breakout-monitor --color 2a78d6 --description "Daily breakout monitor summaries" 2>/dev/null || true
+            url=$(gh issue create --title "Breakout monitor: daily summaries" --label breakout-monitor \
+                  --assignee "${{ github.repository_owner }}" \
+                  --body "Each weekday run of the breakout monitor posts its summary here as a comment. Pages: reports/dashboard.html (every run) and reports/scan_report.html (weekly rescan).")
+            issue=${url##*/}
+            gh issue pin "$issue" || true
+          fi
+          {
+            cat body.md
+            echo
+            echo "[Run log]($RUN_URL) · [dashboard.html](${{ github.server_url }}/${{ github.repository }}/blob/main/reports/dashboard.html) (download and open in a browser)"
+          } > comment.md
+          gh issue comment "$issue" --body-file comment.md
+
+      - name: Report a failure
+        if: failure()
+        run: |
+          msg="The breakout monitor run failed: $RUN_URL"
+          issue=$(gh issue list --label breakout-monitor --state open --json number --jq '.[0].number // empty')
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body "$msg"
+          else
+            gh issue create --title "Breakout monitor run failed" --assignee "${{ github.repository_owner }}" --body "$msg"
+          fi

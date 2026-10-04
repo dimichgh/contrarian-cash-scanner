@@ -133,9 +133,17 @@ current rule and weights), `engine_history.jsonl` (one line per learning cycle),
 `reports/dashboard.html` (the monitor, every run) and `reports/scan_report.html` (the full scan,
 rebuilt at each weekly rescan). Both are self-contained: download one and open it in a browser.
 
-**Scheduled runs.** `scripts/cloud_run.sh` runs the monitor, commits `state/` and pushes it to the
-current branch (or `$MONITOR_BRANCH`), then prints the summary. A Claude cloud routine calls it after
-each US close; its prompt is in `scripts/routine_prompt.md`.
+**Scheduled runs.** A GitHub Actions workflow (`.github/workflows/monitor.yml`) runs the monitor
+every weekday at 21:23 UTC (5:23pm ET in summer, 4:23pm ET in winter), with no Claude usage. It
+calls `scripts/cloud_run.sh`, which runs the monitor, commits `state/` and the pages to `main` and
+prints the summary. The summary goes to the run's page and, when there is a new close, to a comment
+on the pinned "Breakout monitor: daily summaries" issue, so GitHub notifies you by email or on its
+mobile app. A failed run comments there too. Start a run by hand from the Actions tab (Run
+workflow), with optional re-scan or re-fit.
+
+To run it yourself instead: `bash scripts/cloud_run.sh` (or `python -m monitor daily` without the
+git steps). Skipped days only delay signals: each run compares against the last recorded one.
+`scripts/routine_prompt.md` keeps the prompt for running it as a Claude cloud routine instead.
 
 ## Data sources
 
