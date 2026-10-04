@@ -165,7 +165,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 33,
+  "scan_rank": 32,
   "scanned": "2026-10-04",
   "hold": true
  },
@@ -352,7 +352,7 @@
   "sector": "Technology Services",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 68.0,
+   "score": 67.9,
    "tier": "B",
    "checks": 5,
    "timing": "Still falling",
@@ -371,7 +371,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 12,
+  "scan_rank": 13,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -510,7 +510,7 @@
    "why": [
     "FCF yield 12.4% vs 10Y Treasury 4.3% and S&P ~4–5%",
     "Returns 11.1%/yr to holders (dividend 0.0% + buyback 11.1%)",
-    "Fwd P/E 8.5 vs sector median 14.8",
+    "Fwd P/E 8.5 vs sector median 14.7",
     "Insiders bought $612.6K on the open market (last 90d, 2 buyer(s))"
    ],
    "risk": [
@@ -618,7 +618,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 32,
+  "scan_rank": 33,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -645,7 +645,7 @@
    "why": [
     "FCF yield 10.4% vs 10Y Treasury 4.3% and S&P ~4–5%",
     "Returns 6.8%/yr to holders (dividend 0.0% + buyback 6.8%)",
-    "Fwd P/E 10.5 vs sector median 14.8",
+    "Fwd P/E 10.5 vs sector median 14.7",
     "35% below 52w high, 2% above 52w low",
     "Analysts: 11 Hold / 12 Buy / 3 Sell, avg target +51%"
    ],
@@ -653,7 +653,7 @@
     "Short interest rising 49%"
    ]
   },
-  "scan_rank": 11,
+  "scan_rank": 10,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -688,7 +688,7 @@
     "Missed EPS last quarter (-0%)"
    ]
   },
-  "scan_rank": 21,
+  "scan_rank": 20,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -702,7 +702,7 @@
   "sector": "Commercial Services",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 62.7,
+   "score": 62.6,
    "tier": "B",
    "checks": 6,
    "timing": "Near lows",
@@ -1043,7 +1043,7 @@
     "Leverage: net debt/EBITDA 3.5x (author's CMCSA trigger was 2.9x)"
    ]
   },
-  "scan_rank": 15,
+  "scan_rank": 14,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1051,8 +1051,8 @@
   "ticker": "FSLR",
   "added": "2026-09-29",
   "source": "scan",
-  "status": "active",
-  "misses": 2,
+  "status": "dropped",
+  "misses": 3,
   "name": "First Solar, Inc.",
   "sector": "Electronic Technology",
   "exchange": "NASDAQ",
@@ -1077,7 +1077,8 @@
   },
   "scan_rank": 78,
   "scanned": "2026-10-04",
-  "hold": false
+  "hold": false,
+  "dropped": "2026-10-04"
  },
  "G": {
   "ticker": "G",
@@ -1187,8 +1188,8 @@
   "ticker": "GIB",
   "added": "2026-09-29",
   "source": "scan",
-  "status": "active",
-  "misses": 2,
+  "status": "dropped",
+  "misses": 3,
   "name": "CGI Inc.",
   "sector": "Technology Services",
   "exchange": "NYSE",
@@ -1213,7 +1214,8 @@
   },
   "scan_rank": 79,
   "scanned": "2026-10-04",
-  "hold": false
+  "hold": false,
+  "dropped": "2026-10-04"
  },
  "GNTX": {
   "ticker": "GNTX",
@@ -1244,7 +1246,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 28,
+  "scan_rank": 27,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1291,7 +1293,7 @@
   "sector": "Technology Services",
   "exchange": "NYSE",
   "thesis": {
-   "score": 64.2,
+   "score": 64.1,
    "tier": "B",
    "checks": 5,
    "timing": "Near lows",
@@ -1313,7 +1315,7 @@
     "Missed EPS last quarter (-1%)"
    ]
   },
-  "scan_rank": 38,
+  "scan_rank": 40,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1527,7 +1529,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 36,
+  "scan_rank": 35,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1554,7 +1556,7 @@
    "why": [
     "FCF yield 12.4% vs 10Y Treasury 4.3% and S&P ~4–5%",
     "Returns 4.1%/yr to holders (dividend 0.0% + buyback 4.1%)",
-    "Fwd P/E 9.9 vs sector median 14.8",
+    "Fwd P/E 9.9 vs sector median 14.7",
     "58% below 52w high, 1% above 52w low",
     "5-year return -76% — long capitulation"
    ],
@@ -1666,7 +1668,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 20,
+  "scan_rank": 21,
   "scanned": "2026-10-04",
   "hold": true
  },
@@ -1698,7 +1700,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 35,
+  "scan_rank": 36,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1731,7 +1733,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 40,
+  "scan_rank": 38,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1767,7 +1769,7 @@
     "Revenue shrinking -3.6% y/y — value-trap risk"
    ]
   },
-  "scan_rank": 24,
+  "scan_rank": 25,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1857,8 +1859,8 @@
   "ticker": "PLNT",
   "added": "2026-09-29",
   "source": "scan",
-  "status": "active",
-  "misses": 2,
+  "status": "dropped",
+  "misses": 3,
   "name": "Planet Fitness, Inc.",
   "sector": "Consumer Services",
   "exchange": "NYSE",
@@ -1884,9 +1886,10 @@
     "Leverage: net debt/EBITDA 4.3x (author's CMCSA trigger was 2.9x)"
    ]
   },
-  "scan_rank": 94,
+  "scan_rank": 93,
   "scanned": "2026-10-04",
-  "hold": false
+  "hold": false,
+  "dropped": "2026-10-04"
  },
  "POST": {
   "ticker": "POST",
@@ -1898,7 +1901,7 @@
   "sector": "Consumer Non-Durables",
   "exchange": "NYSE",
   "thesis": {
-   "score": 66.1,
+   "score": 66.0,
    "tier": "A",
    "checks": 7,
    "timing": "Still falling",
@@ -1911,7 +1914,7 @@
    "why": [
     "FCF yield 17.3% vs 10Y Treasury 4.3% and S&P ~4–5%",
     "Returns 9.6%/yr to holders (dividend 0.0% + buyback 9.6%)",
-    "Fwd P/E 9.5 vs sector median 14.8",
+    "Fwd P/E 9.5 vs sector median 14.7",
     "38% below 52w high, 2% above 52w low",
     "Analysts: 2 Hold / 5 Buy / 0 Sell, avg target +45%"
    ],
@@ -1919,7 +1922,7 @@
     "Leverage: net debt/EBITDA 5.1x (author's CMCSA trigger was 2.9x)"
    ]
   },
-  "scan_rank": 26,
+  "scan_rank": 28,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1946,7 +1949,7 @@
    "why": [
     "FCF yield 20.5% vs 10Y Treasury 4.3% and S&P ~4–5%",
     "Returns 14.2%/yr to holders (dividend 0.2% + buyback 14.0%)",
-    "Fwd P/E 6.2 vs sector median 14.8",
+    "Fwd P/E 6.2 vs sector median 14.7",
     "25% below 52w high, 27% above 52w low",
     "Insiders bought $1.0M on the open market (last 90d, 1 buyer(s))"
    ],
@@ -1969,7 +1972,7 @@
   "sector": "Commercial Services",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 68.7,
+   "score": 68.6,
    "tier": "A",
    "checks": 7,
    "timing": "Mid-range",
@@ -2060,7 +2063,7 @@
     "High beta 2.29"
    ]
   },
-  "scan_rank": 10,
+  "scan_rank": 11,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -2074,7 +2077,7 @@
   "sector": "Consumer Non-Durables",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 66.0,
+   "score": 65.9,
    "tier": "A",
    "checks": 7,
    "timing": "Still falling",
@@ -2087,7 +2090,7 @@
    "why": [
     "FCF yield 10.7% vs 10Y Treasury 4.3% and S&P ~4–5%",
     "Returns 6.3%/yr to holders (dividend 6.3% + buyback 0.0%)",
-    "Fwd P/E 8.5 vs sector median 14.8",
+    "Fwd P/E 8.5 vs sector median 14.7",
     "37% below 52w high, 2% above 52w low",
     "Analysts: 2 Hold / 5 Buy / 0 Sell, avg target +40%"
    ],
@@ -2109,7 +2112,7 @@
   "sector": "Health Technology",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 67.2,
+   "score": 67.1,
    "tier": "B",
    "checks": 5,
    "timing": "Still falling",
@@ -2168,7 +2171,7 @@
     "Revenue shrinking -1.7% y/y — value-trap risk"
    ]
   },
-  "scan_rank": 261,
+  "scan_rank": 260,
   "scanned": "2026-10-04"
  },
  "T": {
@@ -2205,7 +2208,7 @@
     "Leverage: net debt/EBITDA 3.0x (author's CMCSA trigger was 2.9x)"
    ]
   },
-  "scan_rank": 300,
+  "scan_rank": 299,
   "scanned": "2026-10-04"
  },
  "TDC": {
@@ -2239,7 +2242,7 @@
     "FCF yield looks too high — check for one-offs (the author's 'P/E illusion' warning)"
    ]
   },
-  "scan_rank": 14,
+  "scan_rank": 15,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -2274,7 +2277,7 @@
     "Missed EPS last quarter (-3%)"
    ]
   },
-  "scan_rank": 27,
+  "scan_rank": 26,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -2309,7 +2312,7 @@
     "FCF yield looks too high — check for one-offs (the author's 'P/E illusion' warning)"
    ]
   },
-  "scan_rank": 25,
+  "scan_rank": 24,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -2323,7 +2326,7 @@
   "sector": "Communications",
   "exchange": "NYSE",
   "thesis": {
-   "score": 67.8,
+   "score": 67.7,
    "tier": "B",
    "checks": 5,
    "timing": "Still falling",
@@ -2358,7 +2361,7 @@
   "sector": "Technology Services",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 68.0,
+   "score": 68.1,
    "tier": "C",
    "checks": 4,
    "timing": "Still falling",
@@ -2379,7 +2382,7 @@
     "Missed EPS last quarter (-21%)"
    ]
   },
-  "scan_rank": 13,
+  "scan_rank": 12,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -2523,7 +2526,7 @@
   "sector": "Consumer Services",
   "exchange": "NYSE",
   "thesis": {
-   "score": 60.9,
+   "score": 60.8,
    "tier": "B",
    "checks": 5,
    "timing": "Still falling",
@@ -2542,7 +2545,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 73,
+  "scan_rank": 74,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -2551,7 +2554,7 @@
   "added": "2026-09-29",
   "source": "scan",
   "status": "active",
-  "misses": 1,
+  "misses": 2,
   "name": "Zillow Group, Inc.",
   "sector": "Technology Services",
   "exchange": "NASDAQ",
@@ -2589,7 +2592,7 @@
   "sector": "Health Technology",
   "exchange": "NYSE",
   "thesis": {
-   "score": 70.7,
+   "score": 70.6,
    "tier": "A",
    "checks": 8,
    "timing": "Near lows",
