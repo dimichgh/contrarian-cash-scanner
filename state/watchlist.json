@@ -65,7 +65,7 @@
   },
   "scan_rank": 11,
   "scanned": "2026-09-29",
-  "hold": false
+  "hold": true
  },
  "ADBE": {
   "ticker": "ADBE",
@@ -659,7 +659,7 @@
   },
   "scan_rank": 13,
   "scanned": "2026-09-29",
-  "hold": true
+  "hold": false
  },
  "ERIC": {
   "ticker": "ERIC",
@@ -1951,7 +1951,7 @@
    "entry": 19.7,
    "note": "Sum of parts $26–28; yen upside"
   },
-  "hold": false
+  "hold": true
  },
  "T": {
   "ticker": "T",
@@ -1965,7 +1965,7 @@
    "entry": 24.0,
    "note": "3-year target $28–32; preferred entry $19–20"
   },
-  "hold": true
+  "hold": false
  },
  "TDC": {
   "ticker": "TDC",
@@ -2202,7 +2202,7 @@
    "entry": 130.0,
    "note": "Contrarian energy long; fair value $143–160"
   },
-  "hold": false
+  "hold": true
  },
  "YETI": {
   "ticker": "YETI",

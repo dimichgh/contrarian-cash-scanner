@@ -1,17 +1,24 @@
-Breakout monitor · close of 2026-09-28 · engine v1
+Breakout monitor · close of 2026-10-02 · engine v1
 
-No new session since the last run.
+9 new signals:
+◆ SETUP EPAM $108.29: 0.6% under the trigger level $108.90 (50-day average), lows held 72 sessions; if it triggers there: stop $95.40, target $131.01 · readiness 95
+◆ SETUP T $24.30: 2.7% under the trigger level $24.97 (50-day average), lows held 65 sessions; if it triggers there: stop $23.60, target $27.22 · readiness 87
+◆ SETUP GIB $70.19: 2.6% under the trigger level $72.10 (50-day average), lows held 73 sessions; if it triggers there: stop $67.13, target $80.25 · readiness 86
+◆ SETUP TIMB $17.83: 3.4% under the trigger level $18.46 (50-day average), lows held 32 sessions; if it triggers there: stop $17.22, target $20.47 · readiness 62
+◆ SETUP ACI $11.75: 2.7% under the trigger level $12.08 (50-day average), lows held 49 sessions; if it triggers there: stop $10.50, target $14.68 · readiness 57
+◆ SETUP VIV $11.54: 3.0% under the trigger level $11.89 (50-day average), lows held 30 sessions; if it triggers there: stop $11.15, target $13.09 · readiness 48
+● RUNNING ACN $198.90: move confirmed: holding +7.3% above $185.29, 50-day average rising +5.3%/2wk · readiness 97
+● RUNNING SONY $23.82: move confirmed: holding +12.3% above $21.21, 50-day average rising +2.2%/2wk · readiness 82
+● RUNNING XOP $184.93: move confirmed: holding +12.2% above $164.87, 50-day average rising +1.5%/2wk · readiness 70
 
-Nearest the trigger: ACN -0.8% vs $175.95 (readiness 98), CTSH -1.6% vs $57.70 (readiness 96), XOP -1.3% vs $182.50 (readiness 95), DOX -2.1% vs $58.63 (readiness 94), SONY -0.2% vs $23.38 (readiness 79), GNTX -3.7% vs $23.19 (readiness 74), MTCH -1.8% vs $40.25 (readiness 74), PVH -3.3% vs $78.35 (readiness 68)
-Highest readiness: ACN 98 (setup), CTSH 96 (setup), XOP 95 (setup), DOX 94 (setup), SBSW 91 (basing), LDOS 89 (basing), PYPL 89 (basing), G 88 (basing)
+Nearest the trigger: CTSH -0.6% vs $58.88 (readiness 97), EPAM -0.6% vs $108.90 (readiness 95), DOX -1.7% vs $59.11 (readiness 94), TDC +5.1% vs $28.68 (readiness 90), T -2.7% vs $24.97 (readiness 87), GIB -2.6% vs $72.10 (readiness 86), PVH -3.3% vs $78.09 (readiness 72), AEO +6.0% vs $16.70 (readiness 67)
+Highest readiness: CTSH 97 (setup), EPAM 95 (setup), DOX 94 (setup), TDC 90 (setup), LDOS 87 (basing), T 87 (setup), GIB 86 (setup), INFY 80 (basing)
 
-Since the trigger (open): AEO +0.0% in 0d (S&P +0.0%, best +0.0%; stop $15.26; target $20.67 usually hit Oct 13–Nov 3 (day 0 of a typical 11–26, early)), INTC +11.1% in 14d (S&P -0.0%, best +21.9%; stop $86.73; target $133.51 usually hit Sep 23–Oct 14 (day 14 of a typical 11–26, in window))
-Resolved this week: MMS stopped out (-12.2% now), INFY timed out (-10.1% now), SONY timed out (+4.7% now)
+Since the trigger (open): AEO +2.3% in 4d (S&P +0.5%, best +4.8%; stop $15.26; target $20.67 usually hit Oct 13–Nov 3 (day 4 of a typical 11–26, early)), INTC +14.2% in 18d (S&P +0.5%, best +21.9%; stop $86.73; target $133.51 usually hit Sep 23–Oct 14 (day 18 of a typical 11–26, in window))
 
-Watchlist: 69 names · triggered 1 · setup 12 · running 4 · basing 20 · failed 1 · falling 31
+Watchlist: 69 names · triggered 1 · setup 12 · running 5 · basing 20 · failed 1 · falling 30
 No price data: UDMY, VSNT
 Engine: readiness AUC 0.534 on the held-out year (expert prior alone 0.517); trigger: close above the 50-day average on at least 1.2x average volume, after 10+ of the prior 20 sessions below it; strong when readiness is 80+ — 30% reached their target before their stop vs 29% for any day (1885 past triggers)
 Past triggers that hit target took a median 18 sessions (middle half 11–26); stops came in a median 12. 30% hit target, 48% stopped, 23% timed out.
-No new session since 2026-09-28; alerts already sent
 
 DASHBOARD: skip
