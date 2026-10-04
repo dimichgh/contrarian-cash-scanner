@@ -1,7 +1,7 @@
 {
  "rescan": "2026-10-04",
  "as_of": "2026-10-02",
- "run": "2026-10-04T08:58+00:00",
+ "run": "2026-10-04T09:18+00:00",
  "stages": {
   "ACN": "RUNNING",
   "CTSH": "SETUP",
@@ -11,6 +11,7 @@
   "TDC": "SETUP",
   "LDOS": "BASING",
   "T": "SETUP",
+  "GIB": "SETUP",
   "SBLK": "RUNNING",
   "SONY": "RUNNING",
   "INFY": "BASING",
@@ -73,7 +74,9 @@
   "TTD": "FALLING",
   "GEN": "BASING",
   "PHIN": "FALLING",
+  "PLNT": "FALLING",
   "LEA": "FALLING",
+  "FSLR": "FALLING",
   "NVO": "FALLING",
   "CTVA": "FALLING"
  },

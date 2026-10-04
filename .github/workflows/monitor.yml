@@ -15,6 +15,12 @@ on:
         description: "Re-fit the engine"
         type: boolean
         default: false
+  # report or site changes pushed by hand only redeploy the site (the bot's own pushes don't trigger runs)
+  push:
+    branches: [main]
+    paths:
+      - "reports/**"
+      - "scripts/build_site.py"
 
 permissions:
   contents: write
@@ -26,6 +32,7 @@ concurrency:
 
 jobs:
   run:
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -98,6 +105,7 @@ jobs:
   # Kept as its own job so a Pages problem never fails the monitor run or its summary.
   pages:
     needs: run
+    if: always() && (needs.run.result == 'success' || needs.run.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

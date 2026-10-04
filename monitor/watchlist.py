@@ -79,11 +79,16 @@ def merge_scan(wl: dict, scan: pd.DataFrame, today: dt.date) -> tuple[list[str],
                  scan_rank=rank[t], scanned=day)
         if good:
             e["misses"] = 0
+            e.pop("missed_on", None)
     for t, e in wl.items():
         if e.get("source") != "scan" or e["status"] != "active":
             continue
         if t not in rank or not ok[scan["name"] == t].any():
-            e["misses"] = e.get("misses", 0) + 1
+            # a miss counts once per rescan week, so extra manual rescans can't drop a name early
+            last = e.get("missed_on")
+            if last is None or (today - dt.date.fromisoformat(last)).days >= C.RESCAN_DAYS - 2:
+                e["misses"] = e.get("misses", 0) + 1
+                e["missed_on"] = day
             if t not in rank:
                 e["scan_rank"] = None
             if e["misses"] >= C.DROP_AFTER_MISSES and not e.get("hold"):

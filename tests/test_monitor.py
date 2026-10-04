@@ -129,3 +129,17 @@ def test_since_trigger_tracks_the_trade(spy):
     trig = b.index[280]
     assert w["from"] == str((trig + pd.offsets.BDay(11)).date()) and w["to"] == str((trig + pd.offsets.BDay(26)).date())
     assert w["phase"] == "late"  # 39 sessions after the trigger
+
+
+def test_same_day_rescans_count_one_miss(monkeypatch):
+    monkeypatch.setattr(C, "ADMIT_TOP_N", 0)
+    def scan(names, tiers):
+        return pd.DataFrame({"name": names, "description": names, "sector": "S", "industry": "I", "exchange": "NYSE",
+                             "close": 10.0, "score": 70.0, "tier": tiers, "n_checks": 7, "timing": "Near lows",
+                             "fcf_yield": 9.0, "sh_yield": 6.0, "fwd_pe": 8.0, "dd_52w": -40.0, "target_upside": 30.0,
+                             "nd_ebitda": 1.0, "why": "", "risk": ""})
+    wl, d = {}, dt.date(2026, 10, 4)
+    W.merge_scan(wl, scan(["AAA", "BBB"], ["A", "A"]), d)
+    for _ in range(4):  # four rescans in one day: BBB misses once, not four times
+        _, dropped = W.merge_scan(wl, scan(["AAA"], ["A"]), d + dt.timedelta(days=1))
+    assert dropped == [] and wl["BBB"]["misses"] == 1 and wl["BBB"]["status"] == "active"

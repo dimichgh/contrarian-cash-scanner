@@ -1051,8 +1051,8 @@
   "ticker": "FSLR",
   "added": "2026-09-29",
   "source": "scan",
-  "status": "dropped",
-  "misses": 3,
+  "status": "active",
+  "misses": 1,
   "name": "First Solar, Inc.",
   "sector": "Electronic Technology",
   "exchange": "NASDAQ",
@@ -1078,7 +1078,7 @@
   "scan_rank": 78,
   "scanned": "2026-10-04",
   "hold": false,
-  "dropped": "2026-10-04"
+  "missed_on": "2026-10-04"
  },
  "G": {
   "ticker": "G",
@@ -1188,8 +1188,8 @@
   "ticker": "GIB",
   "added": "2026-09-29",
   "source": "scan",
-  "status": "dropped",
-  "misses": 3,
+  "status": "active",
+  "misses": 1,
   "name": "CGI Inc.",
   "sector": "Technology Services",
   "exchange": "NYSE",
@@ -1215,7 +1215,7 @@
   "scan_rank": 79,
   "scanned": "2026-10-04",
   "hold": false,
-  "dropped": "2026-10-04"
+  "missed_on": "2026-10-04"
  },
  "GNTX": {
   "ticker": "GNTX",
@@ -1859,8 +1859,8 @@
   "ticker": "PLNT",
   "added": "2026-09-29",
   "source": "scan",
-  "status": "dropped",
-  "misses": 3,
+  "status": "active",
+  "misses": 1,
   "name": "Planet Fitness, Inc.",
   "sector": "Consumer Services",
   "exchange": "NYSE",
@@ -1889,7 +1889,7 @@
   "scan_rank": 93,
   "scanned": "2026-10-04",
   "hold": false,
-  "dropped": "2026-10-04"
+  "missed_on": "2026-10-04"
  },
  "POST": {
   "ticker": "POST",
