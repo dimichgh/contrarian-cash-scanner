@@ -18,7 +18,7 @@ if ! .venv/bin/python -m monitor daily "$@" > reports/run.log 2>&1; then
   exit 1
 fi
 
-git add state reports/summary.md
+git add state reports/summary.md reports/*.html
 if ! git diff --cached --quiet; then
   as_of=$(.venv/bin/python -c 'import json; print(json.load(open("state/last_run.json"))["as_of"])')
   git commit -q -m "monitor: close of ${as_of}"

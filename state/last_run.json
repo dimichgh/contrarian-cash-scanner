@@ -1,7 +1,7 @@
 {
- "rescan": "2026-09-29",
+ "rescan": "2026-10-04",
  "as_of": "2026-10-02",
- "run": "2026-10-04T08:18+00:00",
+ "run": "2026-10-04T08:29+00:00",
  "stages": {
   "ACN": "RUNNING",
   "CTSH": "SETUP",
@@ -12,12 +12,15 @@
   "LDOS": "BASING",
   "T": "SETUP",
   "GIB": "SETUP",
+  "SBLK": "RUNNING",
   "SONY": "RUNNING",
   "INFY": "BASING",
+  "AOS": "BASING",
   "GNTX": "BASING",
   "SBSW": "BASING",
   "ZTS": "FALLING",
   "PVH": "SETUP",
+  "COLM": "SETUP",
   "FMS": "BASING",
   "MMS": "FAILED",
   "OTEX": "BASING",
@@ -39,6 +42,7 @@
   "NICE": "RUNNING",
   "VIV": "SETUP",
   "BILL": "BASING",
+  "SNY": "FALLING",
   "HRB": "BASING",
   "PINS": "FALLING",
   "ERIC": "FALLING",
@@ -51,6 +55,8 @@
   "EXPE": "BASING",
   "FIS": "FALLING",
   "FBIN": "FALLING",
+  "TKC": "FALLING",
+  "YUMC": "FALLING",
   "APTV": "FALLING",
   "YETI": "FALLING",
   "ZG": "FALLING",
@@ -71,7 +77,8 @@
   "PLNT": "FALLING",
   "LEA": "FALLING",
   "FSLR": "FALLING",
-  "NVO": "FALLING"
+  "NVO": "FALLING",
+  "CTVA": "FALLING"
  },
  "record": {
   "snapshots": {

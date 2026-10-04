@@ -74,6 +74,7 @@ own rules every week.
 
 ```bash
 .venv/bin/python -m monitor daily            # score the watchlist → reports/summary.md + reports/dashboard.html
+                                             # (rescan days also rebuild reports/scan_report.html)
 .venv/bin/python -m monitor daily --rescan   # force a full re-scan first (runs weekly on its own)
 .venv/bin/python -m monitor daily --learn    # force a re-fit of the engine (runs weekly on its own)
 .venv/bin/python -m monitor add PEP --note "buy zone 120–125"
@@ -128,7 +129,9 @@ would get if they triggered at their level.
 
 **State** lives in `state/` and is committed after each run: `watchlist.json`, `engine.json` (the
 current rule and weights), `engine_history.jsonl` (one line per learning cycle), `alerts.jsonl`,
-`history/YYYY-MM.csv` (daily calls) and `scan_latest.csv`.
+`history/YYYY-MM.csv` (daily calls) and `scan_latest.csv`. The pages are committed too:
+`reports/dashboard.html` (the monitor, every run) and `reports/scan_report.html` (the full scan,
+rebuilt at each weekly rescan). Both are self-contained: download one and open it in a browser.
 
 **Scheduled runs.** `scripts/cloud_run.sh` runs the monitor, commits `state/` and pushes it to the
 current branch (or `$MONITOR_BRANCH`), then prints the summary. A Claude cloud routine calls it after

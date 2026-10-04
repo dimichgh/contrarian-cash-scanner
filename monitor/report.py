@@ -101,7 +101,7 @@ def summary(res: dict) -> str:
         lines.append(f"Live record: {tr['resolved']} trigger alerts resolved, {_pct(tr['hit_rate'])} hit target first, "
                      f"average {tr['avg_ret']:+.1f}% (strong ones: {st['resolved']}, {_pct(st['hit_rate'])})")
     lines += res["notes"]
-    publish = res["rescanned"] or res["learned"] or any(a["type"] == "TRIGGERED" for a in alerts)
+    publish = res["fresh"] or res["rescanned"] or res["learned"]
     lines += ["", f"DASHBOARD: {'publish' if publish else 'skip'}"]
     return "\n".join(lines) + "\n"
 

@@ -116,7 +116,7 @@ def build_calls(j: pd.DataFrame) -> list[dict]:
     return out
 
 
-def main():
+def main(dest: Path = OUT / "scan_report.html") -> Path:
     j = pd.read_json(OUT / "arden_scan.json")
     uni_n = len(a.fetch_universe(2e9))
     data = {
@@ -132,8 +132,10 @@ def main():
     }
     html = (HERE / "report_template.html").read_text()
     html = html.replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False, default=clean))
-    (OUT / "scan_report.html").write_text(html)
-    print(f"wrote {OUT / 'scan_report.html'}  ({len(data['rows'])} rows)")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(html)
+    print(f"wrote {dest}  ({len(data['rows'])} rows)")
+    return dest
 
 
 if __name__ == "__main__":

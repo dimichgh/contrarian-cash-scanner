@@ -13,6 +13,7 @@ import argparse
 import datetime as dt
 import sys
 
+from . import config as C
 from . import report, run
 from . import watchlist as W
 
@@ -36,6 +37,8 @@ def main(argv=None) -> int:
     if args.cmd == "daily":
         res = run.daily(force_rescan=args.rescan, force_learn=args.learn, today=today)
         print(report.write(res))
+        pages = [p for p in (C.REPORTS / "dashboard.html", C.REPORTS / "scan_report.html") if p.exists()]
+        print("Pages: " + ", ".join(str(p.relative_to(C.ROOT)) for p in pages))
         return 0
     wl = W.load()
     if args.cmd == "add":

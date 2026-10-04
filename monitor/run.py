@@ -34,6 +34,11 @@ def rescan(wl: dict, today: dt.date) -> tuple[list[str], list[str]]:
     else:
         final = A.run(2e9, 120, None, out)
     scan = W.save_scan(final)
+    try:  # the scan's own report page, refreshed with every rescan
+        import make_report
+        make_report.main(C.REPORTS / "scan_report.html")
+    except Exception as e:  # a report failure must not stop the monitor
+        print(f"  ! scan report not built: {e.__class__.__name__}: {e}")
     return W.merge_scan(wl, scan, today)
 
 
