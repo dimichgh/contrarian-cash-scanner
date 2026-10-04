@@ -21,13 +21,16 @@ SHELL = """<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>
 body {{ margin: 0; }}
-.site-nav {{ max-width: 1180px; margin: 0 auto; padding: 14px 20px 0; display: flex; flex-wrap: wrap; gap: 6px 18px;
-  font: 500 14px/1.4 "IBM Plex Sans", system-ui, sans-serif; }}
-.site-nav [aria-current="page"] {{ color: inherit; font-weight: 700; text-decoration: none; }}
+.site-nav {{ position: sticky; top: 0; z-index: 10; background: var(--bg, #fff); border-bottom: 1px solid rgba(127, 127, 127, .25); }}
+.site-nav div {{ max-width: 1180px; margin: 0 auto; padding: 0 20px; display: flex; gap: 4px; }}
+.site-nav a {{ font: 600 15px/1 "IBM Plex Sans", system-ui, sans-serif; text-decoration: none; color: inherit; opacity: .65;
+  padding: 14px 14px 12px; border-bottom: 3px solid transparent; }}
+.site-nav a:hover {{ opacity: 1; }}
+.site-nav a[aria-current="page"] {{ opacity: 1; border-bottom-color: #2a78d6; }}
 </style>
 </head>
 <body>
-<nav class="site-nav" aria-label="Reports">{nav}</nav>
+<nav class="site-nav" aria-label="Reports"><div>{nav}</div></nav>
 {content}
 </body>
 </html>

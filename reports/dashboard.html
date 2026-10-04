@@ -53,6 +53,12 @@ section { display: grid; gap: 16px; min-width: 0; }
 
 /* stage ladder */
 .ladder { display: flex; flex-wrap: wrap; gap: 4px; align-items: stretch; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.toc a { font: 500 .82rem/1 var(--body); color: var(--ink-2); text-decoration: none; padding: 7px 10px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); }
+.toc a:hover { border-color: var(--accent); color: var(--accent-ink); }
+.more { all: unset; cursor: pointer; font: 500 .85rem var(--body); color: var(--accent-ink); padding: 10px 12px; }
+.more:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
+h2[id] { scroll-margin-top: 16px; }
 .rung { all: unset; box-sizing: border-box; cursor: pointer; flex: 1 1 0; min-width: 118px; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
 .rung b { font: 600 1.4rem/1.1 var(--mono); font-variant-numeric: tabular-nums; }
 .rung span { font-size: .8rem; color: var(--muted); line-height: 1.3; }
@@ -181,6 +187,10 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
     <p class="eyebrow" id="asof"></p>
     <h1>Breakout Monitor</h1>
     <p class="lede">Watches the beaten-down cash machines from the Contrarian Cash Scan for the day their price turns and starts the move up. Each name gets a stage, the exact price that would trigger an entry signal, and a readiness score the engine re-learns every week from five years of history.</p>
+    <nav class="toc" aria-label="Sections">
+      <a href="#sig-h">Signals</a><a href="#trade-h">Since the trigger</a><a href="#rank-h">Watchlist by readiness</a>
+      <a href="#eng-h">What the engine has learned</a><a href="#rec-h">Track record</a><a href="#how-h">How it improves</a>
+    </nav>
     <div class="ladder" id="ladder" role="group" aria-label="Filter by stage"></div>
   </header>
 
@@ -195,7 +205,7 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
   <section aria-labelledby="trade-h">
     <div class="sec-head">
       <h2 id="trade-h">Since the trigger</h2>
-      <p>Every name's latest trigger from the last 90 trading days, followed as a trade from the trigger-day close: how long ago, how far it has moved, the best and worst close since, the S&amp;P 500 over the same days, and where the price sits between its stop and its target.</p>
+      <p>Each name's latest trigger from the last 90 trading days, followed as a trade from the trigger-day close (open trades and those that finished in the last 10 sessions; older ones are behind the button below the table): how long ago, how far it has moved, the best and worst close since, the S&amp;P 500 over the same days, and where the price sits between its stop and its target.</p>
     </div>
     <div class="panel table-wrap">
       <table>
@@ -206,6 +216,7 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
         </tr></thead>
         <tbody id="trades"></tbody>
       </table>
+      <button type="button" class="more" id="trades-more" hidden></button>
     </div>
     <p class="sub" id="timing-note"></p>
     <p class="sub">A trade resolves when the close reaches its target (green tick) or its stop (red tick), or after 40 sessions. Grey tick: entry; dot: last close. Readiness at the trigger is scored by the current engine unless the monitor logged the signal live.</p>
@@ -363,7 +374,16 @@ function drawLadder() {
     return `<span class="num" style="white-space:nowrap;font-size:.8rem">${md(w.from)} – ${md(w.to)}</span>
       <div class="dim" style="white-space:nowrap">day ${t.sessions} of ${w.p25}–${w.p75} · ${w.phase}</div>`;
   };
-  $("#trades").innerHTML = rows.map((r) => {
+  // open trades and ones that finished in the last 10 sessions; older finished trades on request
+  const recent = (r) => r.trade.status === "open" || r.trade.sessions - r.trade.resolved_in <= 10;
+  let showAll = false;
+  const draw = () => {
+  const shown = showAll ? rows : rows.filter(recent);
+  const hiddenN = rows.length - rows.filter(recent).length;
+  const btn = $("#trades-more");
+  btn.hidden = hiddenN === 0;
+  btn.textContent = showAll ? "Show recent trades only" : `Show ${hiddenN} older finished trade${hiddenN === 1 ? "" : "s"}`;
+  $("#trades").innerHTML = shown.map((r) => {
     const t = r.trade, a = live[t.date + r.t];
     const ready = a ? a.ready : t.ready_at, strong = a ? a.strong !== false : t.strong;
     const lo = t.stop_px, hi = t.target_px, now = r.close;
@@ -382,7 +402,10 @@ function drawLadder() {
         <span class="en" style="left:${x(t.entry)}%"></span><span class="nw" style="left:${x(now)}%"></span></div>
         <div class="dim num" style="font-size:.74rem">stop $${lo.toFixed(2)} · target&nbsp;$${hi.toFixed(2)}</div></td>
       <td><span class="status ${cls[t.status]}">${esc(st)}</span><div>${win(t)}</div></td></tr>`;
-  }).join("") || '<tr><td colspan="10" class="empty">No trigger in the last 90 trading days.</td></tr>';
+  }).join("") || `<tr><td colspan="9" class="empty">${rows.length ? "No open or recently finished trades." : "No trigger in the last 90 trading days."}</td></tr>`;
+  };
+  $("#trades-more").addEventListener("click", () => { showAll = !showAll; draw(); });
+  draw();
 })();
 
 (function timingNote() {
