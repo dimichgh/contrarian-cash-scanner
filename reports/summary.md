@@ -9,7 +9,6 @@ Since the trigger (open): AEO +2.3% in 4d (S&P +0.5%, best +4.8%; stop $15.26; t
 Resolved this week: CTVA stopped out (-85.6% now)
 
 Watchlist: 76 names · triggered 1 · setup 13 · running 6 · basing 21 · failed 1 · falling 34
-Added: SNY, TKC, CTVA, AOS, YUMC, SBLK, COLM
 No price data: UDMY, VSNT
 Engine: readiness AUC 0.534 on the held-out year (expert prior alone 0.517); trigger: close above the 50-day average on at least 1.2x average volume, after 10+ of the prior 20 sessions below it; strong when readiness is 80+ — 30% reached their target before their stop vs 29% for any day (1885 past triggers)
 Past triggers that hit target took a median 18 sessions (middle half 11–26); stops came in a median 12. 30% hit target, 48% stopped, 23% timed out.

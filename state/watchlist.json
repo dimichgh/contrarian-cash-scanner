@@ -63,7 +63,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 56,
+  "scan_rank": 55,
   "scanned": "2026-10-04",
   "hold": true
  },
@@ -77,7 +77,7 @@
   "sector": "Technology Services",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 65.5,
+   "score": 65.6,
    "tier": "B",
    "checks": 6,
    "timing": "Mid-range",
@@ -96,7 +96,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 33,
+  "scan_rank": 31,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -110,7 +110,7 @@
   "sector": "Commercial Services",
   "exchange": "NYSE",
   "thesis": {
-   "score": 72.0,
+   "score": 72.1,
    "tier": "B",
    "checks": 6,
    "timing": "Still falling",
@@ -165,7 +165,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 30,
+  "scan_rank": 33,
   "scanned": "2026-10-04",
   "hold": true
  },
@@ -179,7 +179,7 @@
   "sector": "Producer Manufacturing",
   "exchange": "NYSE",
   "thesis": {
-   "score": 61.5,
+   "score": 61.6,
    "tier": "B",
    "checks": 6,
    "timing": "Near lows",
@@ -198,7 +198,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 69,
+  "scan_rank": 68,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -305,7 +305,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 65,
+  "scan_rank": 64,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -319,7 +319,7 @@
   "sector": "Producer Manufacturing",
   "exchange": "NYSE",
   "thesis": {
-   "score": 63.6,
+   "score": 63.7,
    "tier": "A",
    "checks": 7,
    "timing": "Mid-range",
@@ -338,7 +338,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 49,
+  "scan_rank": 47,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -352,7 +352,7 @@
   "sector": "Technology Services",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 67.9,
+   "score": 68.0,
    "tier": "B",
    "checks": 5,
    "timing": "Still falling",
@@ -371,7 +371,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 13,
+  "scan_rank": 12,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -483,7 +483,7 @@
     "Short interest rising 28%"
    ]
   },
-  "scan_rank": 77,
+  "scan_rank": 76,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -517,7 +517,7 @@
     "Revenue shrinking -2.0% y/y — value-trap risk"
    ]
   },
-  "scan_rank": 38,
+  "scan_rank": 37,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -550,7 +550,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 21,
+  "scan_rank": 22,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -618,7 +618,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 31,
+  "scan_rank": 32,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -667,7 +667,7 @@
   "sector": "Technology Services",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 67.0,
+   "score": 67.1,
    "tier": "A",
    "checks": 7,
    "timing": "Mid-range",
@@ -688,7 +688,7 @@
     "Missed EPS last quarter (-0%)"
    ]
   },
-  "scan_rank": 20,
+  "scan_rank": 21,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -702,7 +702,7 @@
   "sector": "Commercial Services",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 62.6,
+   "score": 62.7,
    "tier": "B",
    "checks": 6,
    "timing": "Near lows",
@@ -724,7 +724,7 @@
     "Short interest rising 25%"
    ]
   },
-  "scan_rank": 57,
+  "scan_rank": 56,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -789,7 +789,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 51,
+  "scan_rank": 50,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -803,7 +803,7 @@
   "sector": "Consumer Services",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 62.3,
+   "score": 62.4,
    "tier": "B",
    "checks": 6,
    "timing": "Mid-range",
@@ -822,7 +822,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 59,
+  "scan_rank": 57,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -877,7 +877,7 @@
   "sector": "Producer Manufacturing",
   "exchange": "NYSE",
   "thesis": {
-   "score": 62.0,
+   "score": 62.1,
    "tier": "B",
    "checks": 5,
    "timing": "Mid-range",
@@ -900,7 +900,7 @@
     "High beta 1.67"
    ]
   },
-  "scan_rank": 63,
+  "scan_rank": 62,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -914,7 +914,7 @@
   "sector": "Technology Services",
   "exchange": "NYSE",
   "thesis": {
-   "score": 67.3,
+   "score": 67.4,
    "tier": "B",
    "checks": 6,
    "timing": "Still falling",
@@ -949,7 +949,7 @@
   "sector": "Commercial Services",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 61.5,
+   "score": 61.6,
    "tier": "B",
    "checks": 5,
    "timing": "Still falling",
@@ -973,7 +973,7 @@
     "Short interest rising 43%"
    ]
   },
-  "scan_rank": 70,
+  "scan_rank": 67,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1008,7 +1008,7 @@
     "Leverage: net debt/EBITDA 2.7x (author's CMCSA trigger was 2.9x)"
    ]
   },
-  "scan_rank": 47,
+  "scan_rank": 46,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1022,7 +1022,7 @@
   "sector": "Commercial Services",
   "exchange": "NYSE",
   "thesis": {
-   "score": 67.7,
+   "score": 67.8,
    "tier": "A",
    "checks": 7,
    "timing": "Still falling",
@@ -1052,7 +1052,7 @@
   "added": "2026-09-29",
   "source": "scan",
   "status": "active",
-  "misses": 1,
+  "misses": 2,
   "name": "First Solar, Inc.",
   "sector": "Electronic Technology",
   "exchange": "NASDAQ",
@@ -1075,7 +1075,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 79,
+  "scan_rank": 78,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1108,7 +1108,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 78,
+  "scan_rank": 77,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1122,7 +1122,7 @@
   "sector": "Technology Services",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 62.9,
+   "score": 63.0,
    "tier": "B",
    "checks": 5,
    "timing": "Still falling",
@@ -1143,7 +1143,7 @@
     "Leverage: net debt/EBITDA 2.9x (author's CMCSA trigger was 2.9x)"
    ]
   },
-  "scan_rank": 55,
+  "scan_rank": 52,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1157,7 +1157,7 @@
   "sector": "Non-Energy Minerals",
   "exchange": "NYSE",
   "thesis": {
-   "score": 61.9,
+   "score": 62.0,
    "tier": "B",
    "checks": 5,
    "timing": "Still falling",
@@ -1179,7 +1179,7 @@
     "Missed EPS last quarter (-11%)"
    ]
   },
-  "scan_rank": 64,
+  "scan_rank": 63,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1188,12 +1188,12 @@
   "added": "2026-09-29",
   "source": "scan",
   "status": "active",
-  "misses": 1,
+  "misses": 2,
   "name": "CGI Inc.",
   "sector": "Technology Services",
   "exchange": "NYSE",
   "thesis": {
-   "score": 59.8,
+   "score": 59.9,
    "tier": "C",
    "checks": 4,
    "timing": "Mid-range",
@@ -1211,7 +1211,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 83,
+  "scan_rank": 79,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1244,7 +1244,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 26,
+  "scan_rank": 28,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1258,7 +1258,7 @@
   "sector": "Consumer Services",
   "exchange": "NYSE",
   "thesis": {
-   "score": 63.7,
+   "score": 63.8,
    "tier": "B",
    "checks": 5,
    "timing": "Mid-range",
@@ -1277,7 +1277,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 46,
+  "scan_rank": 43,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1291,7 +1291,7 @@
   "sector": "Technology Services",
   "exchange": "NYSE",
   "thesis": {
-   "score": 64.1,
+   "score": 64.2,
    "tier": "B",
    "checks": 5,
    "timing": "Near lows",
@@ -1313,7 +1313,7 @@
     "Missed EPS last quarter (-1%)"
    ]
   },
-  "scan_rank": 40,
+  "scan_rank": 38,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1341,7 +1341,7 @@
   "sector": "Technology Services",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 71.7,
+   "score": 71.8,
    "tier": "B",
    "checks": 5,
    "timing": "Near lows",
@@ -1442,7 +1442,7 @@
   "sector": "Technology Services",
   "exchange": "NYSE",
   "thesis": {
-   "score": 63.3,
+   "score": 63.4,
    "tier": "B",
    "checks": 6,
    "timing": "Still falling",
@@ -1461,7 +1461,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 50,
+  "scan_rank": 49,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1475,7 +1475,7 @@
   "sector": "Producer Manufacturing",
   "exchange": "NYSE",
   "thesis": {
-   "score": 64.1,
+   "score": 64.2,
    "tier": "B",
    "checks": 6,
    "timing": "Mid-range",
@@ -1494,7 +1494,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 41,
+  "scan_rank": 39,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1527,7 +1527,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 37,
+  "scan_rank": 36,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1541,7 +1541,7 @@
   "sector": "Consumer Non-Durables",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 63.8,
+   "score": 63.9,
    "tier": "B",
    "checks": 6,
    "timing": "Still falling",
@@ -1563,7 +1563,7 @@
     "Short interest rising 40%"
    ]
   },
-  "scan_rank": 45,
+  "scan_rank": 42,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1633,7 +1633,7 @@
     "Leverage: net debt/EBITDA 2.7x (author's CMCSA trigger was 2.9x)"
    ]
   },
-  "scan_rank": 44,
+  "scan_rank": 45,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1647,7 +1647,7 @@
   "sector": "Technology Services",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 67.0,
+   "score": 67.1,
    "tier": "A",
    "checks": 7,
    "timing": "Mid-range",
@@ -1666,7 +1666,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 22,
+  "scan_rank": 20,
   "scanned": "2026-10-04",
   "hold": true
  },
@@ -1698,7 +1698,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 36,
+  "scan_rank": 35,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1712,7 +1712,7 @@
   "sector": "Consumer Durables",
   "exchange": "NYSE",
   "thesis": {
-   "score": 64.1,
+   "score": 64.2,
    "tier": "A",
    "checks": 7,
    "timing": "Mid-range",
@@ -1731,7 +1731,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 39,
+  "scan_rank": 40,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1767,7 +1767,7 @@
     "Revenue shrinking -3.6% y/y — value-trap risk"
    ]
   },
-  "scan_rank": 25,
+  "scan_rank": 24,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1849,7 +1849,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 72,
+  "scan_rank": 71,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1858,12 +1858,12 @@
   "added": "2026-09-29",
   "source": "scan",
   "status": "active",
-  "misses": 1,
+  "misses": 2,
   "name": "Planet Fitness, Inc.",
   "sector": "Consumer Services",
   "exchange": "NYSE",
   "thesis": {
-   "score": 59.0,
+   "score": 59.1,
    "tier": "C",
    "checks": 4,
    "timing": "Mid-range",
@@ -1884,7 +1884,7 @@
     "Leverage: net debt/EBITDA 4.3x (author's CMCSA trigger was 2.9x)"
    ]
   },
-  "scan_rank": 97,
+  "scan_rank": 94,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1919,7 +1919,7 @@
     "Leverage: net debt/EBITDA 5.1x (author's CMCSA trigger was 2.9x)"
    ]
   },
-  "scan_rank": 27,
+  "scan_rank": 26,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1955,7 +1955,7 @@
     "High beta 2.07"
    ]
   },
-  "scan_rank": 61,
+  "scan_rank": 59,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -1969,7 +1969,7 @@
   "sector": "Commercial Services",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 68.6,
+   "score": 68.7,
    "tier": "A",
    "checks": 7,
    "timing": "Mid-range",
@@ -2074,7 +2074,7 @@
   "sector": "Consumer Non-Durables",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 65.9,
+   "score": 66.0,
    "tier": "A",
    "checks": 7,
    "timing": "Still falling",
@@ -2109,7 +2109,7 @@
   "sector": "Health Technology",
   "exchange": "NASDAQ",
   "thesis": {
-   "score": 67.1,
+   "score": 67.2,
    "tier": "B",
    "checks": 5,
    "timing": "Still falling",
@@ -2274,7 +2274,7 @@
     "Missed EPS last quarter (-3%)"
    ]
   },
-  "scan_rank": 28,
+  "scan_rank": 27,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -2309,7 +2309,7 @@
     "FCF yield looks too high — check for one-offs (the author's 'P/E illusion' warning)"
    ]
   },
-  "scan_rank": 24,
+  "scan_rank": 25,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -2323,7 +2323,7 @@
   "sector": "Communications",
   "exchange": "NYSE",
   "thesis": {
-   "score": 67.7,
+   "score": 67.8,
    "tier": "B",
    "checks": 5,
    "timing": "Still falling",
@@ -2379,7 +2379,7 @@
     "Missed EPS last quarter (-21%)"
    ]
   },
-  "scan_rank": 12,
+  "scan_rank": 13,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -2427,7 +2427,7 @@
     "Missed EPS last quarter (-11%)"
    ]
   },
-  "scan_rank": 62,
+  "scan_rank": 61,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -2509,7 +2509,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 52,
+  "scan_rank": 51,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -2523,7 +2523,7 @@
   "sector": "Consumer Services",
   "exchange": "NYSE",
   "thesis": {
-   "score": 60.8,
+   "score": 60.9,
    "tier": "B",
    "checks": 5,
    "timing": "Still falling",
@@ -2542,7 +2542,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 74,
+  "scan_rank": 73,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -2551,7 +2551,7 @@
   "added": "2026-09-29",
   "source": "scan",
   "status": "active",
-  "misses": 0,
+  "misses": 1,
   "name": "Zillow Group, Inc.",
   "sector": "Technology Services",
   "exchange": "NASDAQ",
@@ -2575,7 +2575,7 @@
    ],
    "risk": []
   },
-  "scan_rank": 35,
+  "scan_rank": null,
   "scanned": "2026-10-04",
   "hold": false
  },
@@ -2589,7 +2589,7 @@
   "sector": "Health Technology",
   "exchange": "NYSE",
   "thesis": {
-   "score": 70.6,
+   "score": 70.7,
    "tier": "A",
    "checks": 8,
    "timing": "Near lows",
