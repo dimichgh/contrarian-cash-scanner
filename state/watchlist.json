@@ -759,7 +759,7 @@
   },
   "scan_rank": 17,
   "scanned": "2026-10-04",
-  "hold": false
+  "hold": true
  },
  "ERIC": {
   "ticker": "ERIC",
@@ -2147,7 +2147,7 @@
    "entry": 19.7,
    "note": "Sum of parts $26–28; yen upside"
   },
-  "hold": true,
+  "hold": false,
   "name": "Sony Group Corporation Sponsored ADR",
   "sector": "Electronic Technology",
   "thesis": {
@@ -2279,7 +2279,7 @@
   },
   "scan_rank": 26,
   "scanned": "2026-10-04",
-  "hold": false
+  "hold": true
  },
  "TKC": {
   "ticker": "TKC",
@@ -2432,7 +2432,7 @@
   },
   "scan_rank": 61,
   "scanned": "2026-10-04",
-  "hold": false
+  "hold": true
  },
  "VSNT": {
   "ticker": "VSNT",
