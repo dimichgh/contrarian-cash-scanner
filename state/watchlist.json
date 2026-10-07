@@ -759,7 +759,7 @@
   },
   "scan_rank": 17,
   "scanned": "2026-10-04",
-  "hold": true
+  "hold": false
  },
  "ERIC": {
   "ticker": "ERIC",
@@ -1637,7 +1637,7 @@
   },
   "scan_rank": 45,
   "scanned": "2026-10-04",
-  "hold": false
+  "hold": true
  },
  "NICE": {
   "ticker": "NICE",
@@ -2030,7 +2030,7 @@
   },
   "scan_rank": 75,
   "scanned": "2026-10-04",
-  "hold": true
+  "hold": false
  },
  "SBSW": {
   "ticker": "SBSW",
@@ -2147,7 +2147,7 @@
    "entry": 19.7,
    "note": "Sum of parts $26–28; yen upside"
   },
-  "hold": false,
+  "hold": true,
   "name": "Sony Group Corporation Sponsored ADR",
   "sector": "Electronic Technology",
   "thesis": {
