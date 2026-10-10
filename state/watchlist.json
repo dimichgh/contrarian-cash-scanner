@@ -587,7 +587,7 @@
   },
   "scan_rank": 54,
   "scanned": "2026-10-04",
-  "hold": true
+  "hold": false
  },
  "CTVA": {
   "ticker": "CTVA",
@@ -690,7 +690,7 @@
   },
   "scan_rank": 20,
   "scanned": "2026-10-04",
-  "hold": true
+  "hold": false
  },
  "EEFT": {
   "ticker": "EEFT",
@@ -2030,7 +2030,7 @@
   },
   "scan_rank": 75,
   "scanned": "2026-10-04",
-  "hold": true
+  "hold": false
  },
  "SBSW": {
   "ticker": "SBSW",
