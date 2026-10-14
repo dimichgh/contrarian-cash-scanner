@@ -304,7 +304,7 @@
   },
   "scan_rank": 65,
   "scanned": "2026-10-13",
-  "hold": true
+  "hold": false
  },
  "BBWI": {
   "ticker": "BBWI",
@@ -756,7 +756,7 @@
   },
   "scan_rank": 83,
   "scanned": "2026-10-13",
-  "hold": false,
+  "hold": true,
   "missed_on": "2026-10-13"
  },
  "CTVA": {
@@ -1356,7 +1356,7 @@
   },
   "scan_rank": 88,
   "scanned": "2026-10-13",
-  "hold": false,
+  "hold": true,
   "missed_on": "2026-10-13"
  },
  "GEN": {
