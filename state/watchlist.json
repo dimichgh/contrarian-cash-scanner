@@ -343,7 +343,7 @@
   },
   "scan_rank": 94,
   "scanned": "2026-10-13",
-  "hold": false,
+  "hold": true,
   "missed_on": "2026-10-13"
  },
  "BILL": {
@@ -1356,7 +1356,7 @@
   },
   "scan_rank": 88,
   "scanned": "2026-10-13",
-  "hold": true,
+  "hold": false,
   "missed_on": "2026-10-13"
  },
  "GEN": {
@@ -2734,7 +2734,7 @@
   },
   "scan_rank": 35,
   "scanned": "2026-10-13",
-  "hold": false
+  "hold": true
  },
  "TKC": {
   "ticker": "TKC",
