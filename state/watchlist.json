@@ -510,7 +510,7 @@
   },
   "scan_rank": 56,
   "scanned": "2026-10-13",
-  "hold": false
+  "hold": true
  },
  "CHTR": {
   "ticker": "CHTR",
@@ -689,7 +689,7 @@
   },
   "scan_rank": 27,
   "scanned": "2026-10-13",
-  "hold": false
+  "hold": true
  },
  "CRUS": {
   "ticker": "CRUS",
@@ -895,7 +895,7 @@
   },
   "scan_rank": 34,
   "scanned": "2026-10-13",
-  "hold": false
+  "hold": true
  },
  "DXC": {
   "ticker": "DXC",
@@ -1033,7 +1033,7 @@
   },
   "scan_rank": 33,
   "scanned": "2026-10-13",
-  "hold": false
+  "hold": true
  },
  "EXPE": {
   "ticker": "EXPE",
