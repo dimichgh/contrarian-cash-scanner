@@ -61,7 +61,7 @@ def summary(res: dict) -> str:
     if near:
         lines += ["", "Nearest the trigger: " + ", ".join(
             f"{r['t']} {r['gap']:+.1f}% vs ${r['level']:.2f} (readiness {r['ready']})" for r in near)]
-    top = [r for r in rows if r["stage"] not in ("RUNNING", "EXTENDED")][:8]
+    top = [r for r in rows if r["stage"] not in ("RUNNING", "EXTENDED", "TARGET")][:8]
     if top:
         lines.append("Highest readiness: " + ", ".join(f"{r['t']} {r['ready']} ({r['stage'].lower()})" for r in top))
     ledger = res.get("trades", [])

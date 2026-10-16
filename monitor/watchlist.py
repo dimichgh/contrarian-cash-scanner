@@ -72,7 +72,7 @@ def merge_scan(wl: dict, scan: pd.DataFrame, today: dt.date) -> tuple[list[str],
         if e is None:
             e = wl[t] = {"ticker": t, "added": day, "source": "scan", "status": "active", "misses": 0}
             added.append(t)
-        elif good and e["status"] == "dropped":
+        elif good and e["status"] == "dropped" and not e.get("user_removed"):
             e.update(status="active", misses=0, readded=day)
             added.append(t)
         e.update(name=r["description"], sector=r["sector"], exchange=r["exchange"], thesis=thesis(r),
@@ -81,7 +81,7 @@ def merge_scan(wl: dict, scan: pd.DataFrame, today: dt.date) -> tuple[list[str],
             e["misses"] = 0
             e.pop("missed_on", None)
     for t, e in wl.items():
-        if e.get("source") != "scan" or e["status"] != "active":
+        if e.get("source") != "scan" or e["status"] != "active" or e.get("pinned"):
             continue
         if t not in rank or not ok[scan["name"] == t].any():
             # a miss counts once per rescan week, so extra manual rescans can't drop a name early
@@ -98,24 +98,29 @@ def merge_scan(wl: dict, scan: pd.DataFrame, today: dt.date) -> tuple[list[str],
 
 
 def ensure_author_calls(wl: dict, today: dt.date) -> list[str]:
-    """The author's own long calls stay on the list whatever the scan says."""
+    """The author's own long calls stay on the list whatever the scan says (unless removed by hand)."""
     from make_report import AUTHOR_CALLS
     added = []
     for t, ex, date, entry, note in AUTHOR_CALLS:
         if t not in wl:
-            wl[t] = {"ticker": t, "added": today.isoformat(), "source": "author", "status": "active",
-                     "exchange": ex, "misses": 0}
+            wl[t] = {"ticker": t, "added": today.isoformat(), "status": "active", "exchange": ex, "misses": 0}
             added.append(t)
-        wl[t]["author"] = {"date": date, "entry": entry, "note": note}
+        e = wl[t]
+        if e["status"] == "dropped" and not e.get("user_removed"):
+            e.update(status="active", misses=0, readded=today.isoformat())
+            added.append(t)
+        e.update(source="author", pinned=True, author={"date": date, "entry": entry, "note": note})
     return added
 
 
 def add_manual(wl: dict, ticker: str, note: str, today: dt.date) -> None:
     t = ticker.upper()
     e = wl.setdefault(t, {"ticker": t, "added": today.isoformat(), "misses": 0})
-    e.update(source="manual", status="active", note=note or e.get("note", ""))
+    e.pop("user_removed", None)
+    e.update(source="manual", status="active", pinned=True, note=note or e.get("note", ""))
 
 
 def remove(wl: dict, ticker: str, today: dt.date) -> None:
+    """Stop watching a name for good: rescans and author calls will not bring it back."""
     e = wl[ticker.upper()]
-    e.update(status="dropped", dropped=today.isoformat(), source="manual")
+    e.update(status="dropped", dropped=today.isoformat(), user_removed=True)

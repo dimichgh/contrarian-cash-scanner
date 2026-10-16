@@ -75,7 +75,7 @@ def score_ticker(t: str, b: pd.DataFrame, spy: pd.Series, eng: dict) -> tuple[di
 def attach_trade(row: dict, trade: dict | None, eng: dict) -> None:
     """Show the name's latest trade, and call a move that already reached its target what it is."""
     row["trade"] = None if trade is None else {**trade, "window": T.window(trade, eng)}
-    moving = ("TRIGGERED", "RUNNING", "EXTENDED")
+    moving = ("TRIGGERED", "RUNNING", "EXTENDED", "ABOVE")
     if trade and trade["status"] == "hit target":
         if row["stage"] in moving:
             row["stage"] = "TARGET"
@@ -93,57 +93,102 @@ def _contributions(m: dict, last: pd.Series) -> list:
     return pos + neg
 
 
-def alert_text(r: dict, p: dict) -> str:
+def _side(gap: float) -> str:
+    return f"{abs(gap):.1f}% {'above' if gap >= 0 else 'under'}"
+
+
+def trigger_day(f: pd.DataFrame, st: pd.DataFrame) -> dict | None:
+    """The numbers of the latest trigger, from the trigger day itself."""
+    days = st.index[st["trigger"].to_numpy(bool)]
+    if not len(days):
+        return None
+    d = days[-1]
+    vr = f.at[d, "vol_ratio"]
+    return {"date": str(d.date()), "close": round(float(f.at[d, "close"]), 2), "level": round(float(st.at[d, "pivot"]), 2),
+            "gap": round((float(f.at[d, "close"]) / float(st.at[d, "pivot"]) - 1) * 100, 1),
+            "vol_ratio": None if pd.isna(vr) else round(float(vr), 2)}
+
+
+def alert_text(r: dict, p: dict, trig: dict | None = None) -> str:
     lvl = PIVOT_TEXT[p["pivot"]]
-    if r["stage"] == "TRIGGERED":
-        vol = f" on {r['vol_ratio']:.1f}x average volume" if r["vol_ratio"] else ""
-        t = r.get("trade") or {}
-        plan = f"; stop ${t['stop_px']:.2f}, target ${t['target_px']:.2f}" if t.get("date") == r["date"] else ""
-        return f"closed {r['gap']:+.1f}% through the {lvl} (${r['level']:.2f}){vol}{plan}"
+    t = r.get("trade") or {}
+    if r["stage"] == "TRIGGERED" and trig:
+        vol = f" on {trig['vol_ratio']:.1f}x average volume" if trig["vol_ratio"] else ""
+        when = "" if trig["date"] == r["date"] else f" on {trig['date']}"
+        plan = f"; stop ${t['stop_px']:.2f}, target ${t['target_px']:.2f}" if t.get("date") == trig["date"] else ""
+        return f"closed {trig['gap']:.1f}% above the {lvl} (${trig['level']:.2f}){when}{vol}{plan}"
     if r["stage"] == "SETUP":
         return (f"{abs(r['gap']):.1f}% under the trigger level ${r['level']:.2f} ({lvl}), lows held {r['low_age']} sessions; "
                 f"if it triggers there: stop ${r['level'] * (1 - r['stop'] / 100):.2f}, target ${r['level'] * (1 + r['target'] / 100):.2f}")
     if r["stage"] == "TARGET":
-        t = r["trade"]
         return (f"reached its target: {t['change']:+.1f}% from the {t['date']} trigger at ${t['entry']:.2f} "
                 f"in {t['resolved_in']} sessions (target ${t['target_px']:.2f})")
     if r["stage"] == "RUNNING":
-        return f"move confirmed: holding {r['gap']:+.1f}% above ${r['level']:.2f}, 50-day average rising {r['slope']:+.1f}%/2wk"
+        trend = f"50-day average {'rising' if r['slope'] > 0 else 'falling'} {abs(r['slope']):.1f}%/2wk"
+        return f"move confirmed: held the breakout, now {_side(r['gap'])} the ${r['level']:.2f} level, {trend}"
     if r["stage"] == "FAILED":
-        return f"breakout failed: back {r['gap']:.1f}% under ${r['level']:.2f}"
+        return f"breakout failed: closed 3%+ back under ${r['level']:.2f}; now {_side(r['gap'])} it"
     return ""
 
 
+def _alert_due(r: dict, before: str | None, st: pd.DataFrame, trig: dict | None, sent: set) -> bool:
+    """Signal a stage change only when it is news: one alert per trigger, no flip-flopping."""
+    s = r["stage"]
+    if s not in ALERT_STAGES or s == before:
+        return False
+    if s == "TRIGGERED":
+        return trig is not None and (r["t"], "TRIGGERED", trig["date"]) not in sent
+    if s == "RUNNING":
+        return before in ("TRIGGERED", "RETEST") and trig is not None and (r["t"], "RUNNING", trig["date"]) not in sent
+    # what happened more than a week ago is not news (e.g. after a rule change or a missed week)
+    recent = str(st.index[max(0, len(st) - 6)].date())
+    if s == "FAILED":
+        return (trig is not None and (r["t"], "FAILED", trig["date"]) not in sent
+                and "FAILED" not in set(st["stage"].iloc[-6:-1]))
+    if s == "TARGET":
+        return r["trade"]["exit_date"] >= recent and (r["t"], "TARGET", r["trade"]["date"]) not in sent
+    # SETUP: only when it was not already set up in the previous 10 sessions
+    return "SETUP" not in set(st["stage"].iloc[-11:-1])
+
+
 def track_record(hist: pd.DataFrame, bars: dict, label: dict, alerts: list[dict]) -> dict:
-    """Out-of-sample scorekeeping: how the engine's own past calls turned out."""
+    """Out-of-sample scorekeeping: how the engine's own past calls turned out.
+
+    A call counts only once its whole 40-session window has passed. Counting calls as soon as they
+    hit a barrier would over-weight quick stops and targets and drop the slow timeouts.
+    """
+    h = label["horizon"]
+
+    def labelled(t):
+        bl = outcomes(bars[t]["close"], label)
+        return bl.assign(elapsed=len(bl) - 1 - np.arange(len(bl)))
+
     out: dict = {}
     if len(hist):
-        lab = []
-        for t, g in hist.groupby("t"):
-            if t not in bars:
-                continue
-            bl = outcomes(bars[t]["close"], label)
-            lab.append(g.assign(_d=pd.to_datetime(g["date"])).join(bl, on="_d"))
+        lab = [g.assign(_d=pd.to_datetime(g["date"])).join(labelled(t), on="_d")
+               for t, g in hist.groupby("t") if t in bars]
         if lab:
-            h = pd.concat(lab).dropna(subset=["y"])
-            hi = h[h["ready"] >= 80]
-            out["snapshots"] = {"resolved": len(h), "open": int(len(hist) - len(h)),
-                                "hit_rate": round(float(h["y"].mean()), 3) if len(h) else None,
+            allrows = pd.concat(lab)
+            done = allrows[(allrows["elapsed"] >= h) & allrows["y"].notna()]
+            hi = done[done["ready"] >= 80]
+            out["snapshots"] = {"resolved": len(done), "open": int(len(hist) - len(done)),
+                                "hit_rate": round(float(done["y"].mean()), 3) if len(done) else None,
                                 "hit_rate_ready80": round(float(hi["y"].mean()), 3) if len(hi) else None,
-                                "n_ready80": len(hi), "auc": round(auc(h["y"], h["prob"]), 3) if len(h) >= 30 else None}
+                                "n_ready80": len(hi), "auc": round(auc(done["y"], done["prob"]), 3) if len(done) >= 30 else None}
     res = []
     for a in alerts:
         if a["type"] != "TRIGGERED" or a["t"] not in bars:
             continue
-        bl = outcomes(bars[a["t"]]["close"], label)
-        d = pd.Timestamp(a["date"])
-        if d in bl.index and not pd.isna(bl.at[d, "y"]):
+        bl = labelled(a["t"])
+        d = pd.Timestamp(a.get("trigger_date") or a["date"])
+        if d in bl.index and bl.at[d, "elapsed"] >= h and not pd.isna(bl.at[d, "y"]):
             res.append({**a, "y": float(bl.at[d, "y"]), "ret": round(float(bl.at[d, "ret"]) * 100, 1),
                         "bars": int(bl.at[d, "bars"])})
+
     def stats(xs):
         return {"resolved": len(xs), "hit_rate": round(float(np.mean([r["y"] for r in xs])), 3) if xs else None,
                 "avg_ret": round(float(np.mean([r["ret"] for r in xs])), 2) if xs else None}
-    out["triggers"] = {**stats(res), "strong": stats([r for r in res if r.get("strong", True)]), "recent": res[-15:]}
+    out["triggers"] = {**stats(res), "strong": stats([r for r in res if r.get("strong", True)])}
     return out
 
 
@@ -158,8 +203,12 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
     added, dropped = [], []
     did_rescan = force_rescan or _due(last.get("rescan"), C.RESCAN_DAYS, today) or not C.SCAN.exists()
     if did_rescan:
-        added, dropped = rescan(wl, today)
-        last["rescan"] = today.isoformat()
+        try:
+            added, dropped = rescan(wl, today)
+            last["rescan"] = today.isoformat()
+        except Exception as e:  # scan sources down: keep the last scan and retry next run
+            did_rescan = False
+            notes.append(f"Rescan failed ({e.__class__.__name__}: {e}); kept the scan of {last.get('rescan', 'n/a')}")
     added += W.ensure_author_calls(wl, today)
 
     did_learn = force_learn or eng is None or _due(eng.get("updated"), C.LEARN_DAYS, today)
@@ -185,8 +234,11 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
         prev_version = eng.get("version") if eng else None
         eng = L.learn({t: b for t, b in bars.items() if t != "SPY"}, spy, eng, today)
         C.ENGINE.write_text(json.dumps(eng, indent=1) + "\n")
-        if prev_version is not None and eng["version"] != prev_version:
-            notes.append(f"Engine updated to v{eng['version']}")
+        mt = eng["metrics"]
+        what = [k for k, ch in (("trigger rule", mt["trigger"]["changed"]), ("prior strength", mt["model"]["changed"]),
+                                ("strong-trigger bar", mt["trigger"]["ready_filter"]["changed"])) if ch]
+        notes.append(f"Engine re-fit: {f'v{prev_version} → ' if prev_version else ''}v{eng['version']} (new weights"
+                     + (f"; changed: {', '.join(what)})" if what else ")"))
 
     as_of = str(spy.index[-1].date())
     fresh_session = as_of != last.get("as_of")
@@ -214,20 +266,30 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
         f, st = scored[r["t"]]
         since = str(st.index[max(0, len(st) - 1 - T.LOOKBACK)].date())
         attach_trade(r, T.latest(ledger, r["t"], since), eng)
-        wl[r["t"]]["hold"] = r["stage"] in ("TRIGGERED", "TARGET", "RUNNING", "EXTENDED")
+        open_trade = bool(r["trade"]) and r["trade"]["status"] == "open"
+        wl[r["t"]]["hold"] = open_trade or r["stage"] in ("TRIGGERED", "TARGET", "RUNNING", "EXTENDED", "RETEST")
     rows.sort(key=lambda r: (-r["ready"], r["t"]))
 
     # alerts: stage changes since the last recorded run (or since yesterday's close on a first run)
     prev = last.get("stages", {})
     new_alerts = []
     if fresh_session:
+        past = [json.loads(x) for x in C.ALERTS.read_text().splitlines()] if C.ALERTS.exists() else []
+        sent = {(a["t"], a["type"], a.get("trigger_date") or a["date"]) for a in past}
         for r in rows:
             before = prev.get(r["t"], r["prev_stage"])
-            if r["stage"] in ALERT_STAGES and r["stage"] != before:
-                strong = r["stage"] != "TRIGGERED" or r["ready"] >= eng["trigger"].get("min_ready", 0)
-                new_alerts.append({"date": r["date"], "t": r["t"], "type": r["stage"], "from": before, "strong": strong,
-                                   "close": r["close"], "level": r["level"], "ready": r["ready"], "prob": r["prob"],
-                                   "text": alert_text(r, eng["trigger"]), "engine": eng["version"]})
+            f, st = scored[r["t"]]
+            trig = trigger_day(f, st)
+            if not _alert_due(r, before, st, trig, sent):
+                continue
+            strong = r["stage"] != "TRIGGERED" or r["ready"] >= eng["trigger"].get("min_ready", 0)
+            key_date = r["trade"]["date"] if r["stage"] == "TARGET" else trig["date"] if r["stage"] in (
+                "TRIGGERED", "RUNNING", "FAILED") else None
+            new_alerts.append({"date": r["date"], "t": r["t"], "type": r["stage"], "from": before, "strong": strong,
+                               "close": trig["close"] if r["stage"] == "TRIGGERED" else r["close"],
+                               "level": trig["level"] if r["stage"] == "TRIGGERED" else r["level"],
+                               "ready": r["ready"], "prob": r["prob"], "trigger_date": key_date,
+                               "text": alert_text(r, eng["trigger"], trig), "engine": eng["version"]})
         with C.ALERTS.open("a") as fh:
             for a in new_alerts:
                 fh.write(json.dumps(a) + "\n")
@@ -250,7 +312,7 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
     record = track_record(hist, bars, eng["label"], alerts)
 
     last.update(as_of=as_of, run=dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
-                stages={r["t"]: r["stage"] for r in rows}, record=record)
+                stages={**prev, **{r["t"]: r["stage"] for r in rows}}, record=record)
     C.LAST_RUN.write_text(json.dumps(last, indent=1) + "\n")
     W.save(wl)
     return {"as_of": as_of, "rows": rows, "alerts": new_alerts, "recent_alerts": alerts[-40:], "added": added,

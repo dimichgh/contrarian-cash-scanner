@@ -189,8 +189,9 @@ def learn(bars, spy_close, engine: dict | None, today: dt.date) -> dict:
                                                   cur_trigger.get("min_ready", 0))
     t_rep["ready_filter"] = r_rep
     t_rep["timing"] = trigger_timing(frames, trigger, label_end)
-    changed = m_rep["changed"] or t_rep["changed"] or r_rep["changed"]
-    version = engine.get("version", 0) + (1 if changed or not engine else 0)
+    # every re-fit moves the weights and percentiles, so every re-fit is a new version: calls tagged
+    # with a version were all scored by the same model
+    version = engine.get("version", 0) + 1
     entry = {"date": today.isoformat(), "version": version, "tickers": len(frames),
              "window": {"from": str(rows.index.min().date()), "train_end": str(train_end.date()),
                         "test_start": str(test_start.date()), "label_end": str(label_end.date())},

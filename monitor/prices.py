@@ -48,8 +48,17 @@ def fetch_ohlcv(ticker: str, range_: str = "2y") -> pd.DataFrame | None:
                 # session still open: signals are on daily closes only
                 df = df.iloc[:-1]
             elif pd.isna(df["close"].iloc[-1]) and meta.get("regularMarketTime", 0) >= end:
-                # right after the close the daily bar can lag; the quote already has the final price
-                df.loc[df.index[-1], "close"] = meta["regularMarketPrice"]
+                # right after the close the daily bar can lag; the quote already has the final price.
+                # Without the day's volume the bar would read as a zero-volume day and hide a trigger
+                if meta.get("regularMarketVolume"):
+                    last = df.index[-1]
+                    df.loc[last, "close"] = meta["regularMarketPrice"]
+                    df.loc[last, "volume"] = meta["regularMarketVolume"]
+                    for col, key in (("high", "regularMarketDayHigh"), ("low", "regularMarketDayLow")):
+                        if meta.get(key):
+                            df.loc[last, col] = meta[key]
+                else:
+                    df = df.iloc[:-1]
     df = df.dropna(subset=["close"])
     for col in ("high", "low", "open"):
         df[col] = df[col].fillna(df["close"])

@@ -75,6 +75,8 @@ h2[id] { scroll-margin-top: 16px; }
 .st-EXTENDED { color: var(--warn); background: var(--warn-soft); }
 .st-TARGET { color: var(--good); background: var(--good-soft); border-color: var(--good); border-style: dashed; }
 .st-BASING { color: var(--ink-2); background: var(--surface-2); }
+.st-RETEST { color: var(--warn); background: var(--warn-soft); border-color: var(--warn); border-style: dashed; }
+.st-ABOVE { color: var(--ink-2); background: var(--surface-2); border-color: var(--rule); }
 .st-FAILED { color: var(--crit); background: var(--crit-soft); }
 .st-FALLING { color: var(--muted); background: var(--surface-2); }
 
@@ -131,6 +133,7 @@ tr.open .xbtn svg { transform: rotate(90deg); }
 .spark .ln { fill: none; stroke: var(--ink-2); stroke-width: 1.5; stroke-linejoin: round; }
 .spark .ar { fill: var(--accent-soft); stroke: none; }
 .spark .lv { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 3 3; }
+.spark .lvo { fill: none; stroke: var(--accent); stroke-width: 1.5; }
 .spark .pt { stroke: var(--surface); stroke-width: 1.5; }
 .gap-up { color: var(--good); }
 .dim { color: var(--muted); font-size: .78rem; }
@@ -253,7 +256,7 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
         <tbody id="tb"></tbody>
       </table>
     </div>
-    <p class="sub">Distance is the close against the trigger level: negative means that far below it. For names that triggered recently, the level shown is the one they broke through; a name running without a recent trigger is measured against today's level. The chart shows the last 60 closes with the level dashed.</p>
+    <p class="sub">Distance is the close against the trigger level: negative means that far below it. For names in a trade stage (triggered, running, extended, retest, failed), the level shown is the one they broke through; for every other stage it is today's level. The chart shows the last 60 closes with the level dashed, or an arrow at the edge when the level is outside that range.</p>
   </section>
 
   <section aria-labelledby="eng-h">
@@ -326,9 +329,9 @@ const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 const pct = (x, d = 0) => x == null ? "n/a" : (x * 100).toFixed(d) + "%";
 const sgn = (x, d = 1) => x == null ? "n/a" : (x > 0 ? "+" : "") + x.toFixed(d) + "%";
-const ORDER = ["FALLING", "BASING", "SETUP", "TRIGGERED", "RUNNING", "EXTENDED", "TARGET", "FAILED"];
+const ORDER = ["FALLING", "BASING", "SETUP", "TRIGGERED", "RUNNING", "EXTENDED", "TARGET", "RETEST", "FAILED", "ABOVE"];
 const TEXT = Object.fromEntries(D.stages);
-const LABEL = {TARGET: "target hit"};
+const LABEL = {TARGET: "target hit", ABOVE: "above, no trigger"};
 const chip = (s) => `<span class="chip st-${s}"><i></i>${LABEL[s] || s.toLowerCase()}</span>`;
 const stageRank = (s) => D.stages.findIndex((x) => x[0] === s);
 
@@ -434,12 +437,16 @@ function spark(r) {
   const w = 132, h = 30, pad = 3, n = sp.length;
   const x = (i) => (i / (n - 1)) * (w - 2 * pad) + pad, y = (v) => h - pad - (v / 99) * (h - 2 * pad);
   const pts = sp.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const off = r.spark_level > 99 ? "above" : r.spark_level < 0 ? "below" : "";
   const lv = Math.max(0, Math.min(99, r.spark_level));
   const col = ["TRIGGERED", "RUNNING", "TARGET"].includes(r.stage) ? "var(--good)" : r.stage === "FAILED" ? "var(--crit)" : "var(--ink)";
-  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Last 60 closes; trigger level $${r.level}">
-    <title>Last 60 closes · trigger level $${r.level.toFixed(2)} · close $${r.close.toFixed(2)}</title>
+  const ax = w - pad - 4, ay = off === "above" ? pad : h - pad;
+  const mark = off ? `<path class="lvo" d="M${ax - 4},${off === "above" ? ay + 5 : ay - 5} L${ax},${ay} L${ax + 4},${off === "above" ? ay + 5 : ay - 5}"/>`
+    : `<line class="lv" x1="${pad}" x2="${w - pad}" y1="${y(lv)}" y2="${y(lv)}"/>`;
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Last 60 closes; trigger level $${r.level}${off ? ` (${off} the chart)` : ""}">
+    <title>Last 60 closes · trigger level $${r.level.toFixed(2)}${off ? `, ${off} the 60-day range` : ""} · close $${r.close.toFixed(2)}</title>
     <polygon class="ar" points="${x(0)},${h - pad} ${pts} ${x(n - 1)},${h - pad}"/>
-    <line class="lv" x1="${pad}" x2="${w - pad}" y1="${y(lv)}" y2="${y(lv)}"/>
+    ${mark}
     <polyline class="ln" points="${pts}"/>
     <circle class="pt" cx="${x(n - 1)}" cy="${y(sp[n - 1])}" r="3.5" fill="${col}"/></svg>`;
 }
@@ -558,16 +565,18 @@ $("#f-q").addEventListener("input", drawTable);
 (function record() {
   const tr = D.record.triggers || {}, sn = D.record.snapshots || {};
   const bits = [];
-  bits.push(tr.resolved ? `${tr.resolved} trigger signals have resolved: ${pct(tr.hit_rate)} reached their target before their stop, average outcome ${sgn(tr.avg_ret)}.`
-    : "No trigger signal has resolved yet: an outcome is known once the price reaches its target or its stop, or after 40 trading days.");
-  if (sn.resolved) bits.push(`Across ${sn.resolved.toLocaleString()} resolved daily calls, ${pct(sn.hit_rate)} were followed by a real move${sn.n_ready80 ? `, and ${pct(sn.hit_rate_ready80)} of the ${sn.n_ready80} with readiness 80+` : ""}.`);
+  bits.push(tr.resolved ? `${tr.resolved} trigger signals have run their full 40 trading days: ${pct(tr.hit_rate)} reached their target before their stop, average outcome ${sgn(tr.avg_ret)}.`
+    : "No trigger signal has run its full 40 trading days yet; until then its trade is in the table above.");
+  if (sn.resolved) bits.push(`Across ${sn.resolved.toLocaleString()} daily calls whose 40 sessions have passed, ${pct(sn.hit_rate)} were followed by a real move${sn.n_ready80 ? `, and ${pct(sn.hit_rate_ready80)} of the ${sn.n_ready80} with readiness 80+` : ""}.`);
   $("#rec-sub").textContent = bits.join(" ");
-  const res = Object.fromEntries((tr.recent || []).map((r) => [r.date + r.t, r]));
+  const trade = Object.fromEntries(D.trades.map((t) => [t.date + t.t, t]));
+  const cls = {"hit target": "out-win", "stopped out": "out-loss"};
   $("#alerts").innerHTML = D.alerts.slice(0, 40).map((a) => {
-    const r = res[a.date + a.t];
+    const r = trade[(a.trigger_date || a.date) + a.t];
     const out = a.type !== "TRIGGERED" ? '<span class="dim">tracked on triggers</span>'
-      : r ? `<span class="${r.y ? "out-win" : "out-loss"}">${r.y ? "hit target" : "missed"}</span> <span class="num">${sgn(r.ret)}</span> <span class="dim">in ${r.bars} sessions</span>`
-      : '<span class="dim">open</span>';
+      : !r ? '<span class="dim">not followed (another trade was open)</span>'
+      : r.status === "open" ? `<span class="dim">open</span> <span class="num">${sgn(r.change)}</span>`
+      : `<span class="${cls[r.status] || "dim"}">${r.status}</span> <span class="num">${sgn(r.change)}</span> <span class="dim">in ${r.resolved_in} sessions</span>`;
     return `<tr><td class="num">${a.date}</td><td class="num"><b>${esc(a.t)}</b></td><td>${chip(a.type)}${a.strong === false ? ' <span class="dim">weak</span>' : ""}</td>
       <td class="r num">$${a.close.toFixed(2)}</td><td class="r num">$${a.level.toFixed(2)}</td><td class="r num">${a.ready}</td><td>${out}</td></tr>`;
   }).join("") || '<tr><td colspan="7" class="empty">No signals yet.</td></tr>';

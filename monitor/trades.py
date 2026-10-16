@@ -106,7 +106,7 @@ def update(ledger: list[dict], scored: dict, spy: pd.Series, eng: dict, seen: di
 
 def mark_live(ledger: list[dict], alerts: list[dict]) -> None:
     """Trades whose trigger the monitor announced on the day take the readiness it announced."""
-    live = {(a["t"], a["date"]): a for a in alerts if a["type"] == "TRIGGERED"}
+    live = {(a["t"], a.get("trigger_date") or a["date"]): a for a in alerts if a["type"] == "TRIGGERED"}
     for r in ledger:
         a = live.get((r["t"], r["date"]))
         if a and not r.get("live"):

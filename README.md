@@ -91,17 +91,25 @@ drops scan names that miss three re-scans in a row, unless their move is already
 
 | Stage | Meaning |
 |---|---|
-| Falling | Still making new 120-day lows |
-| Basing | Lows holding 15+ sessions, 50-day average flattening |
-| Setup | Within 4% under the trigger level, lows holding: closest to a breakout |
-| Triggered | Fresh close through the trigger level (default: the 50-day average, the author's confirmation tranche) on 1.2x volume after 10+ of the prior 20 sessions below it |
-| Target hit | The latest trigger's trade reached its target and the trend is still up: the trade is closed |
-| Running | Held above the level since the trigger, or above a rising 50-day average |
+| Falling | Made a new 120-day low in the last 15 sessions |
+| Basing | Lows holding 15+ sessions, not near the trigger level yet |
+| Setup | Under the trigger level by 4% or less, lows holding: closest to a trigger |
+| Triggered | Closed through the trigger level (default: the 50-day average, the author's confirmation tranche) on 1.2x volume after 10+ of the prior 20 sessions below it, within the last 5 sessions, and holding above it |
+| Running | Has held the level it broke through since the trigger (up to 60 sessions) |
 | Extended | Running but 20%+ above the 50-day average or RSI over 75 |
-| Failed | Closed 3%+ back under the level within 20 sessions of a trigger |
+| Target hit | The trigger's trade reached its target and the price is still above the level: the trade is closed |
+| Retest | Back under the level it broke through, by less than 3% |
+| Failed | Triggered, then closed 3%+ back under the level (within 40 sessions), and still under it |
+| Above, no trigger | Above the trigger level with no live trigger (crossed without the volume or the base, the breakout failed, or the move is over 60 sessions old): no entry signal |
 
-A move into Triggered, Setup, Target hit, Running or Failed raises a signal. A trigger is **strong** when its
-readiness clears a bar the engine learns.
+Trade stages (Triggered, Running, Extended, Retest, Failed) are measured against the level the
+trigger broke through; every other stage against today's level.
+
+Signals are news only: a trigger once per trigger day (with the trigger day's numbers, even when it
+is seen a day late), Running once when a trigger's first sessions are over, Failed once per trigger,
+Target hit once per trade and only within a week of the hit, and Setup only when the name was not
+already set up in the previous 10 sessions. A trigger is **strong** when its readiness clears a bar
+the engine learns.
 
 **Readiness (0–100)** is the engine's probability that the stock reaches its target before its stop
 within 40 trading days, as a percentile of every setup in the training history. Target and stop are
@@ -117,7 +125,9 @@ top 300 names, labels every day by what happened next, and:
    switches rule only when the challenger also wins on the held-out year;
 3. picks the readiness bar for a strong trigger on the held-out year (at least 30 events).
 
-Every daily call is stored, and the dashboard scores those calls against what the price actually did.
+Every daily call is stored, and the dashboard scores those calls against what the price actually did,
+counting a call only once its full 40 sessions have passed (counting early resolutions first would
+over-weight quick stops and targets).
 
 **Since the trigger.** Every trigger is followed as a trade from the trigger-day close, one trade per
 name at a time, until a close reaches its target or its stop, or 40 sessions pass. The trades live in

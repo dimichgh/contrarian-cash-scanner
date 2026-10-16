@@ -27,7 +27,9 @@ permissions:
   issues: write
 
 concurrency:
-  group: breakout-monitor
+  # page-only redeploys get their own group: GitHub keeps one pending run per group, so a push could
+  # otherwise cancel a scheduled monitor run waiting behind it
+  group: breakout-monitor-${{ github.event_name == 'push' && 'pages' || 'run' }}
   cancel-in-progress: false
 
 jobs:
