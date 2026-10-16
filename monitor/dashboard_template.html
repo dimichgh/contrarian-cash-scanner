@@ -331,7 +331,7 @@ const pct = (x, d = 0) => x == null ? "n/a" : (x * 100).toFixed(d) + "%";
 const sgn = (x, d = 1) => x == null ? "n/a" : (x > 0 ? "+" : "") + x.toFixed(d) + "%";
 const ORDER = ["FALLING", "BASING", "SETUP", "TRIGGERED", "RUNNING", "EXTENDED", "TARGET", "RETEST", "FAILED", "ABOVE"];
 const TEXT = Object.fromEntries(D.stages);
-const LABEL = {TARGET: "target hit", ABOVE: "above, no trigger"};
+const LABEL = {TARGET: "target hit", ABOVE: "above, no trade"};
 const chip = (s) => `<span class="chip st-${s}"><i></i>${LABEL[s] || s.toLowerCase()}</span>`;
 const stageRank = (s) => D.stages.findIndex((x) => x[0] === s);
 
@@ -392,7 +392,7 @@ function drawLadder() {
   $("#trades").innerHTML = shown.map((t) => {
     const lo = t.stop_px, hi = t.target_px, isOpen = t.status === "open", last = isOpen ? t.now ?? t.entry : t.exit_px;
     const x = (v) => Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100)).toFixed(1);
-    const st = isOpen ? "open" : `${t.status} in ${t.resolved_in}`;
+    const st = isOpen ? "open" : t.status === "no data" ? "no data" : `${t.status} in ${t.resolved_in}`;
     const after = !isOpen && t.now_change != null ? `<div class="dim" style="white-space:nowrap">now ${sgn(t.now_change)}</div>` : "";
     return `<tr>
       <td><div class="co" style="min-width:110px"><b>${esc(t.t)}</b><span style="max-width:130px">${esc(t.name)}</span></div></td>

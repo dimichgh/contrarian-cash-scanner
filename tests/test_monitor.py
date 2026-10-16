@@ -407,6 +407,9 @@ def test_alerts_are_news_only():
     s2 = st(["BASING"] * 20 + ["SETUP"] * 3 + ["ABOVE"] * 4 + ["SETUP"] * 3)
     assert not _alert_due(row("SETUP"), s2, [{"t": "X", "type": "SETUP", "date": day(20), "trigger_date": day(20)}])[0]
     assert not _alert_due(row("ABOVE"), s2, [])[0]
+    # an alert from before trade dates were recorded still counts for the trade it announced
+    legacy = [{"t": "X", "type": "RUNNING", "date": day(28)}]
+    assert not _alert_due(row("RUNNING", dict(tr, sessions=6)), base, legacy)[0]
 
 
 def test_lagging_last_bar_takes_the_quote_volume(monkeypatch):

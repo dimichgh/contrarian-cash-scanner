@@ -137,7 +137,11 @@ def _alert_due(r: dict, st: pd.DataFrame, past: list[dict]) -> tuple[bool, str |
             return False, None
         if s == "RUNNING" and t["sessions"] > 15:  # the confirmation, not every return to RUNNING
             return False, None
-        return (r["t"], s, t["date"]) not in sent, t["date"]
+        # alerts from before trade dates were recorded: one of this type during the trade covers it
+        start = pd.Timestamp(t["date"])
+        legacy = any(a["t"] == r["t"] and a["type"] == s and not a.get("trigger_date")
+                     and 0 <= (pd.Timestamp(a["date"]) - start).days <= 90 for a in past)
+        return (r["t"], s, t["date"]) not in sent and not legacy, t["date"]
     # SETUP: when the current run of SETUP days began in the last week, and no SETUP signal went
     # out in the 10 sessions before it (a name hovering under its level does not repeat)
     i = _run_start(st["stage"], "SETUP")

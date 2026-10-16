@@ -100,11 +100,12 @@ drops scan names that miss three re-scans in a row, unless their move is already
 | Retest | Trade open, but the price is back under the level it broke through (stop not hit) |
 | Target hit | The trade reached its target and the price is still above its level (up to 60 sessions after the trigger) |
 | Failed | The trade hit its stop and the price is still under its level (up to 40 sessions after the trigger) |
-| Above, no trigger | Above today's trigger level with no open trade: crossed without the volume or the base, or the trade is over. No entry signal |
+| Above, no trade | Above today's trigger level with no open trade: crossed without the volume or the base, or the trade is over. No entry signal |
 
-The first six come from the name's trade (see *Since the trigger*), so a stage can never disagree
-with the trade shown next to it, and they are measured against the level the trade broke through.
-The last four come from the price alone and are measured against today's level.
+Triggered, Running, Extended, Retest, Target hit and Failed come from the name's trade (see *Since
+the trigger*), so a stage can never disagree with the trade shown next to it, and they are measured
+against the level the trade broke through. Falling, Basing, Setup and Above come from the price alone
+and are measured against today's level.
 
 Signals are news only, and decided from what was actually sent, so a missed run delays a signal
 instead of losing it: a trigger once per trade (with the trigger day's numbers and readiness), Running
