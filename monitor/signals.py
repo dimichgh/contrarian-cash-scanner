@@ -108,7 +108,9 @@ def stages(f: pd.DataFrame, p: dict) -> pd.DataFrame:
     held = c.groupby(trig.cumsum()).cummin() >= floor  # never closed back under since the trigger
     gap = c / piv - 1
 
-    running = ((age <= 60) & held & (c > sma50)) | ((c > sma50) & (slope > 0.005) & (low_age >= 30))
+    from_trigger = (age <= 60) & held & (c > sma50)
+    # a stock can also be running with no recent trigger: above a rising 50-day average, lows holding
+    running = from_trigger | ((c > sma50) & (slope > 0.005) & (low_age >= 30))
     conds = [
         (age < p["confirm"]) & (c >= floor),
         running & ((c > sma50 * 1.2) | (f["rsi"] > 75)),
@@ -119,8 +121,13 @@ def stages(f: pd.DataFrame, p: dict) -> pd.DataFrame:
     ]
     st = np.select([x.fillna(False).to_numpy(bool) for x in conds],
                    ["TRIGGERED", "EXTENDED", "RUNNING", "FAILED", "SETUP", "BASING"], "FALLING")
-    out = pd.DataFrame({"stage": st, "pivot": piv, "gap": gap, "trig_age": age, "trig_level": trig_level,
-                        "trigger": trig}, index=f.index)
+    # the level a stage is measured against: the one broken through when the stage comes from a
+    # trigger, else today's trigger level (an old trigger's level says nothing about a later run)
+    s = pd.Series(st, index=f.index)
+    by_trigger = s.isin(["TRIGGERED", "FAILED"]) | (s.isin(["RUNNING", "EXTENDED"]) & from_trigger.fillna(False))
+    level = trig_level.where(by_trigger & trig_level.notna(), piv)
+    out = pd.DataFrame({"stage": st, "pivot": piv, "level": level, "gap": gap, "trig_age": age,
+                        "trig_level": trig_level, "trigger": trig}, index=f.index)
     out.loc[sma50.isna() | piv.isna(), "stage"] = "n/a"
     return out
 

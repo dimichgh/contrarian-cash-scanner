@@ -48,9 +48,7 @@ def score_ticker(t: str, b: pd.DataFrame, spy: pd.Series, eng: dict) -> tuple[di
     m = eng["model"]
     prob = predict(m, f[m["features"]].iloc[-1:].to_numpy())[0]
     last, s = f.iloc[-1], st.iloc[-1]
-    p = eng["trigger"]
-    level = float(s["pivot"]) if s["stage"] not in ("TRIGGERED", "RUNNING", "EXTENDED", "FAILED") \
-        else float(s["trig_level"]) if not pd.isna(s["trig_level"]) else float(s["pivot"])
+    level = float(s["level"])
     size = float(move_size(f["close"], eng["label"]["horizon"]).iloc[-1])
     window = f["close"].iloc[-60:]
     lo, hi = float(window.min()), float(window.max())

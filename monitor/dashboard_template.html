@@ -251,7 +251,7 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
         <tbody id="tb"></tbody>
       </table>
     </div>
-    <p class="sub">Distance is the close against the trigger level: negative means that far below it. For names already triggered or running, the level shown is the one they broke through. The chart shows the last 60 closes with the level dashed.</p>
+    <p class="sub">Distance is the close against the trigger level: negative means that far below it. For names that triggered recently, the level shown is the one they broke through; a name running without a recent trigger is measured against today's level. The chart shows the last 60 closes with the level dashed.</p>
   </section>
 
   <section aria-labelledby="eng-h">
@@ -448,6 +448,7 @@ function detail(r) {
       <div class="kv">
         <span>Target <b>+${r.target}%</b> before stop <b>−${r.stop}%</b></span>
         ${r.trade && r.trade.status === "open" ? `<span>Open trade: stop <b>$${r.trade.stop_px.toFixed(2)}</b> · target <b>$${r.trade.target_px.toFixed(2)}</b></span>`
+          : r.stage === "RUNNING" || r.stage === "EXTENDED" ? `<span>${r.trade ? `Trade from the ${esc(r.trade.date)} trigger: <b>${esc(r.trade.status)}</b>` : "No trigger in the last 90 sessions: running on the trend rule, above a rising 50-day average"}</span>`
           : `<span>If it triggers at $${r.level.toFixed(2)}: stop <b>$${(r.level * (1 - r.stop / 100)).toFixed(2)}</b> · target <b>$${(r.level * (1 + r.target / 100)).toFixed(2)}</b></span>`}<span>P(target first) <b>${pct(r.prob)}</b></span><span>RSI <b>${r.rsi}</b></span>
         <span>50d slope <b>${sgn(r.slope, 2)}</b>/2wk</span><span>Lows held <b>${r.low_age ?? "n/a"}</b> sessions</span>
         <span>1m return <b>${sgn(r.ret20)}</b></span><span>Off 52w high <b>${sgn(r.dd52)}</b></span>

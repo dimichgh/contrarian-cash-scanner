@@ -62,6 +62,24 @@ def test_failed_breakout(spy):
     assert st["stage"].iloc[-1] == "FAILED"
 
 
+def test_run_without_recent_trigger_uses_todays_level(spy):
+    # an old breakout, a sell-off to new lows, then a quiet recovery that runs with no new trigger
+    b = base_then_breakout()
+    c = np.concatenate([b["close"].to_numpy(), np.linspace(75, 50, 60), np.linspace(50, 51, 40), np.linspace(51, 58, 30)])
+    v = np.concatenate([b["volume"].to_numpy(), np.full(130, 1e6)])
+    spy = pd.Series(np.linspace(400, 450, len(c)), index=pd.bdate_range("2022-01-03", periods=len(c)))
+    f = features(bars(c, v), spy)
+    p = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10)
+    st = stages(f, p)
+    assert not st["trigger"].iloc[320:].any()
+    last = st.iloc[-1]
+    assert last["stage"] in ("RUNNING", "EXTENDED")
+    assert last["level"] == last["pivot"] and last["trig_level"] != last["pivot"]
+    # while the original breakout ran, it was measured against the level it broke through
+    assert st.loc[f.index[300], "stage"] in ("RUNNING", "EXTENDED")
+    assert st.loc[f.index[300], "level"] == st.loc[f.index[280], "pivot"]
+
+
 def test_barrier_labels():
     c = pd.Series([100, 101, 104, 111, 90, 95], dtype=float)
     lab = barrier_labels(c, horizon=3, up=0.10, down=0.06)
