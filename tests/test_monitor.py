@@ -127,26 +127,143 @@ def test_watchlist_merge_adds_refreshes_and_drops(monkeypatch):
     assert added == ["BBB"] and wl["BBB"]["status"] == "active"
 
 
-def test_since_trigger_tracks_the_trade(spy):
-    from monitor.run import since_trigger
+def _eng(p, timing=None):
+    m = {"features": C.FEATURES, "coef": [0.0] * len(C.FEATURES), "intercept": 0.0,
+         "mean": [0.0] * len(C.FEATURES), "std": [1.0] * len(C.FEATURES), "quantiles": list(np.linspace(0, 1, 101))}
+    return {"label": C.LABEL, "model": m, "trigger": p, "version": 1,
+            "metrics": {"trigger": {"timing": timing}} if timing else {}}
+
+
+def test_trade_is_followed_and_frozen_at_the_exit(spy):
+    from monitor import trades as T
     b = base_then_breakout()
     f = features(b, spy)
     p = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10, min_ready=0)
     st = stages(f, p)
-    m = {"features": C.FEATURES, "coef": [0.0] * len(C.FEATURES), "intercept": 0.0,
-         "mean": [0.0] * len(C.FEATURES), "std": [1.0] * len(C.FEATURES), "quantiles": list(np.linspace(0, 1, 101))}
-    t = since_trigger(f, st, spy, {"label": C.LABEL, "model": m, "trigger": p})
-    assert t["date"] == str(b.index[280].date()) and t["sessions"] == 39
-    assert t["entry"] == 62.0 and t["change"] == pytest.approx((75 / 62 - 1) * 100, abs=0.1)
-    assert t["worst"] == 0.0 and t["best"] == t["change"]
-    assert t["status"] == "hit target" and t["stop_px"] < 62 < t["target_px"]
-    assert t["window"] is None  # no timing learned yet
-    eng = {"label": C.LABEL, "model": m, "trigger": p,
-           "metrics": {"trigger": {"timing": {"p25": 11, "median": 18, "p75": 26}}}}
-    w = since_trigger(f, st, spy, eng)["window"]
+    eng = _eng(p)
     trig = b.index[280]
-    assert w["from"] == str((trig + pd.offsets.BDay(11)).date()) and w["to"] == str((trig + pd.offsets.BDay(26)).date())
-    assert w["phase"] == "late"  # 39 sessions after the trigger
+    t = T.follow("X", f, st, spy, trig, eng)
+    assert t["date"] == str(trig.date()) and t["entry"] == 62.0 and t["status"] == "hit target"
+    k = t["resolved_in"]
+    exit_px = float(b["close"].iloc[280 + k])
+    assert t["exit_date"] == str(b.index[280 + k].date()) and t["exit_px"] == round(exit_px, 2)
+    assert exit_px >= t["target_px"] and float(b["close"].iloc[280 + k - 1]) < t["target_px"]  # first close through it
+    assert t["change"] == pytest.approx((exit_px / 62 - 1) * 100, abs=0.1) and t["best"] == t["change"] and t["worst"] == 0.0
+    assert t["stop_px"] < 62 < t["target_px"]
+
+    # the stock then gives everything back: the closed trade keeps its exit result
+    c = np.concatenate([b["close"].to_numpy(), np.linspace(75, 50, 30)])
+    v = np.concatenate([b["volume"].to_numpy(), np.full(30, 1e6)])
+    spy2 = pd.Series(np.linspace(400, 450, len(c)), index=pd.bdate_range("2022-01-03", periods=len(c)))
+    f2 = features(bars(c, v), spy2)
+    st2 = stages(f2, p)
+    ledger, seen = T.update([], {"X": (f, st)}, spy, eng, {})
+    assert [r["date"] for r in ledger] == [str(trig.date())] and seen == {"X": str(b.index[-1].date())}
+    ledger2, _ = T.update(ledger, {"X": (f2, st2)}, spy2, eng, seen)
+    assert ledger2 == ledger
+
+
+def test_open_trade_keeps_its_plan_and_new_triggers_only_after_seen(spy):
+    from monitor import trades as T
+    def slow(n):  # triggers on day 280, then drifts up too slowly to reach its target
+        c = base_then_breakout(n_up=1)["close"].to_numpy()[:280]
+        c = np.concatenate([c, np.linspace(62, 62 + 0.2 * (n - 1), n)])
+        v = np.full(len(c), 1e6)
+        v[280:] = 2e6
+        return bars(c, v)
+    b = slow(6)
+    f = features(b, spy)
+    p = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10, min_ready=0)
+    st = stages(f, p)
+    eng = _eng(p, timing={"p25": 11, "median": 18, "p75": 26})
+    ledger, seen = T.update([], {"X": (f, st)}, spy, eng, {})
+    (t,) = ledger
+    assert t["status"] == "open" and t["sessions"] == 5 and t["exit_date"] is None
+    w = T.window(t, eng)
+    trig = pd.Timestamp(t["date"])
+    assert w["from"] == str((trig + pd.offsets.BDay(11)).date()) and w["phase"] == "early"
+    # a later run re-follows it with the target and stop it opened with
+    b2 = slow(10)
+    f2 = features(b2, spy)
+    st2 = stages(f2, dict(p, pivot="hh40"))  # even if the trigger rule changed meanwhile
+    ledger2, _ = T.update([dict(t, up=0.5)], {"X": (f2, st2)}, spy, eng, seen)
+    (t2,) = ledger2
+    assert t2["up"] == 0.5 and t2["target_px"] == round(62 * 1.5, 2) and t2["sessions"] == 9
+    assert t2["level"] == t["level"]  # and the level it broke through
+    assert len(ledger2) == 1  # the new rule's past triggers are not backfilled for a name already seen
+
+
+def test_one_open_trade_per_name(spy):
+    from monitor import trades as T
+    b = base_then_breakout()
+    f = features(b, spy)
+    p = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10, min_ready=0)
+    st = stages(f, p)
+    st["trigger"] = False
+    st.iloc[[280, 283, 315], st.columns.get_loc("trigger")] = True  # 283: while the 280 trade is open
+    ledger, _ = T.update([], {"X": (f, st)}, spy, _eng(p), {})
+    first = next(r for r in ledger if r["date"] == str(b.index[280].date()))
+    assert first["exit_date"] < str(b.index[315].date())
+    assert sorted(r["date"] for r in ledger) == [str(b.index[280].date()), str(b.index[315].date())]
+
+
+def test_target_hit_shows_as_target_not_running(spy):
+    from monitor import trades as T
+    from monitor.run import attach_trade
+    b = base_then_breakout()
+    f = features(b, spy)
+    p = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10, min_ready=0)
+    st = stages(f, p)
+    eng = _eng(p)
+    ledger, _ = T.update([], {"X": (f, st)}, spy, eng, {})
+    row = {"stage": st["stage"].iloc[-1], "prev_stage": st["stage"].iloc[-2], "date": str(b.index[-1].date())}
+    assert row["stage"] in ("RUNNING", "EXTENDED")
+    attach_trade(row, ledger[0], eng)
+    assert row["stage"] == "TARGET" and row["prev_stage"] == "TARGET"  # it got there days ago: no new alert
+    row = {"stage": "BASING", "prev_stage": "BASING", "date": row["date"]}
+    attach_trade(row, ledger[0], eng)
+    assert row["stage"] == "BASING"  # a trend that has since rolled over says so
+
+
+def test_price_cache_updates_detects_splits_and_works_offline(monkeypatch, tmp_path):
+    from monitor import prices as P
+    monkeypatch.setattr(C, "BARS", tmp_path)
+    monkeypatch.setattr(P, "INDEX", tmp_path / "_index.json")
+    idx = pd.bdate_range("2024-06-03", "2026-03-31")
+    full = pd.DataFrame({"open": 10.0, "high": 10.5, "low": 9.5, "close": np.linspace(10, 20, len(idx)), "volume": 1e6},
+                        index=idx)
+    calls = []
+
+    def fake(t, range_="2y"):
+        calls.append(range_)
+        return feed[range_].copy() if range_ in feed else None
+    monkeypatch.setattr(P, "fetch_ohlcv", fake)
+    today = dt.date(2026, 3, 31)
+    feed = {"2y": full.iloc[:-5]}
+    got = P.fetch_many(["X"], "2y", today=today)
+    assert calls == ["2y"] and len(got["X"]) == len(full) - 5
+    # next run: only the last month is downloaded and merged in
+    feed = {"1mo": full.iloc[-22:]}
+    got = P.fetch_many(["X"], "2y", today=today)
+    assert calls[-1] == "1mo" and got["X"]["close"].iloc[-1] == full["close"].iloc[-1]
+    assert len(got["X"]) == len(full[full.index >= pd.Timestamp(today - dt.timedelta(days=731))])
+    # a 2:1 split rescales the overlap: download everything again
+    split = full.copy()
+    split[["open", "high", "low", "close"]] /= 2
+    feed = {"1mo": split.iloc[-22:], "2y": split}
+    got = P.fetch_many(["X"], "2y", today=today)
+    assert calls[-2:] == ["1mo", "2y"] and got["X"]["close"].iloc[0] == pytest.approx(full["close"].iloc[0] / 2, rel=1e-5)
+    # Yahoo down: cached bars come back, flagged stale so they are not signalled on
+    feed = {}
+    stats = {}
+    got = P.fetch_many(["X"], "2y", today=today, stats=stats)
+    assert "X" in got and stats["stale"] == ["X"]
+    # offline: no download at all
+    n = len(calls)
+    monkeypatch.setenv("MONITOR_OFFLINE", "1")
+    stats = {}
+    got = P.fetch_many(["X"], "2y", today=today, stats=stats)
+    assert len(calls) == n and "X" in got and stats["stale"] == [] and stats["offline"]
 
 
 def test_same_day_rescans_count_one_miss(monkeypatch):

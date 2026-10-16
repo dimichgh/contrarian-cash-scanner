@@ -95,11 +95,12 @@ drops scan names that miss three re-scans in a row, unless their move is already
 | Basing | Lows holding 15+ sessions, 50-day average flattening |
 | Setup | Within 4% under the trigger level, lows holding: closest to a breakout |
 | Triggered | Fresh close through the trigger level (default: the 50-day average, the author's confirmation tranche) on 1.2x volume after 10+ of the prior 20 sessions below it |
+| Target hit | The latest trigger's trade reached its target and the trend is still up: the trade is closed |
 | Running | Held above the level since the trigger, or above a rising 50-day average |
 | Extended | Running but 20%+ above the 50-day average or RSI over 75 |
 | Failed | Closed 3%+ back under the level within 20 sessions of a trigger |
 
-A move into Triggered, Setup, Running or Failed raises a signal. A trigger is **strong** when its
+A move into Triggered, Setup, Target hit, Running or Failed raises a signal. A trigger is **strong** when its
 readiness clears a bar the engine learns.
 
 **Readiness (0–100)** is the engine's probability that the stock reaches its target before its stop
@@ -118,18 +119,28 @@ top 300 names, labels every day by what happened next, and:
 
 Every daily call is stored, and the dashboard scores those calls against what the price actually did.
 
-**Since the trigger.** Each name's latest trigger from the last 90 sessions is followed as a trade from
-the trigger-day close: sessions and days since, entry and last price, change, best and worst close
-since, the S&P 500 over the same days and the difference, its stop and target prices, and whether it
-is still open, hit its target, was stopped out or timed out after 40 sessions. Open trades also get a
-target window: the dates between which past triggers that reached their target usually got there
-(the middle half of their times, re-measured at every learning cycle; about 11–26 sessions today),
-and whether the trade is early, in that window or late. Setup names show the stop and target they
-would get if they triggered at their level.
+**Since the trigger.** Every trigger is followed as a trade from the trigger-day close, one trade per
+name at a time, until a close reaches its target or its stop, or 40 sessions pass. The trades live in
+`state/trades.jsonl`: an open trade is re-followed each run with the target and stop it opened with,
+and a closed one keeps its exit date, exit price, result, best and worst close up to the exit and the
+S&P 500 over the same days for good, whatever the watchlist or the trigger rule does later. Names
+that leave the watchlist with a trade open are still followed until it closes. The dashboard lists
+open trades and recent exits (older exits behind a button) with today's change beside each closed one,
+and the totals so far. Open trades also get a target window: the dates between which past triggers
+that reached their target usually got there (the middle half of their times, re-measured at every
+learning cycle), and whether the trade is early, in that window or late. Setup names show the stop
+and target they would get if they triggered at their level.
+
+**Prices** are cached in `state/bars/` (one CSV per name, committed with the state). A run downloads
+only the last month of each name from Yahoo and merges it in; a name is downloaded in full the first
+time, every 60 days, when a longer history is needed, or when the overlap shows a split. If Yahoo
+fails for a name, its cached bars still feed the learner but it gets no signal that day. To work from
+the cache alone, without any download: `MONITOR_OFFLINE=1 .venv/bin/python -m monitor daily`.
 
 **State** lives in `state/` and is committed after each run: `watchlist.json`, `engine.json` (the
 current rule and weights), `engine_history.jsonl` (one line per learning cycle), `alerts.jsonl`,
-`history/YYYY-MM.csv` (daily calls) and `scan_latest.csv`. The pages are committed too:
+`history/YYYY-MM.csv` (daily calls), `trades.jsonl` (every trade), `bars/` (cached prices) and
+`scan_latest.csv`. The pages are committed too:
 `reports/dashboard.html` (the monitor, every run) and `reports/scan_report.html` (the full scan,
 rebuilt at each weekly rescan). Both are self-contained: download one and open it in a browser.
 

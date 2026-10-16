@@ -73,6 +73,7 @@ h2[id] { scroll-margin-top: 16px; }
 .st-SETUP { color: var(--accent-ink); background: var(--accent-soft); }
 .st-RUNNING { color: var(--good); background: var(--good-soft); }
 .st-EXTENDED { color: var(--warn); background: var(--warn-soft); }
+.st-TARGET { color: var(--good); background: var(--good-soft); border-color: var(--good); border-style: dashed; }
 .st-BASING { color: var(--ink-2); background: var(--surface-2); }
 .st-FAILED { color: var(--crit); background: var(--crit-soft); }
 .st-FALLING { color: var(--muted); background: var(--surface-2); }
@@ -205,21 +206,22 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
   <section aria-labelledby="trade-h">
     <div class="sec-head">
       <h2 id="trade-h">Since the trigger</h2>
-      <p>Each name's latest trigger from the last 90 trading days, followed as a trade from the trigger-day close (open trades and those that finished in the last 10 sessions; older ones are behind the button below the table): how long ago, how far it has moved, the best and worst close since, the S&amp;P 500 over the same days, and where the price sits between its stop and its target.</p>
+      <p>Every trigger, followed as a trade from the trigger-day close until a close reaches its target or its stop, or 40 sessions pass. Open trades are measured to the last close; a closed trade keeps its result at the exit, with today's change beside it for reference. Open trades and those closed in the last 10 sessions show first; older ones are behind the button below the table.</p>
     </div>
     <div class="panel table-wrap">
       <table>
         <thead><tr>
-          <th>Company</th><th>Triggered</th><th class="r">Sessions</th><th class="r">Entry → now</th>
-          <th class="r">Change</th><th class="r">Best / worst</th><th class="r">vs S&amp;P</th>
+          <th>Company</th><th>Triggered</th><th class="r">Sessions</th><th class="r">Entry → exit or now</th>
+          <th class="r">Result</th><th class="r">Best / worst</th><th class="r">vs S&amp;P</th>
           <th>Stop → target</th><th>Status · target window</th>
         </tr></thead>
         <tbody id="trades"></tbody>
       </table>
       <button type="button" class="more" id="trades-more" hidden></button>
     </div>
+    <p class="sub" id="ledger-note"></p>
     <p class="sub" id="timing-note"></p>
-    <p class="sub">A trade resolves when the close reaches its target (green tick) or its stop (red tick), or after 40 sessions. Grey tick: entry; dot: last close. Readiness at the trigger is scored by the current engine unless the monitor logged the signal live.</p>
+    <p class="sub">Grey tick: entry; dot: the exit, or the last close while open; green and red ticks: target and stop. Best and worst are the best and worst closes up to the exit. Backfilled: a trigger found in the price history rather than announced by the monitor on the day; its readiness is scored by the engine of the day it was recorded.</p>
   </section>
 
   <section aria-labelledby="rank-h">
@@ -324,9 +326,10 @@ const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 const pct = (x, d = 0) => x == null ? "n/a" : (x * 100).toFixed(d) + "%";
 const sgn = (x, d = 1) => x == null ? "n/a" : (x > 0 ? "+" : "") + x.toFixed(d) + "%";
-const ORDER = ["FALLING", "BASING", "SETUP", "TRIGGERED", "RUNNING", "EXTENDED", "FAILED"];
+const ORDER = ["FALLING", "BASING", "SETUP", "TRIGGERED", "RUNNING", "EXTENDED", "TARGET", "FAILED"];
 const TEXT = Object.fromEntries(D.stages);
-const chip = (s) => `<span class="chip st-${s}"><i></i>${s.toLowerCase()}</span>`;
+const LABEL = {TARGET: "target hit"};
+const chip = (s) => `<span class="chip st-${s}"><i></i>${LABEL[s] || s.toLowerCase()}</span>`;
 const stageRank = (s) => D.stages.findIndex((x) => x[0] === s);
 
 $("#asof").textContent = `Close of ${D.asof} · engine v${D.version} · ${D.rows.length} names`;
@@ -336,7 +339,7 @@ let stageFilter = "all";
 function drawLadder() {
   const n = (s) => D.rows.filter((r) => r.stage === s).length;
   $("#ladder").innerHTML = ORDER.map((s, i) =>
-    (i && i < 6 ? '<span class="arrow" aria-hidden="true">→</span>' : "") +
+    (i && i < 7 ? '<span class="arrow" aria-hidden="true">→</span>' : "") +
     `<button type="button" class="rung" data-s="${s}" aria-pressed="${stageFilter === s}" title="${esc(TEXT[s])}">
       <span>${chip(s)}</span><b>${n(s)}</b><span>${esc(TEXT[s])}</span></button>`).join("");
   document.querySelectorAll(".rung").forEach((b) => b.addEventListener("click", () => {
@@ -351,7 +354,7 @@ function drawLadder() {
   $("#sig-sub").textContent = today.length
     ? `Stage changes at the close of ${D.asof}. A trigger counts as strong when readiness is at or above the bar the engine learned (${D.trigger.min_ready || 0}).`
     : `No stage changes at the close of ${D.asof}. The most recent signals are in the track record below.`;
-  const order = ["TRIGGERED", "SETUP", "RUNNING", "FAILED"];
+  const order = ["TRIGGERED", "TARGET", "SETUP", "RUNNING", "FAILED"];
   today.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type) || b.ready - a.ready);
   $("#signals").innerHTML = today.length ? today.map((a) => `
     <div class="panel sig${a.strong === false ? " weak" : ""}">
@@ -363,49 +366,53 @@ function drawLadder() {
 
 // trades since trigger
 (function trades() {
-  const live = Object.fromEntries(D.alerts.filter((a) => a.type === "TRIGGERED").map((a) => [a.date + a.t, a]));
-  const rows = D.rows.filter((r) => r.trade).sort((a, b) => a.trade.sessions - b.trade.sessions);
   const cls = {"open": "open", "hit target": "win", "stopped out": "loss", "timed out": "flat"};
   const md = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("en-US", {month: "short", day: "numeric"});
   const win = (t) => {
     const w = t.window;
-    if (!w) return '<span class="dim">n/a</span>';
-    if (t.status !== "open") return `<span class="dim">typical ${w.p25}–${w.p75} sessions</span>`;
+    if (!w) return "";
     return `<span class="num" style="white-space:nowrap;font-size:.8rem">${md(w.from)} – ${md(w.to)}</span>
       <div class="dim" style="white-space:nowrap">day ${t.sessions} of ${w.p25}–${w.p75} · ${w.phase}</div>`;
   };
-  // open trades and ones that finished in the last 10 sessions; older finished trades on request
-  const recent = (r) => r.trade.status === "open" || r.trade.sessions - r.trade.resolved_in <= 10;
+  // open trades first (newest first), then closed ones by exit date, newest first
+  const rows = [...D.trades].sort((a, b) => (a.status === "open") !== (b.status === "open") ? (a.status === "open" ? -1 : 1)
+    : a.status === "open" ? (a.date < b.date ? 1 : -1) : (a.exit_date < b.exit_date ? 1 : a.exit_date > b.exit_date ? -1 : a.t < b.t ? -1 : 1));
+  // open trades and ones that closed in the last 10 sessions; older closed trades on request
+  const recent = (t) => t.status === "open" || t.since_exit <= 10;
   let showAll = false;
   const draw = () => {
   const shown = showAll ? rows : rows.filter(recent);
   const hiddenN = rows.length - rows.filter(recent).length;
   const btn = $("#trades-more");
   btn.hidden = hiddenN === 0;
-  btn.textContent = showAll ? "Show recent trades only" : `Show ${hiddenN} older finished trade${hiddenN === 1 ? "" : "s"}`;
-  $("#trades").innerHTML = shown.map((r) => {
-    const t = r.trade, a = live[t.date + r.t];
-    const ready = a ? a.ready : t.ready_at, strong = a ? a.strong !== false : t.strong;
-    const lo = t.stop_px, hi = t.target_px, now = r.close;
+  btn.textContent = showAll ? "Show open and recent trades only" : `Show ${hiddenN} older closed trade${hiddenN === 1 ? "" : "s"}`;
+  $("#trades").innerHTML = shown.map((t) => {
+    const lo = t.stop_px, hi = t.target_px, isOpen = t.status === "open", last = isOpen ? t.now ?? t.entry : t.exit_px;
     const x = (v) => Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100)).toFixed(1);
-    const st = t.status === "open" ? "open" : `${t.status} in ${t.resolved_in}`;
+    const st = isOpen ? "open" : `${t.status} in ${t.resolved_in}`;
+    const after = !isOpen && t.now_change != null ? `<div class="dim" style="white-space:nowrap">now ${sgn(t.now_change)}</div>` : "";
     return `<tr>
-      <td><div class="co" style="min-width:110px"><b>${esc(r.t)}</b><span style="max-width:130px">${esc(r.name)}</span></div></td>
-      <td><span class="num" style="white-space:nowrap">${t.date}</span><div class="dim">readiness ${ready}${strong ? "" : " · weak"}${a ? "" : " · backfilled"}</div></td>
-      <td class="r num">${t.sessions}<div class="dim">${t.days} days</div></td>
-      <td class="r num" style="white-space:nowrap">$${t.entry.toFixed(2)} → $${now.toFixed(2)}</td>
-      <td class="r num"><b>${sgn(t.change)}</b></td>
+      <td><div class="co" style="min-width:110px"><b>${esc(t.t)}</b><span style="max-width:130px">${esc(t.name)}</span></div></td>
+      <td><span class="num" style="white-space:nowrap">${t.date}</span><div class="dim">readiness ${t.ready_at}${t.strong ? "" : " · weak"}${t.live ? "" : " · backfilled"}</div></td>
+      <td class="r num">${t.sessions}</td>
+      <td class="r num" style="white-space:nowrap">$${t.entry.toFixed(2)} → $${last.toFixed(2)}<div class="dim">${isOpen ? "last close" : "exit " + md(t.exit_date)}</div></td>
+      <td class="r num"><b>${sgn(t.change)}</b>${after}</td>
       <td class="r num" style="white-space:nowrap">${sgn(t.best)} / ${sgn(t.worst)}</td>
       <td class="r num">${sgn(t.excess)}<div class="dim" style="white-space:nowrap">S&amp;P ${sgn(t.spy)}</div></td>
       <td><div class="rng" title="stop $${lo.toFixed(2)} (−${t.stop}%) · entry $${t.entry.toFixed(2)} · target $${hi.toFixed(2)} (+${t.target}%)">
         <span class="tr"></span><span class="sl"></span><span class="tg"></span>
-        <span class="en" style="left:${x(t.entry)}%"></span><span class="nw" style="left:${x(now)}%"></span></div>
+        <span class="en" style="left:${x(t.entry)}%"></span><span class="nw" style="left:${x(last)}%"></span></div>
         <div class="dim num" style="font-size:.74rem">stop $${lo.toFixed(2)} · target&nbsp;$${hi.toFixed(2)}</div></td>
-      <td><span class="status ${cls[t.status]}">${esc(st)}</span><div>${win(t)}</div></td></tr>`;
-  }).join("") || `<tr><td colspan="9" class="empty">${rows.length ? "No open or recently finished trades." : "No trigger in the last 90 trading days."}</td></tr>`;
+      <td><span class="status ${cls[t.status]}">${esc(st)}</span><div>${isOpen ? win(t) : ""}</div></td></tr>`;
+  }).join("") || `<tr><td colspan="9" class="empty">${rows.length ? "No open or recently closed trades." : "No triggers yet."}</td></tr>`;
   };
   $("#trades-more").addEventListener("click", () => { showAll = !showAll; draw(); });
   draw();
+  const L = D.ledger;
+  $("#ledger-note").textContent = L.closed
+    ? `Closed so far: ${L.closed} trade${L.closed === 1 ? "" : "s"}: ${L.hit} hit the target, ${L.stopped} stopped out, ${L.timed_out} timed out; ` +
+      `average ${sgn(L.avg_change)} at the exit (${sgn(L.avg_excess)} against the S&P 500 over the same days). ${L.open} still open.`
+    : `${L.open} open trade${L.open === 1 ? "" : "s"}, none closed yet.`;
 })();
 
 (function timingNote() {
@@ -428,7 +435,7 @@ function spark(r) {
   const x = (i) => (i / (n - 1)) * (w - 2 * pad) + pad, y = (v) => h - pad - (v / 99) * (h - 2 * pad);
   const pts = sp.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
   const lv = Math.max(0, Math.min(99, r.spark_level));
-  const col = r.stage === "TRIGGERED" || r.stage === "RUNNING" ? "var(--good)" : r.stage === "FAILED" ? "var(--crit)" : "var(--ink)";
+  const col = ["TRIGGERED", "RUNNING", "TARGET"].includes(r.stage) ? "var(--good)" : r.stage === "FAILED" ? "var(--crit)" : "var(--ink)";
   return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Last 60 closes; trigger level $${r.level}">
     <title>Last 60 closes · trigger level $${r.level.toFixed(2)} · close $${r.close.toFixed(2)}</title>
     <polygon class="ar" points="${x(0)},${h - pad} ${pts} ${x(n - 1)},${h - pad}"/>
@@ -448,7 +455,7 @@ function detail(r) {
       <div class="kv">
         <span>Target <b>+${r.target}%</b> before stop <b>−${r.stop}%</b></span>
         ${r.trade && r.trade.status === "open" ? `<span>Open trade: stop <b>$${r.trade.stop_px.toFixed(2)}</b> · target <b>$${r.trade.target_px.toFixed(2)}</b></span>`
-          : r.stage === "RUNNING" || r.stage === "EXTENDED" ? `<span>${r.trade ? `Trade from the ${esc(r.trade.date)} trigger: <b>${esc(r.trade.status)}</b>` : "No trigger in the last 90 sessions: running on the trend rule, above a rising 50-day average"}</span>`
+          : ["RUNNING", "EXTENDED", "TARGET"].includes(r.stage) ? `<span>${r.trade ? `Trade from the ${esc(r.trade.date)} trigger: <b>${esc(r.trade.status)}</b>${r.trade.exit_date ? ` on ${esc(r.trade.exit_date)}, ${sgn(r.trade.change)}` : ""}` : "No trigger in the last 90 sessions: running on the trend rule, above a rising 50-day average"}</span>`
           : `<span>If it triggers at $${r.level.toFixed(2)}: stop <b>$${(r.level * (1 - r.stop / 100)).toFixed(2)}</b> · target <b>$${(r.level * (1 + r.target / 100)).toFixed(2)}</b></span>`}<span>P(target first) <b>${pct(r.prob)}</b></span><span>RSI <b>${r.rsi}</b></span>
         <span>50d slope <b>${sgn(r.slope, 2)}</b>/2wk</span><span>Lows held <b>${r.low_age ?? "n/a"}</b> sessions</span>
         <span>1m return <b>${sgn(r.ret20)}</b></span><span>Off 52w high <b>${sgn(r.dd52)}</b></span>

@@ -11,10 +11,11 @@ import pandas as pd
 from .config import FEATURES
 
 # display order, most actionable first
-STAGES = ["TRIGGERED", "SETUP", "RUNNING", "EXTENDED", "BASING", "FAILED", "FALLING"]
+STAGES = ["TRIGGERED", "SETUP", "TARGET", "RUNNING", "EXTENDED", "BASING", "FAILED", "FALLING"]
 STAGE_TEXT = {
     "TRIGGERED": "Move starting: fresh close through the trigger level",
     "SETUP": "Coiled just under the trigger level, lows holding",
+    "TARGET": "Reached its target since the trigger: the trade is closed, the trend still up",
     "RUNNING": "Move under way: holding above the level, 50-day average rising",
     "EXTENDED": "Running but stretched: over 20% above the 50-day average or RSI over 75",
     "BASING": "Lows holding, 50-day average flattening, not near the level yet",

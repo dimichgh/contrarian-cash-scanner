@@ -13,6 +13,8 @@ ALERTS = STATE / "alerts.jsonl"
 LAST_RUN = STATE / "last_run.json"
 HISTORY = STATE / "history"
 SCAN = STATE / "scan_latest.csv"
+TRADES = STATE / "trades.jsonl"  # every trigger, followed as a trade; closed ones keep their result
+BARS = STATE / "bars"            # cached daily bars, one CSV per name
 
 RESCAN_DAYS = 7       # full fundamental re-scan cadence
 LEARN_DAYS = 7        # engine re-fit cadence

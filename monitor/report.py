@@ -6,11 +6,14 @@ import json
 import math
 from pathlib import Path
 
+import pandas as pd
+
 from . import config as C
+from . import trades as T
 from .signals import PIVOT_TEXT, STAGE_TEXT, STAGES
 
 TEMPLATE = Path(__file__).with_name("dashboard_template.html")
-MARK = {"TRIGGERED": "▲", "SETUP": "◆", "RUNNING": "●", "FAILED": "✕"}
+MARK = {"TRIGGERED": "▲", "SETUP": "◆", "TARGET": "✓", "RUNNING": "●", "FAILED": "✕"}
 FEATURE_TEXT = {
     "f_sma50_gap": "Distance above the 50-day average", "f_sma200_gap": "Distance above the 200-day average",
     "f_sma50_slope": "50-day average slope", "f_hh40_gap": "Distance to the 40-day high",
@@ -30,6 +33,11 @@ def rule_text(p: dict) -> str:
 
 def _md(iso: str) -> str:
     return dt.date.fromisoformat(iso).strftime("%b %-d")
+
+
+def _sessions_since(iso: str, as_of: str) -> int:
+    """Weekdays from `iso` to `as_of` (holidays count, which is close enough for "recent")."""
+    return max(0, len(pd.bdate_range(iso, as_of)) - 1)
 
 
 def _pct(x):
@@ -56,27 +64,22 @@ def summary(res: dict) -> str:
     top = [r for r in rows if r["stage"] not in ("RUNNING", "EXTENDED")][:8]
     if top:
         lines.append("Highest readiness: " + ", ".join(f"{r['t']} {r['ready']} ({r['stage'].lower()})" for r in top))
-    trades = sorted((r for r in rows if r.get("trade")), key=lambda r: r["trade"]["sessions"])
-    open_ = [r for r in trades if r["trade"]["status"] == "open"]
+    ledger = res.get("trades", [])
+    open_ = sorted((t for t in ledger if t["status"] == "open"), key=lambda t: t["sessions"])
     if open_:
         def plan(t):
-            return f"; stop ${t['stop_px']:.2f}, target ${t['target_px']:.2f}"
-
-        def window(t):
-            w = t.get("window")
+            w = T.window(t, eng)
             if not w:
-                return ""
+                return f"; stop ${t['stop_px']:.2f}, target ${t['target_px']:.2f}"
             return (f"; stop ${t['stop_px']:.2f}; target ${t['target_px']:.2f} usually hit {_md(w['from'])}–{_md(w['to'])}"
                     f" (day {t['sessions']} of a typical {w['p25']}–{w['p75']}, {w['phase']})")
-        lines += ["", "Since the trigger (open): " + ", ".join(
-            f"{r['t']} {r['trade']['change']:+.1f}% in {r['trade']['sessions']}d "
-            f"(S&P {r['trade']['spy']:+.1f}%, best {r['trade']['best']:+.1f}%{window(r['trade']) or plan(r['trade'])})"
-            for r in open_)]
-    closed = [r for r in trades if r["trade"]["status"] != "open"
-              and r["trade"]["sessions"] - r["trade"]["resolved_in"] <= 5]
+        lines += ["", "Open trades: " + ", ".join(
+            f"{t['t']} {t['change']:+.1f}% in {t['sessions']}d (S&P {t['spy']:+.1f}%, best {t['best']:+.1f}%{plan(t)})"
+            for t in open_)]
+    closed = [t for t in ledger if t["status"] != "open" and _sessions_since(t["exit_date"], res["as_of"]) <= 5]
     if closed:
-        lines.append("Resolved this week: " + ", ".join(
-            f"{r['t']} {r['trade']['status']} ({r['trade']['change']:+.1f}% now)" for r in closed))
+        lines.append("Closed this week: " + ", ".join(
+            f"{t['t']} {t['status']} {t['change']:+.1f}% on {_md(t['exit_date'])}" for t in closed))
     counts = {s: sum(r["stage"] == s for r in rows) for s in STAGES}
     lines += ["", f"Watchlist: {len(rows)} names · " + " · ".join(f"{k.lower()} {v}" for k, v in counts.items() if v)]
     if res["added"]:
@@ -112,6 +115,20 @@ def _clean(v):
     return v
 
 
+def _trades(res: dict) -> list[dict]:
+    """Every trade in the ledger, with today's close beside it and how long ago a closed one ended."""
+    names = {t: e.get("name", t) for t, e in res.get("watchlist", {}).items()}
+    out = []
+    for t in res.get("trades", []):
+        now = res.get("closes", {}).get(t["t"])
+        out.append({k: v for k, v in t.items() if k not in ("up", "down")}
+                   | {"name": names.get(t["t"], t["t"]), "window": T.window(t, res["engine"]),
+                      "now": None if now is None else round(now, 2),
+                      "now_change": None if now is None else round((now / t["entry"] - 1) * 100, 1),
+                      "since_exit": None if t["status"] == "open" else _sessions_since(t["exit_date"], res["as_of"])})
+    return sorted(out, key=lambda t: (t["status"] != "open", t["exit_date"] or t["date"]), reverse=False)
+
+
 def dashboard(res: dict) -> str:
     eng = res["engine"]
     m = eng["model"]
@@ -129,7 +146,8 @@ def dashboard(res: dict) -> str:
         "stages": [[s, STAGE_TEXT[s]] for s in STAGES], "rule": rule_text(eng["trigger"]),
         "label": eng["label"], "trigger": eng["trigger"], "metrics": eng["metrics"],
         "learned": learned, "history": history[-20:], "record": res["record"],
-        "alerts": res["recent_alerts"][::-1], "rows": rows,
+        "alerts": res["recent_alerts"][::-1], "rows": rows, "trades": _trades(res),
+        "ledger": T.stats(res.get("trades", [])),
         "added": res["added"], "dropped": res["dropped"],
     }
     blob = json.dumps(data, ensure_ascii=False, separators=(",", ":"), default=_clean)

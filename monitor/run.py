@@ -9,12 +9,13 @@ import pandas as pd
 
 from . import config as C
 from . import learn as L
+from . import trades as T
 from . import watchlist as W
 from .model import auc, predict, readiness
 from .prices import fetch_many
 from .signals import PIVOT_TEXT, features, move_size, outcomes, stages
 
-ALERT_STAGES = {"TRIGGERED", "SETUP", "RUNNING", "FAILED"}
+ALERT_STAGES = {"TRIGGERED", "SETUP", "TARGET", "RUNNING", "FAILED"}
 
 
 def _load(path, default):
@@ -42,7 +43,7 @@ def rescan(wl: dict, today: dt.date) -> tuple[list[str], list[str]]:
     return W.merge_scan(wl, scan, today)
 
 
-def score_ticker(t: str, b: pd.DataFrame, spy: pd.Series, eng: dict) -> tuple[dict, pd.DataFrame]:
+def score_ticker(t: str, b: pd.DataFrame, spy: pd.Series, eng: dict) -> tuple[dict, pd.DataFrame, pd.DataFrame]:
     f = features(b, spy)
     st = stages(f, eng["trigger"])
     m = eng["model"]
@@ -52,7 +53,7 @@ def score_ticker(t: str, b: pd.DataFrame, spy: pd.Series, eng: dict) -> tuple[di
     size = float(move_size(f["close"], eng["label"]["horizon"]).iloc[-1])
     window = f["close"].iloc[-60:]
     lo, hi = float(window.min()), float(window.max())
-    norm = lambda x: int(round((x - lo) / (hi - lo) * 99)) if hi > lo else 50
+    norm = lambda x: int(round((x - lo) / (hi - lo) * 99)) if hi > lo and np.isfinite(x) else 50
     row = {
         "t": t, "date": str(f.index[-1].date()), "close": round(float(last["close"]), 2),
         "target": round(size * eng["label"]["up"] * 100, 1), "stop": round(size * eng["label"]["down"] * 100, 1),
@@ -66,54 +67,20 @@ def score_ticker(t: str, b: pd.DataFrame, spy: pd.Series, eng: dict) -> tuple[di
         "ret20": round(float(last["f_ret20"]) * 100, 1), "dd52": round(float(last["f_dd_52w"]) * 100, 1),
         "spark": "".join(f"{norm(x):02d}" for x in window), "spark_level": norm(level),
         "prev_stage": st["stage"].iloc[-2] if len(st) > 1 else None,
-        "trade": since_trigger(f, st, spy, eng),
         "contrib": _contributions(m, f.iloc[-1]),
     }
-    return row, st
+    return row, f, st
 
 
-def since_trigger(f: pd.DataFrame, st: pd.DataFrame, spy: pd.Series, eng: dict, lookback: int = 90) -> dict | None:
-    """How the most recent trigger (within `lookback` sessions) has played out, as a trade from its close."""
-    days = st.index[st["trigger"]]
-    if not len(days):
-        return None
-    d = days[-1]
-    i = f.index.get_loc(d)
-    n = len(f) - 1 - i
-    if n > lookback:
-        return None
-    label = eng["label"]
-    c = f["close"]
-    entry, now, path = float(c.iloc[i]), float(c.iloc[-1]), c.iloc[i:]
-    o = outcomes(c, label).loc[d]
-    target, stop = float(o["target"]), float(o["stop"])
-    if pd.isna(o["y"]):
-        status, done = "open", None
-    elif o["y"] == 1:
-        status, done = "hit target", int(o["bars"])
-    elif o["ret"] <= -stop + 1e-9:
-        status, done = "stopped out", int(o["bars"])
-    else:
-        status, done = "timed out", int(o["bars"])
-    sp = spy.reindex(c.index).ffill()
-    spy_chg = float(sp.iloc[-1] / sp.iloc[i] - 1)
-    m = eng["model"]
-    ready = int(readiness(m, predict(m, f.loc[[d], m["features"]].to_numpy())[0]))
-    r2 = lambda x: round(x * 100, 1)
-    tm = eng.get("metrics", {}).get("trigger", {}).get("timing", {})
-    window = None
-    if "median" in tm:
-        day = lambda k: str((d + pd.offsets.BDay(k)).date())  # weekdays; holidays shift it a day or so
-        phase = "early" if n < tm["p25"] else "in window" if n <= tm["p75"] else "late"
-        window = {"from": day(tm["p25"]), "median": day(tm["median"]), "to": day(tm["p75"]),
-                  "p25": tm["p25"], "mid": tm["median"], "p75": tm["p75"], "phase": phase}
-    return {"window": window, "date": str(d.date()), "sessions": n, "days": (f.index[-1] - d).days, "entry": round(entry, 2),
-            "level": round(float(st.at[d, "pivot"]), 2), "change": r2(now / entry - 1),
-            "best": r2(float(path.max()) / entry - 1), "worst": r2(float(path.min()) / entry - 1),
-            "spy": r2(spy_chg), "excess": r2(now / entry - 1 - spy_chg),
-            "target_px": round(entry * (1 + target), 2), "stop_px": round(entry * (1 - stop), 2),
-            "target": r2(target), "stop": r2(stop), "status": status, "resolved_in": done,
-            "ready_at": ready, "strong": ready >= eng["trigger"].get("min_ready", 0)}
+def attach_trade(row: dict, trade: dict | None, eng: dict) -> None:
+    """Show the name's latest trade, and call a move that already reached its target what it is."""
+    row["trade"] = None if trade is None else {**trade, "window": T.window(trade, eng)}
+    moving = ("TRIGGERED", "RUNNING", "EXTENDED")
+    if trade and trade["status"] == "hit target":
+        if row["stage"] in moving:
+            row["stage"] = "TARGET"
+        if trade["exit_date"] < row["date"] and row["prev_stage"] in moving:
+            row["prev_stage"] = "TARGET"  # already there yesterday: no fresh alert for a name seen first today
 
 
 def _contributions(m: dict, last: pd.Series) -> list:
@@ -136,6 +103,10 @@ def alert_text(r: dict, p: dict) -> str:
     if r["stage"] == "SETUP":
         return (f"{abs(r['gap']):.1f}% under the trigger level ${r['level']:.2f} ({lvl}), lows held {r['low_age']} sessions; "
                 f"if it triggers there: stop ${r['level'] * (1 - r['stop'] / 100):.2f}, target ${r['level'] * (1 + r['target'] / 100):.2f}")
+    if r["stage"] == "TARGET":
+        t = r["trade"]
+        return (f"reached its target: {t['change']:+.1f}% from the {t['date']} trigger at ${t['entry']:.2f} "
+                f"in {t['resolved_in']} sessions (target ${t['target_px']:.2f})")
     if r["stage"] == "RUNNING":
         return f"move confirmed: holding {r['gap']:+.1f}% above ${r['level']:.2f}, 50-day average rising {r['slope']:+.1f}%/2wk"
     if r["stage"] == "FAILED":
@@ -193,14 +164,23 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
 
     did_learn = force_learn or eng is None or _due(eng.get("updated"), C.LEARN_DAYS, today)
     names = W.active(wl)
-    fetch = list(names)
+    ledger = T.load()
+    # names off the watchlist with a trade still open keep being followed until it closes
+    followed = sorted({r["t"] for r in ledger if r["status"] == "open"} - set(names))
+    fetch = list(names) + followed
     if did_learn:
         scan = W.load_scan()
         fetch += list(scan["name"]) if scan is not None else []
-    bars = fetch_many(fetch + ["SPY"], "5y" if did_learn else "2y")
+    got: dict = {}
+    bars = fetch_many(fetch + ["SPY"], "5y" if did_learn else "2y", today=today, stats=got)
     if "SPY" not in bars:
-        raise RuntimeError("no SPY bars from Yahoo; cannot score")
+        raise RuntimeError("no SPY bars (Yahoo down and none cached); cannot score")
     spy = bars["SPY"]["close"]
+    stale = set(got.get("stale", []))
+    notes.append("Prices: " + ", ".join(f"{got[k]} {k}" for k in ("update", "download", "cache", "missing") if got.get(k))
+                 + (" (offline: cache only)" if got.get("offline") else ""))
+    if "SPY" in stale:
+        raise RuntimeError("no fresh SPY bars from Yahoo; refusing to signal on cached prices")
     if did_learn:
         prev_version = eng.get("version") if eng else None
         eng = L.learn({t: b for t, b in bars.items() if t != "SPY"}, spy, eng, today)
@@ -210,21 +190,31 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
 
     as_of = str(spy.index[-1].date())
     fresh_session = as_of != last.get("as_of")
-    rows, missing = [], []
-    for t in names:
+    rows, missing, scored = [], [], {}
+    for t in names + followed:
         b = bars.get(t)
-        if b is None or len(b) < 220:
-            missing.append(t)
+        if b is None or len(b) < 220 or t in stale:
+            if t in names:
+                missing.append(t)
             continue
-        row, _ = score_ticker(t, b, spy, eng)
+        row, f, st = score_ticker(t, b, spy, eng)
+        scored[t] = (f, st)
+        if t not in names:
+            continue
         if row["stage"] == "n/a":
             missing.append(t)
             continue
         e = wl[t]
         row.update(name=e.get("name", t), source=e.get("source"), thesis=e.get("thesis"), author=e.get("author"),
                    added=e.get("added"))
-        e["hold"] = row["stage"] in ("TRIGGERED", "RUNNING", "EXTENDED")
         rows.append(row)
+
+    ledger, last["ledger_seen"] = T.update(ledger, scored, spy, eng, last.get("ledger_seen", {}))
+    for r in rows:
+        f, st = scored[r["t"]]
+        since = str(st.index[max(0, len(st) - 1 - T.LOOKBACK)].date())
+        attach_trade(r, T.latest(ledger, r["t"], since), eng)
+        wl[r["t"]]["hold"] = r["stage"] in ("TRIGGERED", "TARGET", "RUNNING", "EXTENDED")
     rows.sort(key=lambda r: (-r["ready"], r["t"]))
 
     # alerts: stage changes since the last recorded run (or since yesterday's close on a first run)
@@ -253,6 +243,8 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
         notes.append(f"No new session since {as_of}; alerts already sent")
 
     alerts = [json.loads(x) for x in C.ALERTS.read_text().splitlines()] if C.ALERTS.exists() else []
+    T.mark_live(ledger, alerts)
+    T.save(ledger)
     hist = pd.concat([pd.read_csv(p) for p in sorted(C.HISTORY.glob("*.csv"))]) if C.HISTORY.exists() and \
         any(C.HISTORY.glob("*.csv")) else pd.DataFrame()
     record = track_record(hist, bars, eng["label"], alerts)
@@ -262,5 +254,6 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
     C.LAST_RUN.write_text(json.dumps(last, indent=1) + "\n")
     W.save(wl)
     return {"as_of": as_of, "rows": rows, "alerts": new_alerts, "recent_alerts": alerts[-40:], "added": added,
+            "trades": ledger, "closes": {t: float(f["close"].iloc[-1]) for t, (f, _) in scored.items()},
             "dropped": dropped, "missing": missing, "engine": eng, "record": record, "notes": notes,
             "rescanned": did_rescan, "learned": did_learn, "fresh": fresh_session, "watchlist": wl}
