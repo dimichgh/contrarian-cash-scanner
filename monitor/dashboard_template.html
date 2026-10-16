@@ -209,7 +209,7 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
   <section aria-labelledby="trade-h">
     <div class="sec-head">
       <h2 id="trade-h">Since the trigger</h2>
-      <p>Every trigger, followed as a trade from the trigger-day close until a close reaches its target or its stop, or 40 sessions pass. Open trades are measured to the last close; a closed trade keeps its result at the exit, with today's change beside it for reference. Open trades and those closed in the last 10 sessions show first; older ones are behind the button below the table.</p>
+      <p>Every trigger, followed as a trade from the trigger-day close until a close reaches its target or its stop, or 40 sessions pass, one trade per name at a time. The trade decides the name's stage while it lasts. Open trades are measured to the last close; a closed trade keeps its result at the exit, with today's change beside it for reference. Open trades and those closed in the last 10 sessions show first; older ones are behind the button below the table.</p>
     </div>
     <div class="panel table-wrap">
       <table>
@@ -256,7 +256,7 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
         <tbody id="tb"></tbody>
       </table>
     </div>
-    <p class="sub">Distance is the close against the trigger level: negative means that far below it. For names in a trade stage (triggered, running, extended, retest, failed), the level shown is the one they broke through; for every other stage it is today's level. The chart shows the last 60 closes with the level dashed, or an arrow at the edge when the level is outside that range.</p>
+    <p class="sub">Distance is the close against the trigger level: negative means that far below it. For names whose stage comes from their trade (triggered, running, extended, retest, target hit, failed), the level shown is the one the trade broke through; for every other stage it is today's level. The chart shows the last 60 closes with the level dashed, or an arrow at the edge when the level is outside that range.</p>
   </section>
 
   <section aria-labelledby="eng-h">
@@ -369,7 +369,7 @@ function drawLadder() {
 
 // trades since trigger
 (function trades() {
-  const cls = {"open": "open", "hit target": "win", "stopped out": "loss", "timed out": "flat"};
+  const cls = {"open": "open", "hit target": "win", "stopped out": "loss", "timed out": "flat", "no data": "flat"};
   const md = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("en-US", {month: "short", day: "numeric"});
   const win = (t) => {
     const w = t.window;
@@ -461,9 +461,9 @@ function detail(r) {
         <span class="cbar"><i style="left:0;width:${(Math.abs(v) / cmax * 100).toFixed(0)}%;background:${v > 0 ? "var(--accent)" : "var(--neg)"}"></i></span></div>`).join("") || '<span class="dim">No single feature stands out.</span>'}</div>
       <div class="kv">
         <span>Target <b>+${r.target}%</b> before stop <b>−${r.stop}%</b></span>
-        ${r.trade && r.trade.status === "open" ? `<span>Open trade: stop <b>$${r.trade.stop_px.toFixed(2)}</b> · target <b>$${r.trade.target_px.toFixed(2)}</b></span>`
-          : ["RUNNING", "EXTENDED", "TARGET"].includes(r.stage) ? `<span>${r.trade ? `Trade from the ${esc(r.trade.date)} trigger: <b>${esc(r.trade.status)}</b>${r.trade.exit_date ? ` on ${esc(r.trade.exit_date)}, ${sgn(r.trade.change)}` : ""}` : "No trigger in the last 90 sessions: running on the trend rule, above a rising 50-day average"}</span>`
-          : `<span>If it triggers at $${r.level.toFixed(2)}: stop <b>$${(r.level * (1 - r.stop / 100)).toFixed(2)}</b> · target <b>$${(r.level * (1 + r.target / 100)).toFixed(2)}</b></span>`}<span>P(target first) <b>${pct(r.prob)}</b></span><span>RSI <b>${r.rsi}</b></span>
+        ${r.trade && r.trade.status === "open" ? `<span>Open trade from ${esc(r.trade.date)}: stop <b>$${r.trade.stop_px.toFixed(2)}</b> · target <b>$${r.trade.target_px.toFixed(2)}</b></span>`
+          : r.trade && ["TARGET", "FAILED"].includes(r.stage) ? `<span>Trade from the ${esc(r.trade.date)} trigger: <b>${esc(r.trade.status)}</b> on ${esc(r.trade.exit_date)}, ${sgn(r.trade.change)}</span>`
+          : `${r.trade ? `<span>Last trade (${esc(r.trade.date)}): <b>${esc(r.trade.status)}</b>, ${sgn(r.trade.change)}</span>` : ""}<span>If it triggers at $${r.level.toFixed(2)}: stop <b>$${(r.level * (1 - r.stop / 100)).toFixed(2)}</b> · target <b>$${(r.level * (1 + r.target / 100)).toFixed(2)}</b></span>`}<span>P(target first) <b>${pct(r.prob)}</b></span><span>RSI <b>${r.rsi}</b></span>
         <span>50d slope <b>${sgn(r.slope, 2)}</b>/2wk</span><span>Lows held <b>${r.low_age ?? "n/a"}</b> sessions</span>
         <span>1m return <b>${sgn(r.ret20)}</b></span><span>Off 52w high <b>${sgn(r.dd52)}</b></span>
         <span>Volume today <b>${r.vol_ratio ?? "n/a"}x</b> avg</span>

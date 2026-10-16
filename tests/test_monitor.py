@@ -40,26 +40,58 @@ def test_features_complete(spy):
     assert f[C.FEATURES].iloc[-1].notna().all()
 
 
+P = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10, min_ready=0)
+
+
+def _eng(p=P, timing=None):
+    m = {"features": C.FEATURES, "coef": [0.0] * len(C.FEATURES), "intercept": 0.0,
+         "mean": [0.0] * len(C.FEATURES), "std": [1.0] * len(C.FEATURES), "quantiles": list(np.linspace(0, 1, 101))}
+    return {"label": C.LABEL, "model": m, "trigger": p, "version": 1,
+            "metrics": {"trigger": {"timing": timing}} if timing else {}}
+
+
+def _spy_for(b):
+    return pd.Series(np.linspace(400, 450, len(b)), index=b.index)
+
+
+def _stages_with_trades(b, p=P):
+    """Every day's final stage and level, the way the daily run reads them."""
+    from monitor import trades as T
+    spy = _spy_for(b)
+    f = features(b, spy)
+    st = stages(f, p)
+    keep, T.LOOKBACK = T.LOOKBACK, 10_000  # follow every trigger in the series, however old
+    try:
+        ledger, _ = T.update([], {"X": (f, st)}, spy, _eng(p), {})
+    finally:
+        T.LOOKBACK = keep
+    out = []
+    for i in range(len(st)):
+        day = str(st.index[i].date())
+        out.append(T.stage_on(f, st, i, T.latest(ledger, "X", "1900-01-01", day), p))
+    return pd.DataFrame(out, columns=["stage", "level"], index=st.index), ledger, f
+
+
 def test_breakout_is_detected_and_runs(spy):
     b = base_then_breakout()
     f = features(b, spy)
-    p = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10)
-    trig = trigger_events(f, p)
+    trig = trigger_events(f, P)
     first = trig[trig].index[0]
     assert first == b.index[280]  # the breakout day, not a whipsaw inside the base
-    st = stages(f, p)
-    assert st.loc[first, "stage"] == "TRIGGERED"
-    assert st["stage"].iloc[-1] in ("RUNNING", "EXTENDED")
-    assert st["stage"].iloc[150] == "FALLING"
+    s, ledger, _ = _stages_with_trades(b)
+    assert s.loc[first, "stage"] == "TRIGGERED"
+    assert s["stage"].iloc[-1] == "TARGET" and ledger[0]["status"] == "hit target"  # the move reached its target
+    assert s["stage"].iloc[150] == "FALLING"
+    assert set(s["stage"].iloc[281:280 + ledger[0]["resolved_in"]]) <= {"TRIGGERED", "RUNNING", "EXTENDED"}
 
 
 def test_failed_breakout(spy):
-    b = base_then_breakout(n_up=6)
-    c = np.concatenate([b["close"].to_numpy(), np.linspace(60, 52, 10)])
-    v = np.concatenate([b["volume"].to_numpy(), np.full(10, 1e6)])
-    f = features(bars(c, v), spy)
-    st = stages(f, dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10))
-    assert st["stage"].iloc[-1] == "FAILED"
+    b = base_then_breakout(n_up=1)
+    c = np.concatenate([b["close"].to_numpy(), [61.5, 60.5, 59.0, 57.0, 55.0, 54.0]])
+    v = np.concatenate([b["volume"].to_numpy(), np.full(6, 1e6)])
+    s, ledger, _ = _stages_with_trades(bars(c, v))
+    assert ledger[-1]["status"] == "stopped out" and s["stage"].iloc[-1] == "FAILED"
+    assert c[-1] < s["level"].iloc[-1]
 
 
 def test_run_without_recent_trigger_uses_todays_level(spy):
@@ -67,55 +99,48 @@ def test_run_without_recent_trigger_uses_todays_level(spy):
     b = base_then_breakout()
     c = np.concatenate([b["close"].to_numpy(), np.linspace(75, 50, 60), np.linspace(50, 51, 40), np.linspace(51, 58, 30)])
     v = np.concatenate([b["volume"].to_numpy(), np.full(130, 1e6)])
-    spy = pd.Series(np.linspace(400, 450, len(c)), index=pd.bdate_range("2022-01-03", periods=len(c)))
-    f = features(bars(c, v), spy)
-    p = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10)
-    st = stages(f, p)
-    assert not st["trigger"].iloc[320:].any()
-    last = st.iloc[-1]
-    assert last["stage"] == "ABOVE"  # above its level, but no trigger: no entry signal, not a "move under way"
-    assert last["level"] == last["pivot"] and last["trig_level"] != last["pivot"]
-    # while the original breakout ran, it was measured against the level it broke through
-    assert st.loc[f.index[300], "stage"] in ("RUNNING", "EXTENDED")
-    assert st.loc[f.index[300], "level"] == st.loc[f.index[280], "pivot"]
+    b2 = bars(c, v)
+    s, ledger, f = _stages_with_trades(b2)
+    st = stages(f, P)
+    assert not st["trigger"].iloc[320:].any() and len(ledger) == 1
+    assert s["stage"].iloc[-1] == "ABOVE"  # above its level but no open trade: no entry signal
+    assert s["level"].iloc[-1] == st["pivot"].iloc[-1] != ledger[0]["level"]
+    # while the original trade was open, it was measured against the level it broke through
+    assert s.loc[f.index[285], "stage"] in ("RUNNING", "EXTENDED") and s.loc[f.index[285], "level"] == ledger[0]["level"]
 
 
 def test_stage_meanings_match_their_text(spy):
-    p = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10)
-    # trigger at 62 over a ~59.8 level, then closes slipping back under it
+    # trigger at 62 over a ~59.8 level, then closes slipping back under it until the stop
     b = base_then_breakout(n_up=1)
-    c = np.concatenate([b["close"].to_numpy(), [61.0, 59.7, 58.6, 57.9, 58.3, 59.0]])
-    v = np.concatenate([b["volume"].to_numpy(), np.full(6, 1e6)])
-    st = stages(features(bars(c, v), spy.reindex(pd.bdate_range("2022-01-03", periods=len(c))).ffill()), p)
-    tail = st.iloc[-7:]
-    lvl = tail["level"].iloc[0]
-    assert tail["stage"].iloc[0] == "TRIGGERED" and (tail["level"] == lvl).all()
-    for (_, r), close in zip(tail.iterrows(), c[-7:]):
+    c = np.concatenate([b["close"].to_numpy(), [61.0, 59.7, 58.6, 57.9, 56.0, 55.0, 56.5, 58.0, 60.5, 61.5]])
+    v = np.concatenate([b["volume"].to_numpy(), np.full(10, 1e6)])
+    s, ledger, f = _stages_with_trades(bars(c, v))
+    (t,) = ledger
+    tail = s.iloc[-11:]
+    lvl = t["level"]
+    for (d, r), close in zip(tail.iterrows(), c[-11:]):
+        day = str(d.date())
+        open_ = t["exit_date"] is None or day < t["exit_date"]
         if r["stage"] in ("TRIGGERED", "RUNNING", "EXTENDED"):
-            assert close >= lvl                       # never "triggered" or "running" under the level
+            assert open_ and close >= lvl and r["level"] == lvl
         if r["stage"] == "RETEST":
-            assert lvl * 0.97 <= close < lvl
-    assert list(tail["stage"].iloc[-5:]) == ["RETEST", "RETEST", "FAILED", "FAILED", "FAILED"]  # no re-entry
-    assert not st["trigger"].iloc[-6:].any()
-    # back over the level without a new trigger: no longer "failed", but no live signal either
-    c2 = np.concatenate([c, [60.5, 61.5]])
-    v2 = np.concatenate([v, np.full(2, 1e6)])
-    st2 = stages(features(bars(c2, v2), spy.reindex(pd.bdate_range("2022-01-03", periods=len(c2))).ffill()), p)
-    assert not st2["trigger"].iloc[-2:].any() and list(st2["stage"].iloc[-2:]) == ["ABOVE", "ABOVE"]
+            assert open_ and t["stop_px"] < close < lvl
+        if r["stage"] == "FAILED":
+            assert t["status"] == "stopped out" and day >= t["exit_date"] and close < lvl
+    assert tail["stage"].iloc[0] == "TRIGGERED" and "FAILED" in set(tail["stage"])
+    assert list(tail["stage"].iloc[-2:]) == ["ABOVE", "ABOVE"]  # back over the level, trade over: no live signal
+    assert not stages(f, P)["trigger"].iloc[-10:].any()
 
 
 def test_setup_is_always_under_the_level_and_falling_needs_new_lows(spy):
-    p = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10)
-    st = stages(features(base_then_breakout(), spy), p)
+    st = stages(features(base_then_breakout(), spy), P)
     ok = st["stage"] != "n/a"
     assert (st.loc[ok & (st["stage"] == "SETUP"), "gap"] < 0).all()
     assert (st.loc[ok & (st["stage"] == "ABOVE"), "gap"] > 0).all()
-    f = features(base_then_breakout(), spy)
-    falling = ok & (st["stage"] == "FALLING")
-    assert (f.loc[falling, "low_age_days"] < 15).all()
+    assert (st.loc[ok & (st["stage"] == "FALLING"), "low_age"] < 15).all()
     # a stock that never made a 120-day low after its first bars is not "making new lows"
     up = bars(np.linspace(50, 80, 300))
-    st2 = stages(features(up, spy.iloc[:300]), p)
+    st2 = stages(features(up, spy.iloc[:300]), P)
     assert "FALLING" not in set(st2["stage"].iloc[150:])
 
 
@@ -186,13 +211,6 @@ def test_author_calls_stay_and_removes_stick(monkeypatch):
     W.remove(wl, "PYPL", d)
     W.ensure_author_calls(wl, d + dt.timedelta(days=71))
     assert wl["PYPL"]["status"] == "dropped"
-
-
-def _eng(p, timing=None):
-    m = {"features": C.FEATURES, "coef": [0.0] * len(C.FEATURES), "intercept": 0.0,
-         "mean": [0.0] * len(C.FEATURES), "std": [1.0] * len(C.FEATURES), "quantiles": list(np.linspace(0, 1, 101))}
-    return {"label": C.LABEL, "model": m, "trigger": p, "version": 1,
-            "metrics": {"trigger": {"timing": timing}} if timing else {}}
 
 
 def test_trade_is_followed_and_frozen_at_the_exit(spy):
@@ -268,22 +286,44 @@ def test_one_open_trade_per_name(spy):
     assert sorted(r["date"] for r in ledger) == [str(b.index[280].date()), str(b.index[315].date())]
 
 
-def test_target_hit_shows_as_target_not_running(spy):
+def test_target_and_exit_rules(spy):
     from monitor import trades as T
-    from monitor.run import attach_trade
     b = base_then_breakout()
-    f = features(b, spy)
-    p = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10, min_ready=0)
-    st = stages(f, p)
-    eng = _eng(p)
-    ledger, _ = T.update([], {"X": (f, st)}, spy, eng, {})
-    row = {"stage": st["stage"].iloc[-1], "prev_stage": st["stage"].iloc[-2], "date": str(b.index[-1].date())}
-    assert row["stage"] in ("RUNNING", "EXTENDED")
-    attach_trade(row, ledger[0], eng)
-    assert row["stage"] == "TARGET" and row["prev_stage"] == "TARGET"  # it got there days ago: no new alert
-    row = {"stage": "BASING", "prev_stage": "BASING", "date": row["date"]}
-    attach_trade(row, ledger[0], eng)
-    assert row["stage"] == "BASING"  # a trend that has since rolled over says so
+    s, ledger, f = _stages_with_trades(b)
+    (t,) = ledger
+    exit_i = 280 + t["resolved_in"]
+    assert s["stage"].iloc[exit_i] == "TARGET" and s["stage"].iloc[exit_i - 1] != "TARGET"
+    # a closed winner never reads FAILED or RUNNING again, even if the price comes back down
+    c = np.concatenate([b["close"].to_numpy(), np.linspace(74, 58, 12)])
+    v = np.concatenate([b["volume"].to_numpy(), np.full(12, 1e6)])
+    s2, ledger2, _ = _stages_with_trades(bars(c, v))
+    assert ledger2[0]["status"] == "hit target"
+    assert not {"FAILED", "RUNNING", "RETEST", "EXTENDED"} & set(s2["stage"].iloc[exit_i:])
+    # a trade nobody can follow any more is closed after its horizon
+    r = dict(t, status="open", exit_date=None, exit_px=None, resolved_in=None, date="2020-01-02", as_of="2020-01-10")
+    out, _ = T.update([r], {}, _spy_for(b), _eng(), {}, today="2020-06-01")
+    assert out[0]["status"] == "no data" and out[0]["exit_date"] == "2020-01-10"
+
+
+def test_ledger_rechecks_recent_days_and_frees_closed_trades(spy):
+    from monitor import trades as T
+    b = base_then_breakout()
+    f = features(b, _spy_for(b))
+    st = stages(f, P)
+    trig_day = b.index[280]
+    # a run that saw day 281 before the trigger existed (e.g. the trigger-day volume came in late)
+    st_before = st.copy()
+    st_before["trigger"] = False
+    ledger, seen = T.update([], {"X": (f.iloc[:282], st_before.iloc[:282])}, _spy_for(b), _eng(), {})
+    assert ledger == [] and seen["X"] == str(b.index[281].date())
+    ledger, _ = T.update(ledger, {"X": (f, st)}, _spy_for(b), _eng(), seen)
+    assert [r["date"] for r in ledger] == [str(trig_day.date())]
+    # an open trade that closed between runs no longer blocks the next trigger
+    st2 = st.copy()
+    st2.iloc[315, st2.columns.get_loc("trigger")] = True
+    t_open = dict(ledger[0], status="open", exit_date=None, exit_px=None, resolved_in=None)
+    out, _ = T.update([t_open], {"X": (f, st2)}, _spy_for(b), _eng(), {"X": str(b.index[290].date())})
+    assert sorted(r["date"] for r in out) == [str(trig_day.date()), str(b.index[315].date())]
 
 
 def test_price_cache_updates_detects_splits_and_works_offline(monkeypatch, tmp_path):
@@ -343,28 +383,30 @@ def test_same_day_rescans_count_one_miss(monkeypatch):
 
 def test_alerts_are_news_only():
     from monitor.run import _alert_due
-    idx = pd.bdate_range("2026-10-01", periods=11)
-    st = pd.DataFrame({"stage": ["BASING"] * 8 + ["SETUP", "ABOVE", "SETUP"]}, index=idx)
-    trig = {"date": "2026-10-05"}
-    row = lambda s, t="X", trade=None: {"t": t, "stage": s, "trade": trade}
-    assert _alert_due(row("TRIGGERED"), "SETUP", st, trig, set())
-    assert not _alert_due(row("TRIGGERED"), "FAILED", st, trig, {("X", "TRIGGERED", "2026-10-05")})  # once per trigger
-    assert _alert_due(row("RUNNING"), "TRIGGERED", st, trig, set())
-    assert not _alert_due(row("RUNNING"), "EXTENDED", st, trig, set())  # not "confirmed" again
-    assert not _alert_due(row("RUNNING"), "SETUP", st, None, set())     # no trigger, no running signal
-    assert not _alert_due(row("SETUP"), "ABOVE", st, None, set())       # set up again within 10 sessions
-    st2 = pd.DataFrame({"stage": ["BASING"] * 10 + ["SETUP"]}, index=idx)
-    assert _alert_due(row("SETUP"), "BASING", st2, None, set())
-    assert not _alert_due(row("ABOVE"), "SETUP", st2, None, set())      # no signal for "above, no trigger"
-    t = {"date": "2026-09-01", "exit_date": str(idx[-1].date())}
-    assert _alert_due(row("TARGET", trade=t), "RUNNING", st, trig, set())
-    assert not _alert_due(row("TARGET", trade=t), "RUNNING", st, trig, {("X", "TARGET", "2026-09-01")})
-    old = dict(t, exit_date="2026-09-20")
-    assert not _alert_due(row("TARGET", trade=old), "RUNNING", st, trig, set())  # hit weeks ago: not news
-    st3 = pd.DataFrame({"stage": ["BASING"] * 6 + ["FAILED"] * 5}, index=idx)
-    assert not _alert_due(row("FAILED"), "BASING", st3, trig, set())             # failed days ago
-    st4 = pd.DataFrame({"stage": ["RUNNING"] * 10 + ["FAILED"]}, index=idx)
-    assert _alert_due(row("FAILED"), "RUNNING", st4, trig, set())
+    idx = pd.bdate_range("2026-10-01", periods=30)
+    day = lambda i: str(idx[i].date())
+    st = lambda stages: pd.DataFrame({"stage": stages}, index=idx[:len(stages)])
+    base = st(["BASING"] * 30)
+    row = lambda s, trade=None: {"t": "X", "stage": s, "trade": trade, "date": day(29)}
+    tr = {"date": day(27), "sessions": 2, "exit_date": None}
+    assert _alert_due(row("TRIGGERED", tr), base, []) == (True, day(27))
+    sent = [{"t": "X", "type": "TRIGGERED", "date": day(28), "trigger_date": day(27)}]
+    assert not _alert_due(row("TRIGGERED", tr), base, sent)[0]                    # once per trigger
+    assert _alert_due(row("RUNNING", dict(tr, sessions=6)), base, sent)[0]
+    assert not _alert_due(row("RUNNING", dict(tr, sessions=30)), base, sent)[0]   # not every return to RUNNING
+    won = {"date": day(2), "sessions": 20, "exit_date": day(27)}
+    assert _alert_due(row("TARGET", won), base, [])[0]
+    assert not _alert_due(row("TARGET", dict(won, exit_date=day(10))), base, [])[0]  # weeks ago: not news
+    # a missed run delays a FAILED signal, it does not lose it
+    lost = {"date": day(2), "sessions": 20, "exit_date": day(27)}
+    assert _alert_due(row("FAILED", lost), base, [])[0]
+    # SETUP: once when the run of SETUP days starts, not again while it hovers
+    s1 = st(["BASING"] * 26 + ["SETUP"] * 4)
+    assert _alert_due(row("SETUP"), s1, []) == (True, day(26))
+    assert not _alert_due(row("SETUP"), s1, [{"t": "X", "type": "SETUP", "date": day(26), "trigger_date": day(26)}])[0]
+    s2 = st(["BASING"] * 20 + ["SETUP"] * 3 + ["ABOVE"] * 4 + ["SETUP"] * 3)
+    assert not _alert_due(row("SETUP"), s2, [{"t": "X", "type": "SETUP", "date": day(20), "trigger_date": day(20)}])[0]
+    assert not _alert_due(row("ABOVE"), s2, [])[0]
 
 
 def test_lagging_last_bar_takes_the_quote_volume(monkeypatch):
@@ -387,3 +429,15 @@ def test_lagging_last_bar_takes_the_quote_volume(monkeypatch):
     monkeypatch.setattr(P, "http_get", lambda url, timeout=20: payload({}))
     b = P.fetch_ohlcv("X")
     assert len(b) == 29 and (b["volume"] > 0).all()  # no volume yet: wait for the bar instead of a 0
+
+
+def test_open_trade_under_its_level_is_a_retest(spy):
+    from monitor import trades as T
+    b = base_then_breakout()
+    f = features(b, spy)
+    st = stages(f, P)
+    lvl = float(f["close"].iloc[290]) * 1.02  # the close on day 290 sits 2% under the level it broke
+    trade = {"t": "X", "date": str(b.index[280].date()), "level": lvl, "exit_date": None, "status": "open"}
+    assert T.stage_on(f, st, 290, trade, P) == ("RETEST", lvl)
+    closed = dict(trade, exit_date=str(b.index[288].date()), status="timed out")
+    assert T.stage_on(f, st, 290, closed, P)[0] == st["stage"].iloc[290]  # trade over: price stage, today's level

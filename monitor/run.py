@@ -16,6 +16,7 @@ from .prices import fetch_many
 from .signals import PIVOT_TEXT, features, move_size, outcomes, stages
 
 ALERT_STAGES = {"TRIGGERED", "SETUP", "TARGET", "RUNNING", "FAILED"}
+HOLD_STAGES = {"TRIGGERED", "RUNNING", "EXTENDED", "RETEST", "TARGET"}
 
 
 def _load(path, default):
@@ -43,44 +44,36 @@ def rescan(wl: dict, today: dt.date) -> tuple[list[str], list[str]]:
     return W.merge_scan(wl, scan, today)
 
 
-def score_ticker(t: str, b: pd.DataFrame, spy: pd.Series, eng: dict) -> tuple[dict, pd.DataFrame, pd.DataFrame]:
-    f = features(b, spy)
-    st = stages(f, eng["trigger"])
-    m = eng["model"]
+def make_row(t: str, f: pd.DataFrame, st: pd.DataFrame, eng: dict, ledger: list[dict]) -> dict:
+    """Today's call for one name: its stage (read off its trade when it has one), level and readiness."""
+    m, p = eng["model"], eng["trigger"]
     prob = predict(m, f[m["features"]].iloc[-1:].to_numpy())[0]
-    last, s = f.iloc[-1], st.iloc[-1]
-    level = float(s["level"])
+    last = f.iloc[-1]
+    since = str(st.index[max(0, len(st) - 1 - T.LOOKBACK)].date())
+    day, yday = str(st.index[-1].date()), str(st.index[-2].date())
+    trade = T.latest(ledger, t, since, day)
+    stage, level = T.stage_on(f, st, len(st) - 1, trade, p)
+    prev_stage, _ = T.stage_on(f, st, len(st) - 2, T.latest(ledger, t, since, yday), p)
     size = float(move_size(f["close"], eng["label"]["horizon"]).iloc[-1])
     window = f["close"].iloc[-60:]
     lo, hi = float(window.min()), float(window.max())
     norm = lambda x: int(round((x - lo) / (hi - lo) * 99)) if hi > lo and np.isfinite(x) else 50
-    row = {
-        "t": t, "date": str(f.index[-1].date()), "close": round(float(last["close"]), 2),
+    low_age = st["low_age"].iloc[-1]
+    return {
+        "t": t, "date": day, "close": round(float(last["close"]), 2),
         "target": round(size * eng["label"]["up"] * 100, 1), "stop": round(size * eng["label"]["down"] * 100, 1),
-        "stage": s["stage"], "prob": round(float(prob), 4), "ready": int(readiness(m, prob)),
+        "stage": stage, "prob": round(float(prob), 4), "ready": int(readiness(m, prob)),
         "level": round(level, 2), "gap": round((float(last["close"]) / level - 1) * 100, 1),
         "vol_ratio": round(float(last["vol_ratio"]), 2) if not pd.isna(last["vol_ratio"]) else None,
         "sma50": round(float(last["sma50"]), 2), "sma200": None if pd.isna(last["sma200"]) else round(float(last["sma200"]), 2),
         "slope": round(float(last["f_sma50_slope"]) * 100, 2),
         "rs20": round(float(last["f_rs_slope"]) * 100, 1), "rsi": round(float(last["rsi"]), 0),
-        "low_age": None if pd.isna(last["low_age_days"]) else int(last["low_age_days"]),
+        "low_age": None if pd.isna(low_age) else int(low_age),
         "ret20": round(float(last["f_ret20"]) * 100, 1), "dd52": round(float(last["f_dd_52w"]) * 100, 1),
         "spark": "".join(f"{norm(x):02d}" for x in window), "spark_level": norm(level),
-        "prev_stage": st["stage"].iloc[-2] if len(st) > 1 else None,
-        "contrib": _contributions(m, f.iloc[-1]),
+        "prev_stage": prev_stage, "contrib": _contributions(m, last),
+        "trade": None if trade is None else {**trade, "window": T.window(trade, eng)},
     }
-    return row, f, st
-
-
-def attach_trade(row: dict, trade: dict | None, eng: dict) -> None:
-    """Show the name's latest trade, and call a move that already reached its target what it is."""
-    row["trade"] = None if trade is None else {**trade, "window": T.window(trade, eng)}
-    moving = ("TRIGGERED", "RUNNING", "EXTENDED", "ABOVE")
-    if trade and trade["status"] == "hit target":
-        if row["stage"] in moving:
-            row["stage"] = "TARGET"
-        if trade["exit_date"] < row["date"] and row["prev_stage"] in moving:
-            row["prev_stage"] = "TARGET"  # already there yesterday: no fresh alert for a name seen first today
 
 
 def _contributions(m: dict, last: pd.Series) -> list:
@@ -97,58 +90,61 @@ def _side(gap: float) -> str:
     return f"{abs(gap):.1f}% {'above' if gap >= 0 else 'under'}"
 
 
-def trigger_day(f: pd.DataFrame, st: pd.DataFrame) -> dict | None:
-    """The numbers of the latest trigger, from the trigger day itself."""
-    days = st.index[st["trigger"].to_numpy(bool)]
-    if not len(days):
-        return None
-    d = days[-1]
-    vr = f.at[d, "vol_ratio"]
-    return {"date": str(d.date()), "close": round(float(f.at[d, "close"]), 2), "level": round(float(st.at[d, "pivot"]), 2),
-            "gap": round((float(f.at[d, "close"]) / float(st.at[d, "pivot"]) - 1) * 100, 1),
-            "vol_ratio": None if pd.isna(vr) else round(float(vr), 2)}
-
-
-def alert_text(r: dict, p: dict, trig: dict | None = None) -> str:
+def alert_text(r: dict, p: dict) -> str:
     lvl = PIVOT_TEXT[p["pivot"]]
     t = r.get("trade") or {}
-    if r["stage"] == "TRIGGERED" and trig:
-        vol = f" on {trig['vol_ratio']:.1f}x average volume" if trig["vol_ratio"] else ""
-        when = "" if trig["date"] == r["date"] else f" on {trig['date']}"
-        plan = f"; stop ${t['stop_px']:.2f}, target ${t['target_px']:.2f}" if t.get("date") == trig["date"] else ""
-        return f"closed {trig['gap']:.1f}% above the {lvl} (${trig['level']:.2f}){when}{vol}{plan}"
+    if r["stage"] == "TRIGGERED":
+        gap = (t["entry"] / t["level"] - 1) * 100
+        when = "" if t["date"] == r["date"] else f" on {t['date']}"
+        vol = f", volume {t['vol_ratio']:.1f}x its average" if t.get("vol_ratio") else ""
+        return (f"closed {gap:.1f}% above the {lvl} (${t['level']:.2f}){when}{vol}; "
+                f"stop ${t['stop_px']:.2f}, target ${t['target_px']:.2f}")
     if r["stage"] == "SETUP":
-        return (f"{abs(r['gap']):.1f}% under the trigger level ${r['level']:.2f} ({lvl}), lows held {r['low_age']} sessions; "
+        held = f", lows held {r['low_age']} sessions" if r["low_age"] is not None else ""
+        return (f"{abs(r['gap']):.1f}% under the trigger level ${r['level']:.2f} ({lvl}){held}; "
                 f"if it triggers there: stop ${r['level'] * (1 - r['stop'] / 100):.2f}, target ${r['level'] * (1 + r['target'] / 100):.2f}")
     if r["stage"] == "TARGET":
         return (f"reached its target: {t['change']:+.1f}% from the {t['date']} trigger at ${t['entry']:.2f} "
                 f"in {t['resolved_in']} sessions (target ${t['target_px']:.2f})")
     if r["stage"] == "RUNNING":
         trend = f"50-day average {'rising' if r['slope'] > 0 else 'falling'} {abs(r['slope']):.1f}%/2wk"
-        return f"move confirmed: held the breakout, now {_side(r['gap'])} the ${r['level']:.2f} level, {trend}"
+        return (f"move confirmed: {t['sessions']} sessions after the trigger, {_side(r['gap'])} the ${r['level']:.2f} level "
+                f"({t['change']:+.1f}% from the entry), {trend}")
     if r["stage"] == "FAILED":
-        return f"breakout failed: closed 3%+ back under ${r['level']:.2f}; now {_side(r['gap'])} it"
+        return (f"breakout failed: stopped out at ${t['exit_px']:.2f} ({t['change']:+.1f}%) on {t['exit_date']}; "
+                f"now {_side(r['gap'])} the ${r['level']:.2f} level")
     return ""
 
 
-def _alert_due(r: dict, before: str | None, st: pd.DataFrame, trig: dict | None, sent: set) -> bool:
-    """Signal a stage change only when it is news: one alert per trigger, no flip-flopping."""
-    s = r["stage"]
-    if s not in ALERT_STAGES or s == before:
-        return False
-    if s == "TRIGGERED":
-        return trig is not None and (r["t"], "TRIGGERED", trig["date"]) not in sent
-    if s == "RUNNING":
-        return before in ("TRIGGERED", "RETEST") and trig is not None and (r["t"], "RUNNING", trig["date"]) not in sent
-    # what happened more than a week ago is not news (e.g. after a rule change or a missed week)
-    recent = str(st.index[max(0, len(st) - 6)].date())
-    if s == "FAILED":
-        return (trig is not None and (r["t"], "FAILED", trig["date"]) not in sent
-                and "FAILED" not in set(st["stage"].iloc[-6:-1]))
-    if s == "TARGET":
-        return r["trade"]["exit_date"] >= recent and (r["t"], "TARGET", r["trade"]["date"]) not in sent
-    # SETUP: only when it was not already set up in the previous 10 sessions
-    return "SETUP" not in set(st["stage"].iloc[-11:-1])
+def _run_start(stages: pd.Series, value: str) -> int:
+    """Position of the first day of the current unbroken run of `value` at the end of `stages`."""
+    i = len(stages) - 1
+    while i > 0 and stages.iloc[i - 1] == value:
+        i -= 1
+    return i
+
+
+def _alert_due(r: dict, st: pd.DataFrame, past: list[dict]) -> tuple[bool, str | None]:
+    """(is this news, the date that identifies the event). Decided from what was actually sent,
+    so a missed run delays a signal by a day instead of losing it."""
+    s, t = r["stage"], r.get("trade")
+    if s not in ALERT_STAGES:
+        return False, None
+    sent = {(a["t"], a["type"], a.get("trigger_date") or a["date"]) for a in past}
+    recent = str(st.index[max(0, len(st) - 6)].date())  # older than a week is not news
+    if s in ("TRIGGERED", "RUNNING", "TARGET", "FAILED"):
+        if s in ("TARGET", "FAILED") and t["exit_date"] < recent:
+            return False, None
+        if s == "RUNNING" and t["sessions"] > 15:  # the confirmation, not every return to RUNNING
+            return False, None
+        return (r["t"], s, t["date"]) not in sent, t["date"]
+    # SETUP: when the current run of SETUP days began in the last week, and no SETUP signal went
+    # out in the 10 sessions before it (a name hovering under its level does not repeat)
+    i = _run_start(st["stage"], "SETUP")
+    start = str(st.index[i].date())
+    quiet_from = str(st.index[max(0, i - 10)].date())
+    repeat = any(a["t"] == r["t"] and a["type"] == "SETUP" and a["date"] >= quiet_from for a in past)
+    return start >= recent and not repeat and (r["t"], "SETUP", start) not in sent, start
 
 
 def track_record(hist: pd.DataFrame, bars: dict, label: dict, alerts: list[dict]) -> dict:
@@ -200,6 +196,10 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
     eng = _load(C.ENGINE, None)
     notes: list[str] = []
 
+    ledger = T.load()
+    for t, e in wl.items():  # before a rescan decides what to drop: names mid-move or mid-trade stay
+        e["hold"] = any(r["t"] == t and r["status"] == "open" for r in ledger) \
+            or last.get("stages", {}).get(t) in HOLD_STAGES
     added, dropped = [], []
     did_rescan = force_rescan or _due(last.get("rescan"), C.RESCAN_DAYS, today) or not C.SCAN.exists()
     if did_rescan:
@@ -213,7 +213,6 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
 
     did_learn = force_learn or eng is None or _due(eng.get("updated"), C.LEARN_DAYS, today)
     names = W.active(wl)
-    ledger = T.load()
     # names off the watchlist with a trade still open keep being followed until it closes
     followed = sorted({r["t"] for r in ledger if r["status"] == "open"} - set(names))
     fetch = list(names) + followed
@@ -242,54 +241,49 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
 
     as_of = str(spy.index[-1].date())
     fresh_session = as_of != last.get("as_of")
-    rows, missing, scored = [], [], {}
+    scored, missing = {}, []
     for t in names + followed:
         b = bars.get(t)
         if b is None or len(b) < 220 or t in stale:
             if t in names:
                 missing.append(t)
             continue
-        row, f, st = score_ticker(t, b, spy, eng)
-        scored[t] = (f, st)
-        if t not in names:
+        f = features(b, spy)
+        scored[t] = (f, stages(f, eng["trigger"]))
+
+    ledger, last["ledger_seen"] = T.update(ledger, scored, spy, eng, last.get("ledger_seen", {}), as_of)
+    rows = []
+    for t in names:
+        if t not in scored:
             continue
-        if row["stage"] == "n/a":
+        f, st = scored[t]
+        if st["stage"].iloc[-1] == "n/a":
             missing.append(t)
             continue
+        row = make_row(t, f, st, eng, ledger)
         e = wl[t]
         row.update(name=e.get("name", t), source=e.get("source"), thesis=e.get("thesis"), author=e.get("author"),
                    added=e.get("added"))
+        e["hold"] = bool(row["trade"]) and row["trade"]["status"] == "open" or row["stage"] in HOLD_STAGES
         rows.append(row)
-
-    ledger, last["ledger_seen"] = T.update(ledger, scored, spy, eng, last.get("ledger_seen", {}))
-    for r in rows:
-        f, st = scored[r["t"]]
-        since = str(st.index[max(0, len(st) - 1 - T.LOOKBACK)].date())
-        attach_trade(r, T.latest(ledger, r["t"], since), eng)
-        open_trade = bool(r["trade"]) and r["trade"]["status"] == "open"
-        wl[r["t"]]["hold"] = open_trade or r["stage"] in ("TRIGGERED", "TARGET", "RUNNING", "EXTENDED", "RETEST")
     rows.sort(key=lambda r: (-r["ready"], r["t"]))
 
-    # alerts: stage changes since the last recorded run (or since yesterday's close on a first run)
+    # alerts: stage changes that are news (see _alert_due)
     prev = last.get("stages", {})
     new_alerts = []
     if fresh_session:
         past = [json.loads(x) for x in C.ALERTS.read_text().splitlines()] if C.ALERTS.exists() else []
-        sent = {(a["t"], a["type"], a.get("trigger_date") or a["date"]) for a in past}
         for r in rows:
-            before = prev.get(r["t"], r["prev_stage"])
-            f, st = scored[r["t"]]
-            trig = trigger_day(f, st)
-            if not _alert_due(r, before, st, trig, sent):
+            due, key = _alert_due(r, scored[r["t"]][1], past + new_alerts)
+            if not due:
                 continue
-            strong = r["stage"] != "TRIGGERED" or r["ready"] >= eng["trigger"].get("min_ready", 0)
-            key_date = r["trade"]["date"] if r["stage"] == "TARGET" else trig["date"] if r["stage"] in (
-                "TRIGGERED", "RUNNING", "FAILED") else None
-            new_alerts.append({"date": r["date"], "t": r["t"], "type": r["stage"], "from": before, "strong": strong,
-                               "close": trig["close"] if r["stage"] == "TRIGGERED" else r["close"],
-                               "level": trig["level"] if r["stage"] == "TRIGGERED" else r["level"],
-                               "ready": r["ready"], "prob": r["prob"], "trigger_date": key_date,
-                               "text": alert_text(r, eng["trigger"], trig), "engine": eng["version"]})
+            t = r["trade"] or {}
+            trig = r["stage"] == "TRIGGERED"
+            new_alerts.append({"date": r["date"], "t": r["t"], "type": r["stage"], "from": prev.get(r["t"], r["prev_stage"]),
+                               "strong": bool(t.get("strong", True)) if trig else True,
+                               "close": t["entry"] if trig else r["close"], "level": t["level"] if trig else r["level"],
+                               "ready": t["ready_at"] if trig else r["ready"], "prob": r["prob"], "trigger_date": key,
+                               "text": alert_text(r, eng["trigger"]), "engine": eng["version"]})
         with C.ALERTS.open("a") as fh:
             for a in new_alerts:
                 fh.write(json.dumps(a) + "\n")

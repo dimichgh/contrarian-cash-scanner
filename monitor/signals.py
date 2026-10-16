@@ -13,22 +13,21 @@ from .config import FEATURES
 # display order, most actionable first
 STAGES = ["TRIGGERED", "SETUP", "TARGET", "RUNNING", "EXTENDED", "RETEST", "ABOVE", "BASING", "FAILED", "FALLING"]
 STAGE_TEXT = {
-    "TRIGGERED": "Move starting: closed through the trigger level in the last few sessions and holding above it",
-    "SETUP": "Under the trigger level by 4% or less, lows holding: closest to a trigger",
-    "TARGET": "Reached its target since the trigger: the trade is closed, the price still above the level",
-    "RUNNING": "Move under way: has held the level it broke through since the trigger",
-    "EXTENDED": "Running but stretched: over 20% above the 50-day average or RSI over 75",
-    "RETEST": "Back under the level it broke through, by less than 3%: testing the breakout",
-    "ABOVE": "Above the trigger level with no recent trigger (no volume, no base first, or the move is old): no entry signal",
+    "TRIGGERED": "Move starting: triggered in the last 5 sessions, trade open, price at or above the level",
+    "SETUP": "Under today's trigger level by 4% or less, lows holding: closest to a trigger",
+    "TARGET": "The trade reached its target and the price is still above the level it broke through",
+    "RUNNING": "Move under way: trade open, price at or above the level it broke through",
+    "EXTENDED": "Trade open and stretched: over 20% above the 50-day average or RSI over 75",
+    "RETEST": "Trade open, but the price is back under the level it broke through (stop not hit)",
+    "ABOVE": "Above today's trigger level with no open trade: no entry signal",
     "BASING": "Lows holding 15+ sessions, not near the trigger level yet",
-    "FAILED": "Triggered, then closed 3% or more back under the level, and still under it",
+    "FAILED": "The trade hit its stop and the price is still under the level it broke through",
     "FALLING": "Made a new 120-day low in the last 15 sessions",
 }
-# stages that belong to a trigger and are measured against the level it broke through
-TRADE_STAGES = {"TRIGGERED", "RUNNING", "EXTENDED", "RETEST", "FAILED"}
-# a failed breakout that climbs back over its level without a new trigger reads ABOVE: no live signal
-RUN_WINDOW = 60   # sessions after a trigger its stages last
-FAIL_WINDOW = 40  # sessions after a trigger a close under its floor counts as a failed breakout
+# stages that come from the name's trade; the others come from the price alone
+TRADE_STAGES = {"TRIGGERED", "RUNNING", "EXTENDED", "RETEST", "TARGET", "FAILED"}
+RUN_WINDOW = 60   # sessions after its trigger a won trade can still read TARGET
+FAIL_WINDOW = 40  # sessions after its trigger a stopped trade can still read FAILED
 PIVOT_TEXT = {
     "sma50": "50-day average",
     "hh20": "20-day closing high",
@@ -106,36 +105,20 @@ def trigger_events(f: pd.DataFrame, p: dict) -> pd.Series:
 
 
 def stages(f: pd.DataFrame, p: dict) -> pd.DataFrame:
-    """One stage per day; each one means exactly what its STAGE_TEXT says."""
+    """The price-only stage of each day (ABOVE, SETUP, BASING, FALLING) and the trigger days.
+
+    The trade stages come from the name's trade on top of these (see trades.stage_on), so a stage
+    can never disagree with the trade shown next to it.
+    """
     piv = pivot(f, p["pivot"])
-    trig = trigger_events(f, p)
     c, sma50 = f["close"], f["sma50"]
     # no 120-day low since the data starts means the lows have held all along
     low_age = f["low_age_days"].where(f["low_age_days"].notna() | sma50.isna(), 120.0)
-    pos = pd.Series(np.arange(len(f), dtype=float), index=f.index)
-    age = pos - pos.where(trig).ffill()          # sessions since the last trigger
-    trig_level = piv.where(trig).ffill()           # the level it broke through
-    floor = trig_level * (1 - p["fail_tol"])
-    held = c.groupby(trig.cumsum()).cummin() >= floor  # never closed 3%+ back under since the trigger
-    live = (age <= RUN_WINDOW) & held
     gap = c / piv - 1
-
-    conds = [
-        (age <= FAIL_WINDOW) & ~held & (c < trig_level),
-        live & (age < p["confirm"]) & (c >= trig_level),
-        live & (c < trig_level),
-        live & ((c > sma50 * 1.2) | (f["rsi"] > 75)),
-        live,
-        c > piv,
-        (gap >= -p["setup_gap"]) & (low_age >= 15),
-        low_age >= 15,
-    ]
-    st = np.select([x.fillna(False).to_numpy(bool) for x in conds],
-                   ["FAILED", "TRIGGERED", "RETEST", "EXTENDED", "RUNNING", "ABOVE", "SETUP", "BASING"], "FALLING")
-    by_trigger = pd.Series(st, index=f.index).isin(TRADE_STAGES)
-    level = trig_level.where(by_trigger, piv)
-    out = pd.DataFrame({"stage": st, "pivot": piv, "level": level, "gap": c / level - 1, "trig_age": age,
-                        "trig_level": trig_level, "trigger": trig}, index=f.index)
+    conds = [c > piv, (gap >= -p["setup_gap"]) & (low_age >= 15), low_age >= 15]
+    st = np.select([x.fillna(False).to_numpy(bool) for x in conds], ["ABOVE", "SETUP", "BASING"], "FALLING")
+    out = pd.DataFrame({"stage": st, "pivot": piv, "gap": gap, "low_age": low_age,
+                        "trigger": trigger_events(f, p)}, index=f.index)
     out.loc[sma50.isna() | piv.isna(), "stage"] = "n/a"
     return out
 

@@ -93,23 +93,24 @@ drops scan names that miss three re-scans in a row, unless their move is already
 |---|---|
 | Falling | Made a new 120-day low in the last 15 sessions |
 | Basing | Lows holding 15+ sessions, not near the trigger level yet |
-| Setup | Under the trigger level by 4% or less, lows holding: closest to a trigger |
-| Triggered | Closed through the trigger level (default: the 50-day average, the author's confirmation tranche) on 1.2x volume after 10+ of the prior 20 sessions below it, within the last 5 sessions, and holding above it |
-| Running | Has held the level it broke through since the trigger (up to 60 sessions) |
-| Extended | Running but 20%+ above the 50-day average or RSI over 75 |
-| Target hit | The trigger's trade reached its target and the price is still above the level: the trade is closed |
-| Retest | Back under the level it broke through, by less than 3% |
-| Failed | Triggered, then closed 3%+ back under the level (within 40 sessions), and still under it |
-| Above, no trigger | Above the trigger level with no live trigger (crossed without the volume or the base, the breakout failed, or the move is over 60 sessions old): no entry signal |
+| Setup | Under today's trigger level by 4% or less, lows holding: closest to a trigger |
+| Triggered | Triggered in the last 5 sessions (a close through the trigger level, by default the 50-day average, the author's confirmation tranche, on 1.2x volume after 10+ of the prior 20 sessions below it); trade open, price at or above the level |
+| Running | Trade open, price at or above the level it broke through |
+| Extended | Trade open and stretched: 20%+ above the 50-day average or RSI over 75 |
+| Retest | Trade open, but the price is back under the level it broke through (stop not hit) |
+| Target hit | The trade reached its target and the price is still above its level (up to 60 sessions after the trigger) |
+| Failed | The trade hit its stop and the price is still under its level (up to 40 sessions after the trigger) |
+| Above, no trigger | Above today's trigger level with no open trade: crossed without the volume or the base, or the trade is over. No entry signal |
 
-Trade stages (Triggered, Running, Extended, Retest, Failed) are measured against the level the
-trigger broke through; every other stage against today's level.
+The first six come from the name's trade (see *Since the trigger*), so a stage can never disagree
+with the trade shown next to it, and they are measured against the level the trade broke through.
+The last four come from the price alone and are measured against today's level.
 
-Signals are news only: a trigger once per trigger day (with the trigger day's numbers, even when it
-is seen a day late), Running once when a trigger's first sessions are over, Failed once per trigger,
-Target hit once per trade and only within a week of the hit, and Setup only when the name was not
-already set up in the previous 10 sessions. A trigger is **strong** when its readiness clears a bar
-the engine learns.
+Signals are news only, and decided from what was actually sent, so a missed run delays a signal
+instead of losing it: a trigger once per trade (with the trigger day's numbers and readiness), Running
+once per trade when its first sessions are over, Target hit and Failed once per trade within a week
+of the exit, and Setup when a run of setup days begins, not again within 10 sessions. A trigger is
+**strong** when its readiness clears a bar the engine learns.
 
 **Readiness (0–100)** is the engine's probability that the stock reaches its target before its stop
 within 40 trading days, as a percentile of every setup in the training history. Target and stop are
@@ -133,8 +134,10 @@ over-weight quick stops and targets).
 name at a time, until a close reaches its target or its stop, or 40 sessions pass. The trades live in
 `state/trades.jsonl`: an open trade is re-followed each run with the target and stop it opened with,
 and a closed one keeps its exit date, exit price, result, best and worst close up to the exit and the
-S&P 500 over the same days for good, whatever the watchlist or the trigger rule does later. Names
-that leave the watchlist with a trade open are still followed until it closes. The dashboard lists
+S&P 500 over the same days for good, whatever the watchlist or the trigger rule does later. Each run
+also re-checks the last 5 sessions, so a trigger revealed by a revised bar still gets its trade. Names
+that leave the watchlist with a trade open are still followed until it closes; one that cannot be
+followed any more (delisted, renamed) is closed as "no data" 15 business days after its horizon. The dashboard lists
 open trades and recent exits (older exits behind a button) with today's change beside each closed one,
 and the totals so far. Open trades also get a target window: the dates between which past triggers
 that reached their target usually got there (the middle half of their times, re-measured at every

@@ -3,7 +3,8 @@
 A trade opens at the trigger-day close with a target and a stop sized to the stock's volatility on
 that day. It closes the first time a close reaches either one, or after `horizon` sessions. Open
 trades are re-followed each run; a closed trade keeps the numbers it closed with for good, so the
-history no longer depends on what the watchlist or the trigger rule looks like today.
+history no longer depends on what the watchlist or the trigger rule looks like today. The trade
+stages a name shows (triggered, running, retest, target, failed...) are read off its trade.
 """
 from __future__ import annotations
 
@@ -13,9 +14,11 @@ import pandas as pd
 
 from . import config as C
 from .model import predict, readiness
-from .signals import barrier_labels, move_size
+from .signals import FAIL_WINDOW, RUN_WINDOW, barrier_labels, move_size
 
-LOOKBACK = 90  # sessions of past triggers a name is backfilled with when the ledger first sees it
+LOOKBACK = 90   # sessions of past triggers a name is backfilled with when the ledger first sees it
+RECHECK = 5     # sessions re-checked every run: a revised bar can reveal a trigger after the fact
+NO_DATA_AFTER = 15  # business days past its horizon an open trade nobody can follow is closed
 
 
 def load() -> list[dict]:
@@ -53,19 +56,22 @@ def follow(t: str, f: pd.DataFrame, st: pd.DataFrame, spy: pd.Series, d: pd.Time
     spy_chg = float(sp.iloc[i + k] / sp.iloc[i] - 1)
     r2 = lambda x: round(x * 100, 1)
     level = frozen["level"] if frozen else round(float(st.at[d, "pivot"]), 2)
+    vr = f.at[d, "vol_ratio"]
     rec = {
         "t": t, "date": str(d.date()), "level": level, "entry": round(entry, 2),
+        "vol_ratio": None if pd.isna(vr) else round(float(vr), 2),
         "up": round(up, 5), "down": round(down, 5), "target": r2(up), "stop": r2(down),
         "target_px": round(entry * (1 + up), 2), "stop_px": round(entry * (1 - down), 2),
         "status": status, "sessions": k, "resolved_in": None if status == "open" else k,
         "exit_date": None if status == "open" else str(path.index[-1].date()),
         "exit_px": None if status == "open" else round(exit_px, 2),
+        "as_of": str(path.index[-1].date()),
         "change": r2(exit_px / entry - 1), "best": r2(float(path.max()) / entry - 1),
         "worst": r2(float(path.min()) / entry - 1), "spy": r2(spy_chg), "excess": r2(exit_px / entry - 1 - spy_chg),
     }
     if frozen:
         rec.update({k: frozen[k] for k in ("ready_at", "strong", "live", "engine") if k in frozen})
-    else:
+    else:  # readiness as the engine saw the trigger day itself
         m = eng["model"]
         ready = int(readiness(m, predict(m, f.loc[[d], m["features"]].to_numpy())[0]))
         rec.update(ready_at=ready, strong=ready >= eng["trigger"].get("min_ready", 0), live=False,
@@ -73,50 +79,90 @@ def follow(t: str, f: pd.DataFrame, st: pd.DataFrame, spy: pd.Series, d: pd.Time
     return rec
 
 
-def update(ledger: list[dict], scored: dict, spy: pd.Series, eng: dict, seen: dict) -> tuple[list[dict], dict]:
-    """Add new triggers and re-follow open trades.
+def update(ledger: list[dict], scored: dict, spy: pd.Series, eng: dict, seen: dict,
+           today: str | None = None) -> tuple[list[dict], dict]:
+    """Re-follow open trades, then add new triggers.
 
     scored: {ticker: (features, stages)} for every name priced this run.
     seen: {ticker: last session the ledger looked at}; a name it has not seen is backfilled with
-    its triggers from the last LOOKBACK sessions, a known one only gets triggers after that session.
+    its triggers from the last LOOKBACK sessions, a known one gets the triggers since then plus the
+    last RECHECK sessions again (a revised bar can turn a day into a trigger after the fact).
     """
     by_key = {(r["t"], r["date"]): r for r in ledger}
+    horizon = eng["label"]["horizon"]
+    for key, r in list(by_key.items()):  # first, so a trade that closed in between frees the name
+        if r["status"] != "open":
+            continue
+        f_st = scored.get(r["t"])
+        d = pd.Timestamp(r["date"])
+        if f_st is not None and d in f_st[0].index:
+            by_key[key] = follow(r["t"], *f_st, spy, d, eng, frozen=r)
+        elif today and len(pd.bdate_range(r["date"], today)) > horizon + NO_DATA_AFTER:
+            # delisted, renamed or out of the data: close it where it was last seen
+            by_key[key] = {**r, "status": "no data", "exit_date": r.get("as_of", r["date"]),
+                           "exit_px": round(r["entry"] * (1 + r["change"] / 100), 2), "resolved_in": r["sessions"]}
     seen = dict(seen)
     for t, (f, st) in scored.items():
-        days = st.index[st["trigger"].to_numpy(bool)]
-        floor = st.index[max(0, len(st) - 1 - LOOKBACK)]
-        since = pd.Timestamp(seen[t]) if t in seen else None
-        days = days[(days >= floor) & ((days > since) if since is not None else True)]
-        for d in days:
+        idx = st.index
+        start = max(0, len(idx) - 1 - LOOKBACK)
+        if t in seen:
+            start = max(start, int(idx.searchsorted(pd.Timestamp(seen[t]), side="right")) - RECHECK)
+        days = idx[start:][st["trigger"].to_numpy(bool)[start:]]
+        for d in days:  # chronological, so each new trade is resolved before the next trigger is checked
             day = str(d.date())
-            # one trade per name at a time: a re-trigger while a trade is still open is part of that trade
             busy = any(r["t"] == t and r["date"] < day and (r["exit_date"] is None or r["exit_date"] > day)
-                       for r in by_key.values())
+                       for r in by_key.values())  # one trade per name at a time
             if (t, day) not in by_key and not busy:
                 by_key[(t, day)] = follow(t, f, st, spy, d, eng)
-        seen[t] = str(st.index[-1].date())
-    for key, r in by_key.items():
-        if r["status"] == "open" and r["t"] in scored:
-            f, st = scored[r["t"]]
-            d = pd.Timestamp(r["date"])
-            if d in f.index:
-                by_key[key] = follow(r["t"], f, st, spy, d, eng, frozen=r)
+        seen[t] = str(idx[-1].date())
     return list(by_key.values()), seen
 
 
 def mark_live(ledger: list[dict], alerts: list[dict]) -> None:
-    """Trades whose trigger the monitor announced on the day take the readiness it announced."""
-    live = {(a["t"], a.get("trigger_date") or a["date"]): a for a in alerts if a["type"] == "TRIGGERED"}
+    """Trades the monitor announced as a trigger at the time (not found in the history later)."""
+    trig = [a for a in alerts if a["type"] == "TRIGGERED"]
     for r in ledger:
-        a = live.get((r["t"], r["date"]))
-        if a and not r.get("live"):
-            r.update(live=True, ready_at=a["ready"], strong=a.get("strong", True), engine=a.get("engine", r["engine"]))
+        if r.get("live"):
+            continue
+        for a in trig:
+            if a["t"] != r["t"]:
+                continue
+            # older alerts carry no trigger date: they were sent within a few days of it
+            d = a.get("trigger_date")
+            if d == r["date"] or (d is None and 0 <= (pd.Timestamp(a["date"]) - pd.Timestamp(r["date"])).days <= 7):
+                r["live"] = True
+                break
 
 
-def latest(ledger: list[dict], t: str, since: str) -> dict | None:
-    """A name's most recent trade triggered on or after `since`."""
-    mine = [r for r in ledger if r["t"] == t and r["date"] >= since]
+def latest(ledger: list[dict], t: str, since: str, until: str) -> dict | None:
+    """A name's most recent trade triggered between `since` and `until`."""
+    mine = [r for r in ledger if r["t"] == t and since <= r["date"] <= until]
     return max(mine, key=lambda r: r["date"]) if mine else None
+
+
+def stage_on(f: pd.DataFrame, st: pd.DataFrame, i: int, trade: dict | None, p: dict) -> tuple[str, float]:
+    """(stage, level) on bar i: the trade decides the trade stages, the price the others."""
+    base, piv = st["stage"].iloc[i], float(st["pivot"].iloc[i])
+    day = str(f.index[i].date())
+    if trade is None or base == "n/a" or trade["date"] > day:
+        return base, piv
+    j = f.index.get_indexer([pd.Timestamp(trade["date"])])[0]
+    if j < 0:
+        return base, piv
+    n, c, lvl = i - j, float(f["close"].iloc[i]), float(trade["level"])
+    if trade["exit_date"] is None or trade["exit_date"] > day:  # open on that day
+        if c < lvl:
+            return "RETEST", lvl
+        if n < p["confirm"]:
+            return "TRIGGERED", lvl
+        if c > float(f["sma50"].iloc[i]) * 1.2 or float(f["rsi"].iloc[i]) > 75:
+            return "EXTENDED", lvl
+        return "RUNNING", lvl
+    if trade["status"] == "hit target" and c >= lvl and n <= RUN_WINDOW:
+        return "TARGET", lvl
+    if trade["status"] == "stopped out" and c < lvl and n <= FAIL_WINDOW:
+        return "FAILED", lvl
+    return base, piv
 
 
 def window(r: dict, eng: dict) -> dict | None:
@@ -132,11 +178,12 @@ def window(r: dict, eng: dict) -> dict | None:
 
 
 def stats(ledger: list[dict]) -> dict:
-    closed = [r for r in ledger if r["status"] != "open"]
+    closed = [r for r in ledger if r["status"] not in ("open", "no data")]
     mean = lambda xs: round(sum(xs) / len(xs), 1) if xs else None
     return {"open": sum(r["status"] == "open" for r in ledger), "closed": len(closed),
             "hit": sum(r["status"] == "hit target" for r in closed),
             "stopped": sum(r["status"] == "stopped out" for r in closed),
             "timed_out": sum(r["status"] == "timed out" for r in closed),
+            "no_data": sum(r["status"] == "no data" for r in ledger),
             "avg_change": mean([r["change"] for r in closed]), "avg_excess": mean([r["excess"] for r in closed]),
             "live_closed": sum(bool(r.get("live")) for r in closed)}
