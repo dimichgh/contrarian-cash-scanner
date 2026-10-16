@@ -66,7 +66,7 @@
   },
   "scan_rank": 74,
   "scanned": "2026-10-13",
-  "hold": true
+  "hold": false
  },
  "ADBE": {
   "ticker": "ADBE",
@@ -410,7 +410,7 @@
   },
   "scan_rank": 45,
   "scanned": "2026-10-13",
-  "hold": true
+  "hold": false
  },
  "BWA": {
   "ticker": "BWA",
@@ -510,7 +510,7 @@
   },
   "scan_rank": 56,
   "scanned": "2026-10-13",
-  "hold": true
+  "hold": false
  },
  "CHTR": {
   "ticker": "CHTR",
@@ -551,7 +551,7 @@
  "CMCSA": {
   "ticker": "CMCSA",
   "added": "2026-09-29",
-  "source": "scan",
+  "source": "author",
   "status": "active",
   "misses": 0,
   "name": "Comcast Corporation",
@@ -586,7 +586,8 @@
    "entry": 21.92,
    "note": "Sold on a beat; spin-off 2027; accumulate $21–23"
   },
-  "hold": false
+  "hold": false,
+  "pinned": true
  },
  "COLM": {
   "ticker": "COLM",
@@ -895,7 +896,7 @@
   },
   "scan_rank": 34,
   "scanned": "2026-10-13",
-  "hold": true
+  "hold": false
  },
  "DXC": {
   "ticker": "DXC",
@@ -932,7 +933,7 @@
   },
   "scan_rank": 64,
   "scanned": "2026-10-13",
-  "hold": true
+  "hold": false
  },
  "EEFT": {
   "ticker": "EEFT",
@@ -1001,7 +1002,7 @@
   },
   "scan_rank": 28,
   "scanned": "2026-10-13",
-  "hold": true
+  "hold": false
  },
  "ERIC": {
   "ticker": "ERIC",
@@ -1110,7 +1111,8 @@
    ]
   },
   "scan_rank": 117,
-  "scanned": "2026-10-13"
+  "scanned": "2026-10-13",
+  "pinned": true
  },
  "FBIN": {
   "ticker": "FBIN",
@@ -1429,7 +1431,7 @@
   },
   "scan_rank": 43,
   "scanned": "2026-10-13",
-  "hold": false
+  "hold": true
  },
  "GIB": {
   "ticker": "GIB",
@@ -1645,7 +1647,8 @@
    "entry": 20.0,
    "note": "Recovery option on US fabs; fair value $36–37"
   },
-  "hold": false
+  "hold": true,
+  "pinned": true
  },
  "INTU": {
   "ticker": "INTU",
@@ -2023,7 +2026,7 @@
   },
   "scan_rank": 30,
   "scanned": "2026-10-13",
-  "hold": true
+  "hold": false
  },
  "NICE": {
   "ticker": "NICE",
@@ -2056,7 +2059,7 @@
   },
   "scan_rank": 46,
   "scanned": "2026-10-13",
-  "hold": true
+  "hold": false
  },
  "NVO": {
   "ticker": "NVO",
@@ -2194,7 +2197,8 @@
    "risk": []
   },
   "scan_rank": 281,
-  "scanned": "2026-10-13"
+  "scanned": "2026-10-13",
+  "pinned": true
  },
  "PHIN": {
   "ticker": "PHIN",
@@ -2377,7 +2381,7 @@
  "PYPL": {
   "ticker": "PYPL",
   "added": "2026-09-29",
-  "source": "scan",
+  "source": "author",
   "status": "active",
   "misses": 0,
   "name": "PayPal Holdings, Inc.",
@@ -2410,7 +2414,8 @@
    "entry": 41.5,
    "note": "17% FCF yield, 11% share shrink; base $60–80"
   },
-  "hold": false
+  "hold": false,
+  "pinned": true
  },
  "SBLK": {
   "ticker": "SBLK",
@@ -2480,7 +2485,7 @@
   },
   "scan_rank": 5,
   "scanned": "2026-10-13",
-  "hold": false
+  "hold": true
  },
  "SFD": {
   "ticker": "SFD",
@@ -2564,7 +2569,7 @@
    "entry": 19.7,
    "note": "Sum of parts $26–28; yen upside"
   },
-  "hold": true,
+  "hold": false,
   "name": "Sony Group Corporation Sponsored ADR",
   "sector": "Electronic Technology",
   "thesis": {
@@ -2589,7 +2594,8 @@
    ]
   },
   "scan_rank": 276,
-  "scanned": "2026-10-13"
+  "scanned": "2026-10-13",
+  "pinned": true
  },
  "T": {
   "ticker": "T",
@@ -2628,7 +2634,8 @@
    ]
   },
   "scan_rank": 182,
-  "scanned": "2026-10-13"
+  "scanned": "2026-10-13",
+  "pinned": true
  },
  "TAP": {
   "ticker": "TAP",
@@ -2853,7 +2860,9 @@
    "date": "2025-10-27",
    "entry": 6.92,
    "note": "First positive FCF, CEO buying; fair value $11–12"
-  }
+  },
+  "hold": false,
+  "pinned": true
  },
  "UFPI": {
   "ticker": "UFPI",
@@ -2959,7 +2968,8 @@
    ]
   },
   "scan_rank": 21,
-  "scanned": "2026-10-13"
+  "scanned": "2026-10-13",
+  "hold": false
  },
  "XOP": {
   "ticker": "XOP",
@@ -2973,7 +2983,8 @@
    "entry": 130.0,
    "note": "Contrarian energy long; fair value $143–160"
   },
-  "hold": true
+  "hold": false,
+  "pinned": true
  },
  "YETI": {
   "ticker": "YETI",
