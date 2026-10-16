@@ -570,9 +570,13 @@ $("#f-q").addEventListener("input", drawTable);
   if (sn.resolved) bits.push(`Across ${sn.resolved.toLocaleString()} daily calls whose 40 sessions have passed, ${pct(sn.hit_rate)} were followed by a real move${sn.n_ready80 ? `, and ${pct(sn.hit_rate_ready80)} of the ${sn.n_ready80} with readiness 80+` : ""}.`);
   $("#rec-sub").textContent = bits.join(" ");
   const trade = Object.fromEntries(D.trades.map((t) => [t.date + t.t, t]));
+  // older alerts carry no trigger date: they announced the name's trade from the days just before
+  const days = (a, b) => (new Date(a) - new Date(b)) / 864e5;
+  const near = (a) => D.trades.filter((t) => t.t === a.t && t.date <= a.date && days(a.date, t.date) <= 7)
+    .sort((x, y) => (x.date < y.date ? 1 : -1))[0];
   const cls = {"hit target": "out-win", "stopped out": "out-loss"};
   $("#alerts").innerHTML = D.alerts.slice(0, 40).map((a) => {
-    const r = trade[(a.trigger_date || a.date) + a.t];
+    const r = a.trigger_date ? trade[a.trigger_date + a.t] : trade[a.date + a.t] || near(a);
     const out = a.type !== "TRIGGERED" ? '<span class="dim">tracked on triggers</span>'
       : !r ? '<span class="dim">not followed (another trade was open)</span>'
       : r.status === "open" ? `<span class="dim">open</span> <span class="num">${sgn(r.change)}</span>`
