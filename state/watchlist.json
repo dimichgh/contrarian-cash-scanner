@@ -1499,7 +1499,7 @@
   },
   "scan_rank": 38,
   "scanned": "2026-10-20",
-  "hold": true
+  "hold": false
  },
  "GIB": {
   "ticker": "GIB",
