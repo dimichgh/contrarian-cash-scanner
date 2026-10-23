@@ -99,7 +99,7 @@
   },
   "scan_rank": 27,
   "scanned": "2026-10-20",
-  "hold": false
+  "hold": true
  },
  "ADT": {
   "ticker": "ADT",
@@ -235,7 +235,7 @@
   },
   "scan_rank": 77,
   "scanned": "2026-10-20",
-  "hold": false,
+  "hold": true,
   "missed_on": "2026-10-20"
  },
  "AOS": {
@@ -792,7 +792,7 @@
   },
   "scan_rank": 100,
   "scanned": "2026-10-20",
-  "hold": true,
+  "hold": false,
   "missed_on": "2026-10-20"
  },
  "CTVA": {
@@ -1219,7 +1219,7 @@
   },
   "scan_rank": 43,
   "scanned": "2026-10-20",
-  "hold": false
+  "hold": true
  },
  "FIS": {
   "ticker": "FIS",
@@ -1714,7 +1714,7 @@
    "entry": 20.0,
    "note": "Recovery option on US fabs; fair value $36–37"
   },
-  "hold": true,
+  "hold": false,
   "pinned": true
  },
  "INTU": {
@@ -2586,7 +2586,7 @@
   },
   "scan_rank": 5,
   "scanned": "2026-10-20",
-  "hold": true
+  "hold": false
  },
  "SFD": {
   "ticker": "SFD",
