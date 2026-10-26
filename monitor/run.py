@@ -73,7 +73,35 @@ def make_row(t: str, f: pd.DataFrame, st: pd.DataFrame, eng: dict, ledger: list[
         "spark": "".join(f"{norm(x):02d}" for x in window), "spark_level": norm(level),
         "prev_stage": prev_stage, "contrib": _contributions(m, last),
         "trade": None if trade is None else {**trade, "window": T.window(trade, eng)},
+        "crossing": _crossing(f, st, p, eng["label"]) if stage == "ABOVE" else None,
     }
+
+
+def _crossing(f: pd.DataFrame, st: pd.DataFrame, p: dict, label: dict) -> dict | None:
+    """For a name above its level with no trade: the close that took it there and why it wasn't a trigger."""
+    above = (f["close"] > st["pivot"]).to_numpy()
+    if not above[-1]:
+        return None
+    i = len(above) - 1
+    while i > 0 and above[i - 1]:
+        i -= 1
+    if i == 0:
+        return None  # above for as long as the data goes back
+    below = int((~above[max(0, i - 20):i]).sum())
+    vr, low_age = f["vol_ratio"].iloc[i], st["low_age"].iloc[i]
+    why = []
+    if p["vol_mult"] and not vr >= p["vol_mult"]:
+        why.append(f"volume {vr:.2f}x its average, under the {p['vol_mult']:g}x a trigger needs")
+    if below < p["min_below"]:
+        why.append(f"only {below} of the prior 20 sessions below the level, under the {p['min_below']} a trigger needs")
+    if not low_age >= p["min_low_age"]:
+        why.append(f"a new 120-day low {int(low_age)} sessions before, under the {p['min_low_age']} a trigger needs")
+    entry = float(f["close"].iloc[i])
+    size = float(move_size(f["close"], label["horizon"]).iloc[i])
+    return {"date": str(f.index[i].date()), "close": round(entry, 2), "level": round(float(st["pivot"].iloc[i]), 2),
+            "sessions": len(above) - 1 - i, "trigger": bool(st["trigger"].iloc[i]), "why": why,
+            "stop_px": round(entry * (1 - size * label["down"]), 2), "target_px": round(entry * (1 + size * label["up"]), 2),
+            "change": round((float(f["close"].iloc[-1]) / entry - 1) * 100, 1)}
 
 
 def _contributions(m: dict, last: pd.Series) -> list:

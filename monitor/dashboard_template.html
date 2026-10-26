@@ -249,6 +249,7 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
           <th data-k="ready"><button type="button">Readiness</button></th>
           <th data-k="level" class="r"><button type="button">Trigger</button></th>
           <th data-k="gap" class="r"><button type="button">Distance</button></th>
+          <th data-k="entry"><button type="button">Entry</button></th>
           <th>60 sessions</th>
           <th data-k="rs20" class="r"><button type="button">vs S&amp;P 1m</button></th>
           <th data-k="score" class="r"><button type="button">Thesis</button></th>
@@ -396,7 +397,7 @@ function drawLadder() {
     const after = !isOpen && t.now_change != null ? `<div class="dim" style="white-space:nowrap">now ${sgn(t.now_change)}</div>` : "";
     return `<tr>
       <td><div class="co" style="min-width:110px"><b>${esc(t.t)}</b><span style="max-width:130px">${esc(t.name)}</span></div></td>
-      <td><span class="num" style="white-space:nowrap">${t.date}</span><div class="dim">readiness ${t.ready_at}${t.strong ? "" : " · weak"}${t.live ? "" : " · backfilled"}</div></td>
+      <td><span class="num" style="white-space:nowrap">${t.date}</span><div class="dim">readiness ${t.ready_at}${t.strong ? "" : " · weak"}${t.live ? "" : " · backtest"}</div></td>
       <td class="r num">${t.sessions}</td>
       <td class="r num" style="white-space:nowrap">$${t.entry.toFixed(2)} → $${last.toFixed(2)}<div class="dim">${isOpen ? "last close" : "exit " + md(t.exit_date)}</div></td>
       <td class="r num"><b>${sgn(t.change)}</b>${after}</td>
@@ -430,7 +431,7 @@ const stageSel = $("#f-stage");
 D.stages.forEach(([s]) => stageSel.insertAdjacentHTML("beforeend", `<option value="${s}">${s[0] + s.slice(1).toLowerCase()}</option>`));
 let sortK = "ready", sortDir = -1;
 const open = new Set();
-const val = (r, k) => k === "stage" ? -stageRank(r.stage) : k === "score" ? (r.thesis?.score ?? -1) : r[k];
+const val = (r, k) => k === "stage" ? -stageRank(r.stage) : k === "score" ? (r.thesis?.score ?? -1) : k === "entry" ? (entryOf(r)?.date ?? "") : r[k];
 
 function spark(r) {
   const sp = r.spark.match(/../g).map(Number);
@@ -451,6 +452,32 @@ function spark(r) {
     <circle class="pt" cx="${x(n - 1)}" cy="${y(sp[n - 1])}" r="3.5" fill="${col}"/></svg>`;
 }
 
+// entry of the name's latest trade (live or found by the 90-session backtest), else its crossing close
+const mdate = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("en-US", {month: "short", day: "numeric"});
+function entryOf(r) {
+  const t = r.trade, x = r.crossing;
+  if (t) return {date: t.date, px: t.entry, tag: `${t.live ? "live" : "backtest"} · ${t.status === "open" ? "open" : t.status}`};
+  if (x) return {date: x.date, px: x.close, tag: "crossing, no trade"};
+  return null;
+}
+function entryCell(r) {
+  const e = entryOf(r);
+  return e ? `<span class="num" style="white-space:nowrap">${mdate(e.date)} · $${e.px.toFixed(2)}</span><div class="dim" style="white-space:nowrap">${esc(e.tag)}</div>`
+    : '<span class="dim">none yet</span>';
+}
+
+// what a name without an open trade would need, or (already above its level) what its crossing was
+function plan(r) {
+  const x = r.crossing;
+  if (r.stage === "ABOVE" && x) {
+    const why = x.trigger ? "it was a trigger, but another trade was still open" : x.why.join("; ") || "it did not meet the trigger rule";
+    return `<span>Crossed above its level on <b>${esc(x.date)}</b> at <b>$${x.close.toFixed(2)}</b> (level $${x.level.toFixed(2)}),
+      ${x.sessions} session${x.sessions === 1 ? "" : "s"} ago, ${sgn(x.change)} since. No trade: ${esc(why)}.</span>
+      <span>A trade from that close would have had stop <b>$${x.stop_px.toFixed(2)}</b> · target <b>$${x.target_px.toFixed(2)}</b> (shown for reference only).</span>`;
+  }
+  return `<span>If it triggers at today's level, $${r.level.toFixed(2)} (moves with the 50-day average daily): stop <b>$${(r.level * (1 - r.stop / 100)).toFixed(2)}</b> · target <b>$${(r.level * (1 + r.target / 100)).toFixed(2)}</b></span>`;
+}
+
 function detail(r) {
   const cmax = Math.max(0.05, ...r.contrib.map((c) => Math.abs(c[1])));
   const th = r.thesis;
@@ -463,7 +490,7 @@ function detail(r) {
         <span>Target <b>+${r.target}%</b> before stop <b>−${r.stop}%</b></span>
         ${r.trade && r.trade.status === "open" ? `<span>Open trade from ${esc(r.trade.date)}: stop <b>$${r.trade.stop_px.toFixed(2)}</b> · target <b>$${r.trade.target_px.toFixed(2)}</b></span>`
           : r.trade && ["TARGET", "FAILED"].includes(r.stage) ? `<span>Trade from the ${esc(r.trade.date)} trigger: <b>${esc(r.trade.status)}</b> on ${esc(r.trade.exit_date)}, ${sgn(r.trade.change)}</span>`
-          : `${r.trade ? `<span>Last trade (${esc(r.trade.date)}): <b>${esc(r.trade.status)}</b>, ${sgn(r.trade.change)}</span>` : ""}<span>If it triggers at $${r.level.toFixed(2)}: stop <b>$${(r.level * (1 - r.stop / 100)).toFixed(2)}</b> · target <b>$${(r.level * (1 + r.target / 100)).toFixed(2)}</b></span>`}<span>P(target first) <b>${pct(r.prob)}</b></span><span>RSI <b>${r.rsi}</b></span>
+          : `${r.trade ? `<span>Last trade (${esc(r.trade.date)}): <b>${esc(r.trade.status)}</b>, ${sgn(r.trade.change)}</span>` : ""}${plan(r)}`}<span>P(target first) <b>${pct(r.prob)}</b></span><span>RSI <b>${r.rsi}</b></span>
         <span>50d slope <b>${sgn(r.slope, 2)}</b>/2wk</span><span>Lows held <b>${r.low_age ?? "n/a"}</b> sessions</span>
         <span>1m return <b>${sgn(r.ret20)}</b></span><span>Off 52w high <b>${sgn(r.dd52)}</b></span>
         <span>Volume today <b>${r.vol_ratio ?? "n/a"}x</b> avg</span>
@@ -474,7 +501,7 @@ function detail(r) {
     <div><h3>On the list</h3>
       <div class="kv" style="display:grid;gap:4px">
         <span>Source <b>${esc(r.source === "author" ? "author's call" : r.source)}</b></span>
-        <span>Added <b>${esc(r.added)}</b></span>
+        <span>On the watchlist since <b>${esc(r.added)}</b></span>
         <span>Close <b>$${r.close.toFixed(2)}</b> · 50d <b>$${r.sma50.toFixed(2)}</b>${r.sma200 ? ` · 200d <b>$${r.sma200.toFixed(2)}</b>` : ""}</span>
         ${th ? `<span>Scan score <b>${th.score}</b> · tier <b>${th.tier}</b> · <b>${th.checks}</b>/10 checks</span>
         <span>FCF yield <b>${th.fcf ?? "n/a"}%</b> · paid to wait <b>${th.shy ?? "n/a"}%</b> · fwd P/E <b>${th.pe ?? "n/a"}</b></span>` : ""}
@@ -502,11 +529,12 @@ function drawTable() {
       <td><div class="ready"><span class="num" style="min-width:24px">${r.ready}</span><span class="bar"><i style="width:${r.ready}%"></i></span></div></td>
       <td class="r num">$${r.level.toFixed(2)}</td>
       <td class="r num${r.gap >= 0 ? " gap-up" : ""}">${sgn(r.gap)}</td>
+      <td>${entryCell(r)}</td>
       <td>${spark(r)}</td>
       <td class="r num">${sgn(r.rs20)}</td>
       <td class="r">${th ? `<span class="num">${th.score}</span> <span class="tier ${th.tier}">${th.tier}</span>` : `<span class="dim">${r.source === "author" ? "author" : "n/a"}</span>`}</td>
-    </tr>${o ? `<tr class="detail"><td colspan="9">${detail(r)}</td></tr>` : ""}`;
-  }).join("") || '<tr><td colspan="9" class="empty">No names match these filters.</td></tr>';
+    </tr>${o ? `<tr class="detail"><td colspan="10">${detail(r)}</td></tr>` : ""}`;
+  }).join("") || '<tr><td colspan="10" class="empty">No names match these filters.</td></tr>';
 }
 $("#tb").addEventListener("click", (e) => {
   const tr = e.target.closest("tr.main"); if (!tr) return;

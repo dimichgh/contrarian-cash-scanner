@@ -1,6 +1,6 @@
 Breakout monitor · close of 2026-10-23 · engine v2
 
-No new signals.
+No new session since the last run.
 
 Nearest the trigger: LRN -3.0% vs $81.89 (readiness 92), ADBE +3.1% vs $255.92 (readiness 78), DECK -3.0% vs $83.59 (readiness 73), FBIN +3.6% vs $41.50 (readiness 72), EXPE -0.5% vs $290.51 (readiness 69), ALGN +1.3% vs $152.51 (readiness 62), COO -1.1% vs $61.92 (readiness 21)
 Highest readiness: PYPL 93 (above), LRN 92 (setup), JD 90 (basing), ALB 89 (falling), FISV 89 (above), PINS 89 (above), INTU 88 (above), TKC 87 (falling)
@@ -12,6 +12,7 @@ Watchlist: 91 names · triggered 3 · setup 4 · target 2 · running 6 · retest
 No price data: UDMY, VSNT
 Engine: readiness AUC 0.537 on the held-out year (expert prior alone 0.507); trigger: close above the 50-day average on at least 1.2x average volume, after 10+ of the prior 20 sessions below it; strong when readiness is 60+ — 30% reached their target before their stop vs 29% for any day (1964 past triggers)
 Past triggers that hit target took a median 18 sessions (middle half 11–26); stops came in a median 13. 30% hit target, 47% stopped, 22% timed out.
-Prices: 93 update, 1 missing
+Prices: 93 cache, 1 missing (offline: cache only)
+No new session since 2026-10-23; alerts already sent
 
-DASHBOARD: publish
+DASHBOARD: skip
