@@ -298,8 +298,14 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
       <p id="rec-sub"></p>
     </div>
     <div class="panel table-wrap">
-      <table>
-        <thead><tr><th>Date</th><th>Ticker</th><th>Signal</th><th class="r">Close</th><th class="r">Level</th><th class="r">Readiness</th><th>Outcome</th></tr></thead>
+      <table><caption class="sub" style="text-align:left;padding:8px 8px 0">Every trigger the monitor announced at the time, followed as a trade. The outcome shows the day the close reaches the target or the stop.</caption>
+        <thead><tr><th>Triggered</th><th>Ticker</th><th class="r">Entry</th><th class="r">Level</th><th class="r">Readiness</th><th>Stop → target</th><th>Outcome</th></tr></thead>
+        <tbody id="live"></tbody>
+      </table>
+    </div>
+    <div class="panel table-wrap">
+      <table><caption class="sub" style="text-align:left;padding:8px 8px 0">Other signals: the latest setup, running, target and failed notices</caption>
+        <thead><tr><th>Date</th><th>Ticker</th><th>Signal</th><th class="r">Close</th><th class="r">Level</th><th class="r">Readiness</th></tr></thead>
         <tbody id="alerts"></tbody>
       </table>
     </div>
@@ -378,6 +384,9 @@ function drawLadder() {
     return `<span class="num" style="white-space:nowrap;font-size:.8rem">${md(w.from)} – ${md(w.to)}</span>
       <div class="dim" style="white-space:nowrap">day ${t.sessions} of ${w.p25}–${w.p75} · ${w.phase}</div>`;
   };
+  // the stage an open trade's name shows today (triggered only in its first sessions, then running, retest...)
+  const rowOf = Object.fromEntries(D.rows.map((r) => [r.t, r]));
+  const nowStage = (t) => { const r = rowOf[t.t]; return r && r.trade && r.trade.date === t.date ? (LABEL[r.stage] || r.stage.toLowerCase()) : null; };
   // open trades first (newest first), then closed ones by exit date, newest first
   const rows = [...D.trades].sort((a, b) => (a.status === "open") !== (b.status === "open") ? (a.status === "open" ? -1 : 1)
     : a.status === "open" ? (a.date < b.date ? 1 : -1) : (a.exit_date < b.exit_date ? 1 : a.exit_date > b.exit_date ? -1 : a.t < b.t ? -1 : 1));
@@ -407,7 +416,7 @@ function drawLadder() {
         <span class="tr"></span><span class="sl"></span><span class="tg"></span>
         <span class="en" style="left:${x(t.entry)}%"></span><span class="nw" style="left:${x(last)}%"></span></div>
         <div class="dim num" style="font-size:.74rem">stop $${lo.toFixed(2)} · target&nbsp;$${hi.toFixed(2)}</div></td>
-      <td><span class="status ${cls[t.status]}">${esc(st)}</span><div>${isOpen ? win(t) : ""}</div></td></tr>`;
+      <td><span class="status ${cls[t.status]}">${esc(st)}</span>${isOpen && nowStage(t) ? ` <span class="dim">· now ${esc(nowStage(t))}</span>` : ""}<div>${isOpen ? win(t) : ""}</div></td></tr>`;
   }).join("") || `<tr><td colspan="9" class="empty">${rows.length ? "No open or recently closed trades." : "No triggers yet."}</td></tr>`;
   };
   $("#trades-more").addEventListener("click", () => { showAll = !showAll; draw(); });
@@ -592,26 +601,38 @@ $("#f-q").addEventListener("input", drawTable);
 // track record
 (function record() {
   const tr = D.record.triggers || {}, sn = D.record.snapshots || {};
+  const live = D.trades.filter((t) => t.live).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.t < b.t ? -1 : 1));
+  const back = D.trades.filter((t) => !t.live);
+  const tally = (xs) => {
+    const c = {"open": 0, "hit target": 0, "stopped out": 0, "timed out": 0, "no data": 0};
+    xs.forEach((t) => { c[t.status] = (c[t.status] || 0) + 1; });
+    const closed = xs.filter((t) => !["open", "no data"].includes(t.status));
+    return {...c, closed, avg: closed.length ? closed.reduce((a, t) => a + t.change, 0) / closed.length : null};
+  };
+  const L = tally(live), B = tally(back);
+  const line = (n, c) => `${c["hit target"]} hit the target, ${c["stopped out"]} stopped out, ${c["timed out"]} timed out, ${c.open} still open` +
+    (c.closed.length ? `; the ${c.closed.length} closed averaged ${sgn(c.avg)}` : "");
   const bits = [];
-  bits.push(tr.resolved ? `${tr.resolved} trigger signals have run their full 40 trading days: ${pct(tr.hit_rate)} reached their target before their stop, average outcome ${sgn(tr.avg_ret)}.`
-    : "No trigger signal has run its full 40 trading days yet; until then its trade is in the table above.");
+  bits.push(live.length ? `${live.length} trigger${live.length === 1 ? "" : "s"} announced live so far: ${line(live.length, L)}.`
+    : "No trigger has been announced live yet.");
+  if (back.length) bits.push(`The 90-session backtest adds ${back.length} more: ${line(back.length, B)}.`);
+  bits.push(tr.resolved ? `Counting only live signals whose full 40 sessions have passed, so slow trades weigh in as much as quick ones: ${pct(tr.hit_rate)} reached the target, average ${sgn(tr.avg_ret)}.`
+    : "Early results lean toward trades that resolve quickly; a hit rate over full 40-session windows follows once the first live signals are 40 sessions old.");
   if (sn.resolved) bits.push(`Across ${sn.resolved.toLocaleString()} daily calls whose 40 sessions have passed, ${pct(sn.hit_rate)} were followed by a real move${sn.n_ready80 ? `, and ${pct(sn.hit_rate_ready80)} of the ${sn.n_ready80} with readiness 80+` : ""}.`);
   $("#rec-sub").textContent = bits.join(" ");
-  const trade = Object.fromEntries(D.trades.map((t) => [t.date + t.t, t]));
-  // older alerts carry no trigger date: they announced the name's trade from the days just before
-  const days = (a, b) => (new Date(a) - new Date(b)) / 864e5;
-  const near = (a) => D.trades.filter((t) => t.t === a.t && t.date <= a.date && days(a.date, t.date) <= 7)
-    .sort((x, y) => (x.date < y.date ? 1 : -1))[0];
   const cls = {"hit target": "out-win", "stopped out": "out-loss"};
-  $("#alerts").innerHTML = D.alerts.slice(0, 40).map((a) => {
-    const r = a.trigger_date ? trade[a.trigger_date + a.t] : trade[a.date + a.t] || near(a);
-    const out = a.type !== "TRIGGERED" ? '<span class="dim">tracked on triggers</span>'
-      : !r ? '<span class="dim">not followed (another trade was open)</span>'
-      : r.status === "open" ? `<span class="dim">open</span> <span class="num">${sgn(r.change)}</span>`
-      : `<span class="${cls[r.status] || "dim"}">${r.status}</span> <span class="num">${sgn(r.change)}</span> <span class="dim">in ${r.resolved_in} sessions</span>`;
-    return `<tr><td class="num">${a.date}</td><td class="num"><b>${esc(a.t)}</b></td><td>${chip(a.type)}${a.strong === false ? ' <span class="dim">weak</span>' : ""}</td>
-      <td class="r num">$${a.close.toFixed(2)}</td><td class="r num">$${a.level.toFixed(2)}</td><td class="r num">${a.ready}</td><td>${out}</td></tr>`;
-  }).join("") || '<tr><td colspan="7" class="empty">No signals yet.</td></tr>';
+  $("#live").innerHTML = live.map((t) => {
+    const out = t.status === "open" ? `<span class="dim">open, day ${t.sessions}</span> <span class="num">${sgn(t.change)}</span>`
+      : `<span class="${cls[t.status] || "dim"}">${esc(t.status)}</span> <span class="num">${sgn(t.change)}</span>` +
+        `<span class="dim"> on ${mdate(t.exit_date)}, ${t.resolved_in} sessions</span>`;
+    return `<tr><td class="num">${t.date}</td><td class="num"><b>${esc(t.t)}</b></td><td class="r num">$${t.entry.toFixed(2)}</td>
+      <td class="r num">$${t.level.toFixed(2)}</td><td class="r num">${t.ready_at}${t.strong ? "" : ' <span class="dim">weak</span>'}</td>
+      <td class="num" style="white-space:nowrap">$${t.stop_px.toFixed(2)} → $${t.target_px.toFixed(2)}</td><td>${out}</td></tr>`;
+  }).join("") || '<tr><td colspan="7" class="empty">No live triggers yet.</td></tr>';
+  $("#alerts").innerHTML = D.alerts.filter((a) => a.type !== "TRIGGERED").slice(0, 25).map((a) => `<tr><td class="num">${a.date}</td>
+      <td class="num"><b>${esc(a.t)}</b></td><td>${chip(a.type)}</td><td class="r num">$${a.close.toFixed(2)}</td>
+      <td class="r num">$${a.level.toFixed(2)}</td><td class="r num">${a.ready}</td></tr>`).join("")
+    || '<tr><td colspan="6" class="empty">No other signals yet.</td></tr>';
 })();
 
 drawLadder();

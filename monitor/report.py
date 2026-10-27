@@ -98,11 +98,13 @@ def summary(res: dict) -> str:
                      f"{timing['p25']}–{timing['p75']}); stops came in a median {timing['stop_median']}. "
                      f"{_pct(timing['hit'])} hit target, {_pct(timing['stopped'])} stopped, "
                      f"{_pct(timing['timed_out'])} timed out.")
-    tr = res["record"].get("triggers", {})
-    if tr.get("resolved"):
-        st = tr["strong"]
-        lines.append(f"Live record: {tr['resolved']} trigger alerts resolved, {_pct(tr['hit_rate'])} hit target first, "
-                     f"average {tr['avg_ret']:+.1f}% (strong ones: {st['resolved']}, {_pct(st['hit_rate'])})")
+    live = [t for t in res.get("trades", []) if t.get("live")]
+    if live:  # counted the day a trade reaches its target or stop, not after the full 40 sessions
+        n = lambda s: sum(t["status"] == s for t in live)
+        closed = [t for t in live if t["status"] not in ("open", "no data")]
+        avg = f"; closed ones averaged {sum(t['change'] for t in closed) / len(closed):+.1f}%" if closed else ""
+        lines.append(f"Live triggers so far: {len(live)}: {n('hit target')} hit target, {n('stopped out')} stopped out, "
+                     f"{n('timed out')} timed out, {n('open')} open{avg}.")
     lines += res["notes"]
     publish = res["fresh"] or res["rescanned"] or res["learned"]
     lines += ["", f"DASHBOARD: {'publish' if publish else 'skip'}"]
