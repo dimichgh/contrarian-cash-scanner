@@ -2591,7 +2591,7 @@
    "entry": 41.5,
    "note": "17% FCF yield, 11% share shrink; base $60–80"
   },
-  "hold": false,
+  "hold": true,
   "pinned": true
  },
  "SBLK": {
@@ -2906,7 +2906,7 @@
   },
   "scan_rank": 109,
   "scanned": "2026-10-27",
-  "hold": true,
+  "hold": false,
   "missed_on": "2026-10-27"
  },
  "T": {
