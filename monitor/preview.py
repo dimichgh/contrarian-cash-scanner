@@ -19,7 +19,6 @@ import pandas as pd
 from . import config as C
 from . import trades as T
 from . import watchlist as W
-from .model import predict, readiness
 from .prices import fetch_ohlcv, load_cached
 from .signals import PIVOT_TEXT, features, move_size, stages
 
@@ -61,7 +60,7 @@ def project(bars: pd.DataFrame) -> pd.DataFrame:
 
 def classify(t: str, f: pd.DataFrame, st: pd.DataFrame, eng: dict, busy: bool) -> dict | None:
     """Where today's live bar leaves a name against the trigger rule; None when it is in none of the lists."""
-    p, lab, m = eng["trigger"], eng["label"], eng["model"]
+    p, lab = eng["trigger"], eng["label"]
     c, lvl = float(f["close"].iloc[-1]), float(st["pivot"].iloc[-1])
     if not np.isfinite(lvl):
         return None
@@ -70,12 +69,11 @@ def classify(t: str, f: pd.DataFrame, st: pd.DataFrame, eng: dict, busy: bool) -
     low_age = st["low_age"].iloc[-1]
     vr = float(f["vol_ratio"].iloc[-1]) if pd.notna(f["vol_ratio"].iloc[-1]) else 0.0
     base_ok = below_days >= p["min_below"] and low_age >= p["min_low_age"] and not bool(above.iloc[-2])
-    prob = predict(m, f[m["features"]].iloc[-1:].to_numpy())[0]
-    ready = int(readiness(m, prob))
+    grade = T.judge(f.iloc[-1:], eng)  # as if today closed here: readiness, quality, strong or weak
     size = float(move_size(f["close"], lab["horizon"]).iloc[-1])
     row = {"t": t, "close": round(c, 2), "level": round(lvl, 2), "gap": round((c / lvl - 1) * 100, 2),
-           "vol_ratio": round(vr, 2), "vol_need": p["vol_mult"], "ready": ready,
-           "strong": ready >= p.get("min_ready", 0), "below_days": below_days,
+           "vol_ratio": round(vr, 2), "vol_need": p["vol_mult"], "ready": grade["ready_at"],
+           "quality": grade.get("quality"), "strong": grade["strong"], "below_days": below_days,
            "stop_px": round(c * (1 - size * lab["down"]), 2), "target_px": round(c * (1 + size * lab["up"]), 2)}
     if busy or not base_ok:
         return None  # one trade per name; and without a stretch below the level no close can trigger
@@ -140,7 +138,7 @@ def run(today: dt.date | None = None) -> dict:
             row["name"] = wl[t].get("name", t)
             res[row["kind"]].append(row)
     for k in ("trigger", "volume_short"):
-        res[k].sort(key=lambda r: -r["ready"])
+        res[k].sort(key=lambda r: (-(r["quality"] if r["quality"] is not None else -1), -r["ready"]))
     res["near"].sort(key=lambda r: -r["gap"])
     res["trades"] = open_trades_now(ledger, today_bars)
     return res
@@ -155,6 +153,12 @@ def _clock(res: dict) -> str:
     return f"{t} ET, {left} minutes before the close: prices so far, volume projected to a full session"
 
 
+def _grade(r: dict) -> str:
+    q = f"quality {r['quality']} {'strong' if r['strong'] else 'weak'}, " if r.get("quality") is not None else ""
+    weak = "" if r.get("quality") is not None or r["strong"] else " (weak)"
+    return f"{q}readiness {r['ready']}{weak}"
+
+
 def summary(res: dict) -> str:
     lines = [f"Pre-close preview · {_clock(res)}", ""]
     if res.get("closed"):
@@ -164,17 +168,17 @@ def summary(res: dict) -> str:
         lines.append(f"On track to trigger at the close ({len(res['trigger'])}):")
         for r in res["trigger"]:
             lines.append(f"▲ {r['t']} ${r['close']:.2f}: {r['gap']:+.1f}% through the {res['rule']['pivot']} (${r['level']:.2f}), "
-                         f"volume on pace for {r['vol_ratio']:.1f}x · readiness {r['ready']}{'' if r['strong'] else ' (weak)'} · "
+                         f"volume on pace for {r['vol_ratio']:.1f}x · {_grade(r)} · "
                          f"if it closes here: stop ${r['stop_px']:.2f}, target ${r['target_px']:.2f}")
     if res["volume_short"]:
         lines.append(f"Crossing, but volume short of {need} so far ({len(res['volume_short'])}):")
         for r in res["volume_short"]:
-            lines.append(f"△ {r['t']} ${r['close']:.2f}: {r['gap']:+.1f}% over ${r['level']:.2f}, volume on pace for {r['vol_ratio']:.1f}x")
+            lines.append(f"△ {r['t']} ${r['close']:.2f}: {r['gap']:+.1f}% over ${r['level']:.2f}, volume on pace for {r['vol_ratio']:.1f}x · {_grade(r)}")
     if res["near"]:
         lines.append(f"Within {NEAR:.0%} under the level, could cross by the close ({len(res['near'])}):")
         for r in res["near"]:
             lines.append(f"◇ {r['t']} ${r['close']:.2f}: needs {-r['gap']:.1f}% to close above ${r['level']:.2f}, "
-                         f"volume on pace for {r['vol_ratio']:.1f}x (needs {need})")
+                         f"volume on pace for {r['vol_ratio']:.1f}x (needs {need}) · {_grade(r)}")
     if not (res["trigger"] or res["volume_short"] or res["near"]):
         lines.append("No name is on track to trigger at the close.")
     flagged = [r for r in res["trades"] if r["flag"]]

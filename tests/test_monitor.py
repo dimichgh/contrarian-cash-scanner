@@ -481,3 +481,56 @@ def test_preview_classify(spy):
     assert last_day(lvl * 0.97, 2e6)[0] is None  # too far under
     f = features(base_then_breakout(n_up=1), spy)
     assert classify("X", f, stages(f, p), eng, busy=True) is None  # a trade is already open
+
+
+def _trigger_frames(signal: float, n_names=40, seed=0):
+    """Frames with a trigger every 9 sessions per name, whose outcome leans on f_low_age by `signal`."""
+    rng = np.random.default_rng(seed)
+    idx = pd.bdate_range("2021-01-04", periods=900)
+    frames = {}
+    for k in range(n_names):
+        fr = pd.DataFrame(rng.normal(size=(len(idx), len(C.FEATURES))), index=idx, columns=C.FEATURES)
+        fr["trig"] = (np.arange(len(idx)) + k) % 9 == 0
+        fr["y"] = (signal * fr["f_low_age"] + rng.normal(size=len(idx)) > 0.5).astype(float)
+        fr["ret"] = np.where(fr["y"] == 1, 0.08, -0.04)
+        frames[f"T{k}"] = fr
+    return frames, idx
+
+
+def test_trigger_quality_learns_from_trigger_days_and_stays_off_without_signal(monkeypatch):
+    from monitor import learn as L
+    monkeypatch.setattr(L, "trigger_events", lambda fr, rule: fr["trig"])
+    for signal, on in ((1.0, True), (0.0, False)):
+        frames, idx = _trigger_frames(signal)
+        train_end, test_start, label_end = L.windows(idx, 40)
+        q, rep = L.learn_quality(frames, {}, train_end, test_start, label_end, {})
+        assert rep["n_all"] == rep["n_train"] + rep["n_test"] + sum(  # the embargo gap is the rest
+            int(fr.loc[(fr.index > train_end) & (fr.index < test_start), "trig"].sum()) for fr in frames.values())
+        assert q["active"] is on and rep["active"] is on
+        if on:
+            assert rep["test_auc"] > 0.6 and q["min_quality"] > 0
+            assert q["coef"][C.FEATURES.index("f_low_age")] == max(q["coef"])
+            assert rep["thirds"]["high"]["hit_rate"] > rep["thirds"]["low"]["hit_rate"]
+        else:
+            assert rep["test_auc"] < C.QUALITY_MIN_AUC and q["min_quality"] == 0
+
+
+def test_quality_decides_strong_and_earlier_trades_are_rated_once():
+    from monitor import trades as T
+    eng = _eng(dict(P, min_ready=80))
+    x = pd.DataFrame([dict.fromkeys(C.FEATURES, 0.0)], index=[pd.Timestamp("2024-03-01")])
+    g = T.judge(x, eng)  # no quality model yet: readiness and its bar decide
+    assert "quality" not in g and g["strong"] is (g["ready_at"] >= 80)
+    coef = [1.0 if k == "f_low_age" else 0.0 for k in C.FEATURES]
+    eng["quality"] = {**eng["model"], "coef": coef, "min_quality": 67, "active": True}
+    hi, lo = x.assign(f_low_age=2.0), x.assign(f_low_age=-2.0)
+    assert T.judge(hi, eng)["quality"] >= 67 and T.judge(hi, eng)["strong"]
+    assert T.judge(lo, eng)["quality"] < 67 and not T.judge(lo, eng)["strong"]
+    ledger = [{"t": "X", "date": "2024-03-01", "ready_at": 90, "strong": True},
+              {"t": "X", "date": "2024-02-01", "ready_at": 10, "quality": 99, "strong": True}]
+    assert T.rate(ledger, {"X": (lo, None)}, eng) == ["X 2024-03-01"]
+    assert ledger[0]["quality"] < 67 and ledger[0]["strong"] is False and ledger[0]["ready_at"] == 90
+    assert ledger[1]["quality"] == 99  # already rated: kept
+    assert T.rate(ledger, {"X": (hi, None)}, eng) == []  # rated once, not again
+    eng["quality"]["active"] = False
+    assert T.rate([{"t": "X", "date": "2024-03-01"}], {"X": (hi, None)}, eng) == []

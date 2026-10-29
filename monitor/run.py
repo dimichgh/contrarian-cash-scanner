@@ -267,7 +267,8 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
         C.ENGINE.write_text(json.dumps(eng, indent=1) + "\n")
         mt = eng["metrics"]
         what = [k for k, ch in (("trigger rule", mt["trigger"]["changed"]), ("prior strength", mt["model"]["changed"]),
-                                ("strong-trigger bar", mt["trigger"]["ready_filter"]["changed"])) if ch]
+                                ("strong-trigger bar", mt["trigger"]["ready_filter"]["changed"]),
+                                ("trigger quality", mt["quality"]["changed"])) if ch]
         notes.append(f"Engine re-fit: {f'v{prev_version} → ' if prev_version else ''}v{eng['version']} (new weights"
                      + (f"; changed: {', '.join(what)})" if what else ")"))
 
@@ -284,6 +285,9 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
         scored[t] = (f, stages(f, eng["trigger"]))
 
     ledger, last["ledger_seen"] = T.update(ledger, scored, spy, eng, last.get("ledger_seen", {}), as_of)
+    rated = T.rate(ledger, scored, eng)
+    if rated:
+        notes.append(f"Trigger quality given to {len(rated)} earlier trade{'s' * (len(rated) != 1)}")
     rows = []
     for t in names:
         if t not in scored:
@@ -314,7 +318,8 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
             new_alerts.append({"date": r["date"], "t": r["t"], "type": r["stage"], "from": prev.get(r["t"], r["prev_stage"]),
                                "strong": bool(t.get("strong", True)) if trig else True,
                                "close": t["entry"] if trig else r["close"], "level": t["level"] if trig else r["level"],
-                               "ready": t["ready_at"] if trig else r["ready"], "prob": r["prob"], "trigger_date": key,
+                               "ready": t["ready_at"] if trig else r["ready"], "quality": t.get("quality") if trig else None,
+                               "prob": r["prob"], "trigger_date": key,
                                "text": alert_text(r, eng["trigger"]), "engine": eng["version"]})
         with C.ALERTS.open("a") as fh:
             for a in new_alerts:

@@ -24,11 +24,26 @@ FEATURE_TEXT = {
 }
 
 
-def rule_text(p: dict) -> str:
+def rule_text(p: dict, q: dict | None = None) -> str:
     vol = f" on at least {p['vol_mult']:g}x average volume" if p["vol_mult"] else ""
     base = f", after {p['min_below']}+ of the prior 20 sessions below it" if p["min_below"] else ""
-    ready = f"; strong when readiness is {p['min_ready']}+" if p.get("min_ready") else ""
-    return f"Close above the {PIVOT_TEXT[p['pivot']]}{vol}{base}{ready}"
+    if (q or {}).get("active"):
+        bar = f"; strong when trigger quality is {q['min_quality']}+" if q["min_quality"] else ""
+    else:
+        bar = f"; strong when readiness is {p['min_ready']}+" if p.get("min_ready") else ""
+    return f"Close above the {PIVOT_TEXT[p['pivot']]}{vol}{base}{bar}"
+
+
+def bar_text(eng: dict) -> str:
+    """What a weak trigger fell short of."""
+    return "quality" if (eng.get("quality") or {}).get("active") else "readiness"
+
+
+def rating(a: dict) -> str:
+    """A trigger's scores as one phrase: quality first when it has one."""
+    q = a.get("quality")
+    ready = a["ready_at"] if "ready_at" in a else a["ready"]
+    return f"quality {q}, readiness {ready}" if q is not None else f"readiness {ready}"
 
 
 def _md(iso: str) -> str:
@@ -51,10 +66,12 @@ def summary(res: dict) -> str:
     if alerts:
         lines.append(f"{len(alerts)} new signal{'s' * (len(alerts) != 1)}:")
         order = {s: i for i, s in enumerate(STAGES)}
-        for a in sorted(alerts, key=lambda a: (order.get(a["type"], 9), -a["ready"])):
-            kind = a["type"] if a.get("strong", True) else "TRIGGERED (weak: readiness under the learned bar)"
-            mark = MARK.get(a["type"], "·") if a.get("strong", True) else "△"
-            lines.append(f"{mark} {kind} {a['t']} ${a['close']:.2f}: {a['text']} · readiness {a['ready']}")
+        for a in sorted(alerts, key=lambda a: (order.get(a["type"], 9), -(a.get("quality") or 0), -a["ready"])):
+            strong = a.get("strong", True)
+            kind = a["type"] if a["type"] != "TRIGGERED" else "TRIGGERED (strong)" if strong \
+                else f"TRIGGERED (weak: {bar_text(eng)} under the learned bar)"
+            mark = MARK.get(a["type"], "·") if strong else "△"
+            lines.append(f"{mark} {kind} {a['t']} ${a['close']:.2f}: {a['text']} · {rating(a)}")
     else:
         lines.append("No new signals." if res["fresh"] else "No new session since the last run.")
     near = [r for r in rows if r["stage"] in ("TRIGGERED", "SETUP")][:8]
@@ -73,8 +90,12 @@ def summary(res: dict) -> str:
                 return f"; stop ${t['stop_px']:.2f}, target ${t['target_px']:.2f}"
             return (f"; stop ${t['stop_px']:.2f}; target ${t['target_px']:.2f} usually hit {_md(w['from'])}–{_md(w['to'])}"
                     f" (day {t['sessions']} of a typical {w['p25']}–{w['p75']}, {w['phase']})")
+        def grade(t):
+            if t.get("quality") is None:
+                return ""
+            return f"quality {t['quality']} {'strong' if t['strong'] else 'weak'}, "
         lines += ["", "Open trades: " + ", ".join(
-            f"{t['t']} {t['change']:+.1f}% in {t['sessions']}d (S&P {t['spy']:+.1f}%, best {t['best']:+.1f}%{plan(t)})"
+            f"{t['t']} {t['change']:+.1f}% in {t['sessions']}d ({grade(t)}S&P {t['spy']:+.1f}%, best {t['best']:+.1f}%{plan(t)})"
             for t in open_)]
     closed = [t for t in ledger if t["status"] != "open" and _sessions_since(t["exit_date"], res["as_of"]) <= 5]
     if closed:
@@ -90,8 +111,14 @@ def summary(res: dict) -> str:
         lines.append(f"No price data: {', '.join(res['missing'])}")
     t_all = tm["all"]
     lines.append(f"Engine: readiness AUC {mm['test_auc']:.3f} on the held-out year (expert prior alone {mm['prior_only_auc']:.3f}); "
-                 f"trigger: {rule_text(eng['trigger']).lower()} — {_pct(t_all['hit_rate'])} reached their target before their stop "
-                 f"vs {_pct(t_all['base_hit_rate'])} for any day ({t_all['n']} past triggers)")
+                 f"trigger: {rule_text(eng['trigger'], eng.get('quality')).lower()} — {_pct(t_all['hit_rate'])} reached their target "
+                 f"before their stop vs {_pct(t_all['base_hit_rate'])} for any day ({t_all['n']} past triggers)")
+    qm = eng["metrics"].get("quality")
+    if qm and qm["active"]:
+        hi = qm["by_threshold"][str(qm["min_quality"])]
+        lines.append(f"Trigger quality: AUC {qm['test_auc']:.3f} on the held-out year's {qm['n_test']} triggers; "
+                     f"the {hi['n']} at quality {qm['min_quality']}+ hit target {_pct(hi['hit_rate'])} of the time "
+                     f"(avg {hi['expectancy'] * 100:+.1f}%) vs {_pct(qm['by_threshold']['0']['hit_rate'])} for all of them.")
     timing = tm.get("timing", {})
     if "median" in timing:
         lines.append(f"Past triggers that hit target took a median {timing['median']} sessions (middle half "
@@ -136,6 +163,9 @@ def dashboard(res: dict) -> str:
     m = eng["model"]
     learned = sorted(({"f": FEATURE_TEXT.get(k, k), "prior": C.PRIOR.get(k, 0), "w": w}
                       for k, w in zip(m["features"], m["coef"])), key=lambda x: -abs(x["w"]))
+    q = eng.get("quality") or {}
+    q_learned = sorted(({"f": FEATURE_TEXT.get(k, k), "prior": 0, "w": w}
+                        for k, w in zip(q.get("features", []), q.get("coef", []))), key=lambda x: -abs(x["w"]))
     history = [json.loads(x) for x in C.ENGINE_LOG.read_text().splitlines()] if C.ENGINE_LOG.exists() else []
     rows = [{k: v for k, v in r.items() if k not in ("prev_stage", "watch")} for r in res["rows"]]
     for r in rows:
@@ -143,12 +173,18 @@ def dashboard(res: dict) -> str:
         if r.get("thesis"):
             r["thesis"] = {**r["thesis"], "why": r["thesis"]["why"][:4], "risk": r["thesis"]["risk"][:2]}
         r.pop("date", None)
+    by_trade = {(t["t"], t["date"]): t for t in res.get("trades", [])}
+
+    def graded(a):  # a trigger shows the rating its trade carries (trades from before quality get it later)
+        t = by_trade.get((a["t"], a.get("trigger_date")))
+        return {**a, "quality": t.get("quality"), "strong": t["strong"]} if a["type"] == "TRIGGERED" and t else a
     data = {
         "asof": res["as_of"], "version": eng["version"], "updated": eng["updated"],
-        "stages": [[s, STAGE_TEXT[s]] for s in STAGES], "rule": rule_text(eng["trigger"]),
+        "stages": [[s, STAGE_TEXT[s]] for s in STAGES], "rule": rule_text(eng["trigger"], q),
         "label": eng["label"], "trigger": eng["trigger"], "metrics": eng["metrics"],
-        "learned": learned, "history": history[-20:], "record": res["record"],
-        "alerts": res["recent_alerts"][::-1], "rows": rows, "trades": _trades(res),
+        "quality": {k: q[k] for k in ("active", "min_quality", "lam") if k in q},
+        "learned": learned, "q_learned": q_learned, "history": history[-20:], "record": res["record"],
+        "alerts": [graded(a) for a in res["recent_alerts"][::-1]], "rows": rows, "trades": _trades(res),
         "ledger": T.stats(res.get("trades", [])),
         "added": res["added"], "dropped": res["dropped"],
     }

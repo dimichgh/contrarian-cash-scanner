@@ -70,13 +70,39 @@ def follow(t: str, f: pd.DataFrame, st: pd.DataFrame, spy: pd.Series, d: pd.Time
         "worst": r2(float(path.min()) / entry - 1), "spy": r2(spy_chg), "excess": r2(exit_px / entry - 1 - spy_chg),
     }
     if frozen:
-        rec.update({k: frozen[k] for k in ("ready_at", "strong", "live", "engine") if k in frozen})
-    else:  # readiness as the engine saw the trigger day itself
-        m = eng["model"]
-        ready = int(readiness(m, predict(m, f.loc[[d], m["features"]].to_numpy())[0]))
-        rec.update(ready_at=ready, strong=ready >= eng["trigger"].get("min_ready", 0), live=False,
-                   engine=eng["version"])
+        rec.update({k: frozen[k] for k in ("ready_at", "quality", "strong", "live", "engine") if k in frozen})
+    else:  # as the engine saw the trigger day itself
+        rec.update(judge(f.loc[[d]], eng), live=False, engine=eng["version"])
     return rec
+
+
+def judge(x: pd.DataFrame, eng: dict) -> dict:
+    """How the engine rates a trigger from its day's features (one row): readiness, quality and
+    strong or weak. Quality decides strong while the learner has it active, readiness otherwise."""
+    m, q = eng["model"], eng.get("quality") or {}
+    out = {"ready_at": int(readiness(m, predict(m, x[m["features"]].to_numpy())[0]))}
+    if q.get("active"):
+        out["quality"] = int(readiness(q, predict(q, x[q["features"]].to_numpy())[0]))
+        out["strong"] = out["quality"] >= q["min_quality"]
+    else:
+        out["strong"] = out["ready_at"] >= eng["trigger"].get("min_ready", 0)
+    return out
+
+
+def rate(ledger: list[dict], scored: dict, eng: dict) -> list[str]:
+    """Give trades from before the quality score its rating (and strong or weak from it), once:
+    after that a trade keeps the rating it has, like its target and stop."""
+    if not (eng.get("quality") or {}).get("active"):
+        return []
+    done = []
+    for r in ledger:
+        f_st = scored.get(r["t"])
+        d = pd.Timestamp(r["date"])
+        if "quality" in r or f_st is None or d not in f_st[0].index:
+            continue
+        r.update({k: v for k, v in judge(f_st[0].loc[[d]], eng).items() if k != "ready_at"})
+        done.append(f"{r['t']} {r['date']}")
+    return done
 
 
 def update(ledger: list[dict], scored: dict, spy: pd.Series, eng: dict, seen: dict,

@@ -76,3 +76,10 @@ FEATURES = list(PRIOR)
 LAMBDAS = [30.0, 300.0, 3000.0, 30000.0]  # prior strength candidates (pseudo-observations)
 ADOPT_AUC_MARGIN = 0.003    # a challenger model must beat the champion's holdout AUC by this much
 ADOPT_EXP_MARGIN = 0.0025   # a challenger trigger rule must beat the champion's expectancy by this much
+# Trigger quality: a second regression, fitted on trigger days only, says which triggers tend to
+# reach their target. It starts from no opinion (every weight shrunk toward zero, not toward PRIOR)
+# and decides strong vs weak only while it ranks the held-out year's triggers better than chance.
+QUALITY_LAMBDAS = [3.0, 30.0, 300.0, 3000.0]
+QUALITY_MIN_AUC = 0.53      # held-out AUC it needs to be used
+QUALITY_MIN_TEST = 100      # held-out triggers it needs to be judged at all
+QUALITY_STEPS = [0, 33, 50, 67]  # candidate bars for a strong trigger (quality percentile)

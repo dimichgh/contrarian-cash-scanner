@@ -102,6 +102,7 @@ h2[id] { scroll-margin-top: 16px; }
 .status.win { color: var(--good); }
 .status.loss { color: var(--crit); }
 .status.flat { color: var(--muted); }
+.strong { color: var(--good); font-weight: 600; }
 
 /* controls + table */
 .controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
@@ -224,7 +225,7 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
     </div>
     <p class="sub" id="ledger-note"></p>
     <p class="sub" id="timing-note"></p>
-    <p class="sub">Grey tick: entry; dot: the exit, or the last close while open; green and red ticks: target and stop. Best and worst are the best and worst closes up to the exit. Backfilled: a trigger found in the price history rather than announced by the monitor on the day; its readiness is scored by the engine of the day it was recorded.</p>
+    <p class="sub">Grey tick: entry; dot: the exit, or the last close while open; green and red ticks: target and stop. Best and worst are the best and worst closes up to the exit. Backfilled: a trigger found in the price history rather than announced by the monitor on the day; its readiness is scored by the engine of the day it was recorded. Quality ranks a trigger against every past trigger by how often ones like it reached their target (67 = better than two thirds of them); strong ones clear the bar the engine learned. Trades opened before the quality score existed were rated once, by the engine that introduced it.</p>
   </section>
 
   <section aria-labelledby="rank-h">
@@ -271,8 +272,18 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
         <h3>Readiness weights</h3>
         <div class="legend"><span><i style="background:var(--accent)"></i>Learned, pushes readiness up</span><span><i style="background:var(--neg)"></i>Learned, pulls it down</span><span><i class="pr"></i>Starting expert weight</span></div>
         <div id="weights" style="display:grid;gap:7px"></div>
+        <div id="q-weights-box" hidden style="margin-top:14px">
+          <h3>Trigger quality weights</h3>
+          <p class="sub">Fitted on past trigger days only, starting from no opinion: what set the triggers that reached their target apart.</p>
+          <div id="q-weights" style="display:grid;gap:7px"></div>
+        </div>
       </div>
       <div style="display:grid;gap:16px">
+        <div class="panel mini table-wrap" id="q-thresh-box" hidden>
+          <table><caption class="sub" style="text-align:left;padding:8px 8px 0">Trigger signals on the held-out year, by trigger quality at the time</caption>
+            <thead><tr><th>Quality</th><th class="r">Triggers</th><th class="r">Hit target first</th><th class="r">Avg outcome</th></tr></thead>
+            <tbody id="q-thresh"></tbody></table>
+        </div>
         <div class="panel mini table-wrap">
           <table><caption class="sub" style="text-align:left;padding:8px 8px 0">Trigger signals on the held-out year, by readiness at the time</caption>
             <thead><tr><th>Readiness</th><th class="r">Triggers</th><th class="r">Hit target first</th><th class="r">Avg outcome</th></tr></thead>
@@ -287,7 +298,7 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
     </div>
     <div class="panel mini table-wrap">
       <table><caption class="sub" style="text-align:left;padding:8px 8px 0">Learning cycles</caption>
-        <thead><tr><th>Date</th><th class="r">Version</th><th>Trigger rule</th><th class="r">Readiness AUC</th><th class="r">Trigger hit rate</th><th>Changed</th></tr></thead>
+        <thead><tr><th>Date</th><th class="r">Version</th><th>Trigger rule</th><th class="r">Readiness AUC</th><th class="r">Quality AUC</th><th class="r">Trigger hit rate</th><th>Changed</th></tr></thead>
         <tbody id="cycles"></tbody></table>
     </div>
   </section>
@@ -299,13 +310,13 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
     </div>
     <div class="panel table-wrap">
       <table><caption class="sub" style="text-align:left;padding:8px 8px 0">Every trigger the monitor announced at the time, followed as a trade. The outcome shows the day the close reaches the target or the stop.</caption>
-        <thead><tr><th>Triggered</th><th>Ticker</th><th class="r">Entry</th><th class="r">Level</th><th class="r">Readiness</th><th>Stop → target</th><th>Outcome</th></tr></thead>
+        <thead><tr><th>Triggered</th><th>Ticker</th><th class="r">Entry</th><th class="r">Level</th><th class="r">Quality</th><th class="r">Readiness</th><th>Stop → target</th><th>Outcome</th></tr></thead>
         <tbody id="live"></tbody>
       </table>
     </div>
     <div class="panel table-wrap">
       <table><caption class="sub" style="text-align:left;padding:8px 8px 0" id="back-cap"></caption>
-        <thead><tr><th>Triggered</th><th>Ticker</th><th class="r">Entry</th><th class="r">Level</th><th class="r">Readiness</th><th>Stop → target</th><th>Outcome</th></tr></thead>
+        <thead><tr><th>Triggered</th><th>Ticker</th><th class="r">Entry</th><th class="r">Level</th><th class="r">Quality</th><th class="r">Readiness</th><th>Stop → target</th><th>Outcome</th></tr></thead>
         <tbody id="back"></tbody>
       </table>
       <button type="button" class="more" id="back-more" hidden></button>
@@ -325,6 +336,7 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
         <li><b>Every trading day</b> it scores each name from its daily bars, records the call, and raises a signal when a name moves into a new stage.</li>
         <li><b>Every week</b> it re-runs the full fundamental scan: new names that qualify join the watchlist, and names that miss three scans in a row leave it unless their move is under way.</li>
         <li><b>Every week</b> it replays five years of history for about 300 names, labels every day by what happened next, refits the readiness weights, and re-tests every variant of the trigger rule.</li>
+        <li><b>Every week</b> it also refits the trigger quality score on past trigger days alone. While that score ranks the final year's triggers better than chance, it decides which triggers count as strong.</li>
         <li><b>Changes need proof.</b> A new rule or a new level of trust in the data replaces the old one only if it does better on the final year, which the fit never sees.</li>
         <li><b>It keeps score.</b> Every call it made is checked against what the price actually did, so the track record above is out of sample.</li>
       </ol>
@@ -339,6 +351,7 @@ footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule
 
 <script>
 const D = /*__DATA__*/null;
+const Q = D.quality || {};
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 const pct = (x, d = 0) => x == null ? "n/a" : (x * 100).toFixed(d) + "%";
@@ -369,15 +382,18 @@ function drawLadder() {
 (function signals() {
   const today = D.alerts.filter((a) => a.date === D.asof);
   $("#sig-sub").textContent = today.length
-    ? `Stage changes at the close of ${D.asof}. A trigger counts as strong when readiness is at or above the bar the engine learned (${D.trigger.min_ready || 0}).`
+    ? `Stage changes at the close of ${D.asof}. ${Q.active ? `A trigger counts as strong when its quality (how often triggers like it reached their target) is at or above the bar the engine learned (${Q.min_quality}).`
+      : `A trigger counts as strong when readiness is at or above the bar the engine learned (${D.trigger.min_ready || 0}).`}`
     : `No stage changes at the close of ${D.asof}. The most recent signals are in the track record below.`;
   const order = ["TRIGGERED", "TARGET", "SETUP", "RUNNING", "FAILED"];
-  today.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type) || b.ready - a.ready);
+  today.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type) || (b.quality ?? -1) - (a.quality ?? -1) || b.ready - a.ready);
+  const trig = (a) => a.type === "TRIGGERED" && a.quality != null;
   $("#signals").innerHTML = today.length ? today.map((a) => `
     <div class="panel sig${a.strong === false ? " weak" : ""}">
       <span>${chip(a.type)}</span><span class="tk">${esc(a.t)}</span>
-      <span class="txt">$${a.close.toFixed(2)}: ${esc(a.text)}${a.strong === false ? " · weak: readiness under the learned bar" : ""}</span>
-      <span class="rd">readiness ${a.ready}</span>
+      <span class="txt">$${a.close.toFixed(2)}: ${esc(a.text)}${a.strong === false ? ` · weak: ${a.quality != null ? "quality" : "readiness"} under the learned bar`
+        : trig(a) ? ' · <span class="strong">strong</span>' : ""}</span>
+      <span class="rd">${trig(a) ? `quality ${a.quality} · ` : ""}readiness ${a.ready}</span>
     </div>`).join("") : '<div class="panel empty">Nothing moved into a new stage today.</div>';
 })();
 
@@ -391,6 +407,9 @@ function drawLadder() {
     return `<span class="num" style="white-space:nowrap;font-size:.8rem">${md(w.from)} – ${md(w.to)}</span>
       <div class="dim" style="white-space:nowrap">day ${t.sessions} of ${w.p25}–${w.p75} · ${w.phase}</div>`;
   };
+  // the trigger's scores: quality first (with strong or weak) when it has one
+  const grade = (t) => t.quality != null ? `quality ${t.quality} · ${t.strong ? '<span class="strong">strong</span>' : "weak"}`
+    : `readiness ${t.ready_at}${t.strong ? "" : " · weak"}`;
   // the stage an open trade's name shows today (triggered only in its first sessions, then running, retest...)
   const rowOf = Object.fromEntries(D.rows.map((r) => [r.t, r]));
   const nowStage = (t) => { const r = rowOf[t.t]; return r && r.trade && r.trade.date === t.date ? (LABEL[r.stage] || r.stage.toLowerCase()) : null; };
@@ -413,7 +432,7 @@ function drawLadder() {
     const after = !isOpen && t.now_change != null ? `<div class="dim" style="white-space:nowrap">now ${sgn(t.now_change)}</div>` : "";
     return `<tr>
       <td><div class="co" style="min-width:110px"><b>${esc(t.t)}</b><span style="max-width:130px">${esc(t.name)}</span></div></td>
-      <td><span class="num" style="white-space:nowrap">${t.date}</span><div class="dim">readiness ${t.ready_at}${t.strong ? "" : " · weak"}${t.live ? "" : " · backtest"}</div></td>
+      <td><span class="num" style="white-space:nowrap">${t.date}</span><div class="dim" style="white-space:nowrap">${grade(t)}${t.live ? "" : " · backtest"}</div></td>
       <td class="r num">${t.sessions}</td>
       <td class="r num" style="white-space:nowrap">$${t.entry.toFixed(2)} → $${last.toFixed(2)}<div class="dim">${isOpen ? "last close" : "exit " + md(t.exit_date)}</div></td>
       <td class="r num"><b>${sgn(t.change)}</b>${after}</td>
@@ -570,25 +589,37 @@ $("#f-q").addEventListener("input", drawTable);
 
 // engine
 (function engine() {
-  const mm = D.metrics.model, tm = D.metrics.trigger, all = tm.all;
+  const mm = D.metrics.model, tm = D.metrics.trigger, all = tm.all, qm = D.metrics.quality;
   $("#eng-sub").textContent = `Version ${D.version}, last re-fit ${D.updated} on ${D.metrics.tickers} names. The target: a rise of ${D.label.up}× the stock's normal ${D.label.horizon}-day swing before a fall of ${D.label.down}×, within ${D.label.horizon} trading days. Current trigger rule: ${D.rule}.`;
   const tiles = [
     [mm.test_auc.toFixed(3), `Readiness AUC on the held-out year. 0.5 is a coin flip; the expert weights alone scored ${mm.prior_only_auc.toFixed(3)}.`],
     [pct(all.hit_rate), `of ${all.n.toLocaleString()} past triggers reached their target before their stop, against ${pct(all.base_hit_rate)} for a random day.`],
-    [(D.trigger.min_ready || 0) + "+", "Readiness a trigger needs to count as strong, picked on the held-out year."],
+    ...(Q.active ? [[qm.test_auc.toFixed(3), `Trigger quality AUC on the held-out year's ${qm.n_test} triggers: how well it told the ones that reached their target from the rest.`],
+      [Q.min_quality + "+", `Quality a trigger needs to count as strong, picked on the held-out year: ${pct(qm.by_threshold[Q.min_quality].hit_rate)} of those reached their target, against ${pct(qm.by_threshold[0].hit_rate)} of all triggers.`]]
+      : [[(D.trigger.min_ready || 0) + "+", "Readiness a trigger needs to count as strong, picked on the held-out year."]]),
     [pct(mm.base_rate), `of all ${(mm.n_train + mm.n_test).toLocaleString()} sampled days in the data were followed by a real move.`],
     ...(tm.timing?.median != null ? [[`${tm.timing.median} days`, `Median trading days from trigger to target, for the ${tm.timing.wins.toLocaleString()} past triggers that got there (middle half ${tm.timing.p25}–${tm.timing.p75}).`]] : []),
   ];
   $("#tiles").innerHTML = tiles.map(([b, s]) => `<div class="panel tile"><b>${b}</b><span>${esc(s)}</span></div>`).join("");
-  const wmax = Math.max(0.05, ...D.learned.map((x) => Math.max(Math.abs(x.w), Math.abs(x.prior))));
-  const pos = (v) => 50 + (v / wmax) * 50;
-  $("#weights").innerHTML = D.learned.map((x) => {
-    const a = pos(Math.min(0, x.w)), b = pos(Math.max(0, x.w));
-    return `<div class="wrow" title="learned ${x.w.toFixed(3)} · expert ${x.prior.toFixed(2)}"><span>${esc(x.f)}</span>
-      <span class="wtrack"><span class="axis"></span><span class="w ${x.w >= 0 ? "pos" : "neg"}" style="left:${a}%;width:${Math.max(0.5, b - a)}%"></span>
-      <span class="pr" style="left:calc(${pos(x.prior)}% - 1px)"></span></span>
-      <span class="num" style="text-align:right">${x.w >= 0 ? "+" : ""}${x.w.toFixed(2)}</span></div>`;
-  }).join("");
+  const bars = (xs, prior) => {
+    const wmax = Math.max(0.05, ...xs.map((x) => Math.max(Math.abs(x.w), Math.abs(x.prior))));
+    const pos = (v) => 50 + (v / wmax) * 50;
+    return xs.map((x) => {
+      const a = pos(Math.min(0, x.w)), b = pos(Math.max(0, x.w));
+      return `<div class="wrow" title="learned ${x.w.toFixed(3)}${prior ? ` · expert ${x.prior.toFixed(2)}` : ""}"><span>${esc(x.f)}</span>
+        <span class="wtrack"><span class="axis"></span><span class="w ${x.w >= 0 ? "pos" : "neg"}" style="left:${a}%;width:${Math.max(0.5, b - a)}%"></span>
+        ${prior ? `<span class="pr" style="left:calc(${pos(x.prior)}% - 1px)"></span>` : ""}</span>
+        <span class="num" style="text-align:right">${x.w >= 0 ? "+" : ""}${x.w.toFixed(2)}</span></div>`;
+    }).join("");
+  };
+  $("#weights").innerHTML = bars(D.learned, true);
+  if (D.q_learned.length) { $("#q-weights-box").hidden = false; $("#q-weights").innerHTML = bars(D.q_learned, false); }
+  if (Q.active && qm) {
+    $("#q-thresh-box").hidden = false;
+    $("#q-thresh").innerHTML = Object.entries(qm.by_threshold).map(([t, s]) => `<tr${+t === Q.min_quality ? ' style="font-weight:600"' : ""}>
+      <td>${t === "0" ? "Any" : t + "+"}</td><td class="r num">${s.n}</td><td class="r num">${pct(s.hit_rate)}</td>
+      <td class="r num">${s.expectancy == null ? "n/a" : sgn(s.expectancy * 100, 2)}</td></tr>`).join("");
+  }
   const rf = tm.ready_filter?.by_threshold || {};
   $("#thresh").innerHTML = Object.entries(rf).map(([t, s]) => `<tr${+t === (D.trigger.min_ready || 0) ? ' style="font-weight:600"' : ""}>
     <td>${t === "0" ? "Any" : t + "+"}</td><td class="r num">${s.n}</td><td class="r num">${pct(s.hit_rate)}</td>
@@ -599,9 +630,11 @@ $("#f-q").addEventListener("input", drawTable);
     `<tr><td>Expert prior only</td><td class="r num">${mm.prior_only_auc.toFixed(3)}</td></tr>`;
   const rule = (r) => `${r.pivot}, vol ${r.vol_mult || "any"}, ${r.min_below}+ below, lows ${r.min_low_age}+`;
   $("#cycles").innerHTML = D.history.slice().reverse().map((h) => {
-    const ch = [h.model.changed && "readiness weights", h.trigger.changed && "trigger rule", h.trigger.ready_filter?.changed && "strong-trigger bar"].filter(Boolean);
+    const ch = [h.model.changed && "readiness weights", h.trigger.changed && "trigger rule", h.trigger.ready_filter?.changed && "strong-trigger bar",
+      h.quality?.changed && (h.quality.active ? "trigger quality" : "trigger quality off")].filter(Boolean);
     return `<tr><td class="num">${h.date}</td><td class="r num">v${h.version}</td><td class="num" style="font-size:.8rem">${esc(rule(h.trigger.rule))}</td>
-      <td class="r num">${h.model.test_auc.toFixed(3)}</td><td class="r num">${pct(h.trigger.all.hit_rate)}</td><td>${ch.length ? esc(ch.join(", ")) : '<span class="dim">kept</span>'}</td></tr>`;
+      <td class="r num">${h.model.test_auc.toFixed(3)}</td><td class="r num">${h.quality ? h.quality.test_auc.toFixed(3) : '<span class="dim">n/a</span>'}</td>
+      <td class="r num">${pct(h.trigger.all.hit_rate)}</td><td>${ch.length ? esc(ch.join(", ")) : '<span class="dim">kept</span>'}</td></tr>`;
   }).join("");
 })();
 
@@ -633,10 +666,12 @@ $("#f-q").addEventListener("input", drawTable);
       : `<span class="${cls[t.status] || "dim"}">${esc(t.status)}</span> <span class="num">${sgn(t.change)}</span>` +
         `<span class="dim"> on ${mdate(t.exit_date)}, ${t.resolved_in} sessions</span>`;
     return `<tr><td class="num">${t.date}</td><td class="num"><b>${esc(t.t)}</b></td><td class="r num">$${t.entry.toFixed(2)}</td>
-      <td class="r num">$${t.level.toFixed(2)}</td><td class="r num">${t.ready_at}${t.strong ? "" : ' <span class="dim">weak</span>'}</td>
+      <td class="r num">$${t.level.toFixed(2)}</td>
+      <td class="r num">${t.quality != null ? `${t.quality}${t.strong ? ' <span class="strong">strong</span>' : ' <span class="dim">weak</span>'}` : '<span class="dim">n/a</span>'}</td>
+      <td class="r num">${t.ready_at}${t.quality == null && !t.strong ? ' <span class="dim">weak</span>' : ""}</td>
       <td class="num" style="white-space:nowrap">$${t.stop_px.toFixed(2)} → $${t.target_px.toFixed(2)}</td><td>${out}</td></tr>`;
   };
-  $("#live").innerHTML = live.map(tradeRow).join("") || '<tr><td colspan="7" class="empty">No live triggers yet.</td></tr>';
+  $("#live").innerHTML = live.map(tradeRow).join("") || '<tr><td colspan="8" class="empty">No live triggers yet.</td></tr>';
   // backtest: triggers found by replaying each name's last 90 sessions when the monitor first saw it
   const backSorted = [...back].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.t < b.t ? -1 : 1));
   const hits = backSorted.filter((t) => t.status === "hit target");
@@ -647,7 +682,7 @@ $("#f-q").addEventListener("input", drawTable);
       ? `Backtest trades: all ${back.length} triggers found by replaying each name's last 90 sessions when the monitor first saw it (not announced at the time).`
       : `Backtest trades that hit their target: ${hits.length} of the ${back.length} triggers found by replaying each name's last 90 sessions when the monitor first saw it (not announced at the time).`;
     $("#back").innerHTML = shown.map(tradeRow).join("")
-      || `<tr><td colspan="7" class="empty">${back.length ? "None of the backtest trades hit the target." : "No backtest trades."}</td></tr>`;
+      || `<tr><td colspan="8" class="empty">${back.length ? "None of the backtest trades hit the target." : "No backtest trades."}</td></tr>`;
     const btn = $("#back-more");
     btn.hidden = back.length === hits.length;
     btn.textContent = allBack ? "Show only the ones that hit the target" : `Show all ${back.length} backtest trades (stopped out and timed out too)`;

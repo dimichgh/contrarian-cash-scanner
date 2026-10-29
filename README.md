@@ -111,12 +111,22 @@ Signals are news only, and decided from what was actually sent, so a missed run 
 instead of losing it: a trigger once per trade (with the trigger day's numbers and readiness), Running
 once per trade when its first sessions are over, Target hit and Failed once per trade within a week
 of the exit, and Setup when a run of setup days begins, not again within 10 sessions. A trigger is
-**strong** when its readiness clears a bar the engine learns.
+**strong** when its trigger quality clears a bar the engine learns (readiness decides while the
+quality score is not in use).
 
 **Readiness (0–100)** is the engine's probability that the stock reaches its target before its stop
 within 40 trading days, as a percentile of every setup in the training history. Target and stop are
 sized to the stock's own volatility (0.9× and 0.55× its normal 40-day swing: about +10% / −6% for a
 typical value stock), so the engine looks for direction rather than for volatility.
+
+**Trigger quality (0–100)** ranks a trigger against every past trigger by how often ones like it
+reached their target first. Readiness is fitted on every day and asks whether a move is near; once a
+trigger fires, it barely tells the winners from the losers (held-out AUC about 0.51 on trigger days).
+Quality is a second logistic regression on the same 16 features, fitted on past trigger days only and
+shrunk toward zero rather than toward the expert weights, so the held-out test is not steered by
+anyone's opinion. It is used only while it ranks the held-out year's triggers better than chance
+(AUC 0.53+, 100+ triggers). Each trade is rated once, when it opens (trades from before the score
+existed were rated by the engine that introduced it), and keeps that rating, like its target and stop.
 
 **How it improves.** Each week it replays five years of daily bars for the watchlist and the scan's
 top 300 names, labels every day by what happened next, and:
@@ -125,7 +135,10 @@ top 300 names, labels every day by what happened next, and:
    hand-set expert weights; how far it may move from them is chosen on a held-out final year);
 2. replays 48 variants of the trigger rule (level, volume, time below the level, age of the low) and
    switches rule only when the challenger also wins on the held-out year;
-3. picks the readiness bar for a strong trigger on the held-out year (at least 30 events).
+3. picks the readiness bar for a strong trigger on the held-out year (at least 30 events);
+4. refits the trigger quality score on past trigger days, picks how strongly it is shrunk and the
+   quality bar for a strong trigger (0, 33, 50 or 67) on the held-out year, and switches it off when
+   it no longer beats chance there.
 
 Every daily call is stored, and the dashboard scores those calls against what the price actually did,
 counting a call only once its full 40 sessions have passed (counting early resolutions first would

@@ -10,6 +10,9 @@ and then:
    that the fit never saw, and it only changes when the new choice beats the deployed one there.
 2. Trigger rule: replays every variant in TRIGGER_GRID, picks the best on the training years, and
    swaps it in only if it also beats the deployed rule on the held-out year.
+3. Trigger quality: a separate fit on past trigger days only, ranking triggers by how often ones
+   like them reached their target. It decides strong vs weak while it beats chance on the held-out
+   year; otherwise the readiness bar does.
 
 Structural changes need out-of-sample evidence; coefficients simply keep absorbing new data.
 """
@@ -154,6 +157,55 @@ def learn_min_ready(frames, rule: dict, holdout: dict, test_start, label_end, cu
                     "by_threshold": {str(t): {k: by[t][k] for k in ("n", "hit_rate", "expectancy")} for t in by}}
 
 
+def learn_quality(frames, rule: dict, train_end, test_start, label_end, current: dict) -> tuple[dict, dict]:
+    """Trigger quality: which triggers reached their target, learned from trigger days alone.
+
+    Readiness is fitted on every day and asks "is a move near?"; once a trigger has fired, what it
+    measures barely separates the winners. This fit sees only past trigger days, with weights shrunk
+    toward zero, its strength picked on the held-out year. It is used (active) only while it ranks
+    that year's triggers better than chance, and the bar for a strong trigger is picked there too.
+    """
+    ev = pd.concat([fr.loc[trigger_events(fr, rule) & (fr.index <= label_end), C.FEATURES + ["y", "ret"]]
+                    for fr in frames.values()]).dropna(subset=["y"])
+    train, test = ev[ev.index <= train_end], ev[ev.index >= test_start]
+    zero = np.zeros(len(C.FEATURES))
+    z = lambda d, mean, std: np.nan_to_num(((d[C.FEATURES] - mean) / std).to_numpy())  # as predict() does
+    mean, std = _std(train)
+    Xtr, Xte, ytr = z(train, mean, std), z(test, mean, std), train["y"].to_numpy()
+    by_lam = {lam: auc(test["y"], sigmoid(Xte @ w + b))
+              for lam, (w, b) in ((lam, fit_logit(Xtr, ytr, zero, lam)) for lam in C.QUALITY_LAMBDAS)}
+    best = max(by_lam, key=lambda k: -1 if np.isnan(by_lam[k]) else by_lam[k])
+    cur = current.get("lam") if current.get("features") == C.FEATURES and current.get("lam") in by_lam else None
+    lam = best if cur is None or by_lam[best] >= by_lam[cur] + C.ADOPT_AUC_MARGIN else cur
+    w, b = fit_logit(Xtr, ytr, zero, lam)
+    holdout = {"features": C.FEATURES, "coef": w.tolist(), "intercept": b, "mean": mean.tolist(), "std": std.tolist(),
+               "quantiles": np.quantile(sigmoid(Xtr @ w + b), np.linspace(0, 1, 101)).tolist()}
+    q = readiness(holdout, predict(holdout, test[C.FEATURES].to_numpy()))
+    base = pd.concat([fr.loc[(fr.index >= test_start) & (fr.index <= label_end), ["y", "ret"]]
+                      for fr in frames.values()]).dropna()
+    by = {s: _event_stats(test[q >= s], base) for s in C.QUALITY_STEPS}
+    thirds = {k: _event_stats(test[m], base) for k, m in (("low", q < 33), ("mid", (q >= 33) & (q < 67)), ("high", q >= 67))}
+    active = len(test) >= C.QUALITY_MIN_TEST and by_lam[lam] >= C.QUALITY_MIN_AUC
+    pick = max((s for s in by if s == 0 or by[s]["n"] >= 30), key=lambda s: by[s]["score"])
+    cur_bar = current.get("min_quality", 0) if current.get("min_quality", 0) in by else 0
+    bar = pick if by[pick]["score"] >= by[cur_bar]["score"] + C.ADOPT_EXP_MARGIN else cur_bar
+    # production fit: every labelled trigger; its percentiles rank a new trigger against all past ones
+    mean, std = _std(ev)
+    X = z(ev, mean, std)
+    w, b = fit_logit(X, ev["y"].to_numpy(), zero, lam)
+    quality = {"features": C.FEATURES, "coef": w.round(5).tolist(), "intercept": round(float(b), 5),
+               "mean": mean.round(6).tolist(), "std": std.round(6).tolist(), "lam": lam,
+               "quantiles": np.quantile(sigmoid(X @ w + b), np.linspace(0, 1, 101)).round(5).tolist(),
+               "min_quality": bar if active else 0, "active": bool(active)}
+    report = {"active": bool(active), "changed": bool(active) != bool(current.get("active"))
+              or (active and bar != current.get("min_quality")), "lam": lam,
+              "test_auc": round(by_lam[lam], 4), "test_auc_by_lam": {str(k): round(v, 4) for k, v in by_lam.items()},
+              "min_quality": quality["min_quality"], "n_train": len(train), "n_test": len(test), "n_all": len(ev),
+              "by_threshold": {str(s): {k: by[s][k] for k in ("n", "hit_rate", "expectancy")} for s in by},
+              "thirds": {k: {x: v[x] for x in ("n", "hit_rate", "expectancy")} for k, v in thirds.items()}}
+    return quality, report
+
+
 def trigger_timing(frames, rule: dict, label_end) -> dict:
     """How long past triggers took to resolve: the basis for each open trade's target window."""
     ev = pd.concat([fr.loc[trigger_events(fr, rule) & (fr.index <= label_end), ["y", "ret", "bars", "stop"]]
@@ -189,15 +241,17 @@ def learn(bars, spy_close, engine: dict | None, today: dt.date) -> dict:
                                                   cur_trigger.get("min_ready", 0))
     t_rep["ready_filter"] = r_rep
     t_rep["timing"] = trigger_timing(frames, trigger, label_end)
+    quality, q_rep = learn_quality(frames, trigger, train_end, test_start, label_end, engine.get("quality", {}))
     # every re-fit moves the weights and percentiles, so every re-fit is a new version: calls tagged
     # with a version were all scored by the same model
     version = engine.get("version", 0) + 1
     entry = {"date": today.isoformat(), "version": version, "tickers": len(frames),
              "window": {"from": str(rows.index.min().date()), "train_end": str(train_end.date()),
                         "test_start": str(test_start.date()), "label_end": str(label_end.date())},
-             "model": m_rep, "trigger": t_rep}
+             "model": m_rep, "trigger": t_rep, "quality": q_rep}
     C.ENGINE_LOG.parent.mkdir(parents=True, exist_ok=True)
     with C.ENGINE_LOG.open("a") as fh:
         fh.write(json.dumps(entry) + "\n")
     return {"version": version, "updated": today.isoformat(), "label": label, "trigger": trigger,
-            "model": model, "metrics": {"model": m_rep, "trigger": t_rep, "tickers": len(frames)}}
+            "model": model, "quality": quality,
+            "metrics": {"model": m_rep, "trigger": t_rep, "quality": q_rep, "tickers": len(frames)}}
