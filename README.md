@@ -166,9 +166,9 @@ weekday, on New York time, with no Claude usage:
 | Pre-close preview | ~3:22pm ET | `python -m monitor preview`: today's live prices against the trigger rule, with today's volume projected to a full session. Lists names on track to trigger at the close, names crossing on thin volume so far, names within 1% under their level, and open trades at their target or stop. Records nothing; commits only `reports/preview.*` |
 | After the close | ~6:04pm ET | `python -m monitor daily`: final prices (closing auction included), stages, triggers, the trade ledger, alerts, weekly rescan and re-fit. Commits `state/` and the pages |
 
-GitHub's cron is UTC only, so each run is scheduled for both daylight and standard time and the
-first step keeps the copy that lands in its New York window (preview 3:00–3:58pm, final
-5:45–6:55pm). GitHub can start scheduled runs some minutes late. Both runs go through
+Both are scheduled on New York time (`timezone: America/New_York`), so they stay put when the
+clocks change. A run that GitHub starts too late is skipped: the first step checks the New York
+time (preview 3:00–3:58pm, final 5:45–6:55pm). GitHub can start scheduled runs some minutes late. Both runs go through
 `scripts/cloud_run.sh` (`--preview` for the first). Each posts to the pinned "Breakout monitor:
 daily summaries" issue, so GitHub notifies you by email or on its mobile app: the preview only
 when something is on track or an open trade is at its target or stop, the final run when there is a

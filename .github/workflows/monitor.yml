@@ -2,15 +2,14 @@ name: Breakout monitor
 
 on:
   schedule:
-    # Two runs each weekday, on New York time: a preview about 30 minutes before the close (today's
-    # live prices, nothing recorded) and the official run about 2 hours after it (final prices, the
-    # closing auction included). GitHub's cron is UTC only, so each run is listed for daylight (EDT)
-    # and standard (EST) time; the "Pick the run" step keeps the copy that lands in its window.
+    # Two runs each weekday, on New York time (GitHub handles the switch between EDT and EST): a
+    # preview about 30 minutes before the close (today's live prices, nothing recorded) and the
+    # official run about 2 hours after it (final prices, the closing auction included).
     # GitHub can start scheduled runs some minutes late, hence 3:22pm for a ~3:30pm preview.
-    - cron: "22 19 * * 1-5"  # preview, 3:22pm EDT
-    - cron: "22 20 * * 1-5"  # preview, 3:22pm EST
-    - cron: "4 22 * * 1-5"   # after the close, 6:04pm EDT
-    - cron: "4 23 * * 1-5"   # after the close, 6:04pm EST
+    - cron: "22 15 * * 1-5"  # preview
+      timezone: "America/New_York"
+    - cron: "4 18 * * 1-5"   # after the close
+      timezone: "America/New_York"
   workflow_dispatch:
     inputs:
       mode:
@@ -69,6 +68,7 @@ jobs:
             if [ "$mode" = auto ]; then
               if [ "$dow" -le 5 ] && [ "$now" -ge 930 ] && [ "$now" -lt 1600 ]; then mode=preview; else mode=final; fi
             fi
+          # scheduled: a start delayed past its window is skipped (a preview after the close is no preview)
           elif [ "$now" -ge 1500 ] && [ "$now" -lt 1558 ]; then
             mode=preview
           elif [ "$now" -ge 1745 ] && [ "$now" -lt 1855 ]; then
