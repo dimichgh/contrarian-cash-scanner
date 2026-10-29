@@ -1,0 +1,25 @@
+# Public, dated price calls from the first pass (2026-10-29), in the alerts.csv format.
+# None of these came with a stop, so they're judged on the target alone: reached within the horizon or not.
+# Levels are as posted (pre-split prices for RVPH/CLDI/NXL/BIVI); tracker.py undoes later splits.
+alert_id,post_id,posted_at,source,ticker,side,level_basis,entry,stop,t1,t2,t3,opt_type,strike,expiry,horizon_days,bucket,advertised,notes
+tsla-235,1816473912726958506,,x_public,TSLA,long,underlying,,,235,,,,,,365,large,0,4h chart off the Banana325SMA
+nvda-146,1831922793946231160,,x_public,NVDA,long,underlying,,,146,,,,,,365,large,0,daily inverse head and shoulders continuation
+nio-9-14,1839876764446695657,,x_public,NIO,long,underlying,,,9,14,,,,,365,large,0,monthly chart above the 13 EMA
+nvda-155,1868627914109186533,,x_public,NVDA,long,underlying,,,155.55,,,,,,365,large,0,"failed head and shoulders, 'ATH coming'; restated 2025-01-31"
+tsla-500,1888509052118012188,,x_public,TSLA,long,underlying,,,500,700,800,,,,365,large,0,quarterly chart
+amzn-235,1940561024895357222,,x_public,AMZN,long,underlying,,,235,,,,,,365,large,0,'Bezos sell wall' post
+spx-7015,2011901774551269513,,x_public,^GSPC,long,underlying,,,7015,,,,,,365,large,0,'7k wall'
+spx-7500,2044290808141230345,,x_public,^GSPC,long,underlying,,,7500,8000,,,,,365,large,0,SPY weekly; same targets in a 2026-04-08 reply
+meta-740,2045900452613742677,,x_public,META,long,underlying,,,740,820,,,,,365,large,0,weekly W double bottom
+btc-85k,2049901555273666972,,x_public,BTC-USD,long,underlying,,,85000,90000,,,,,365,large,0,
+spx-8300,,2026-05-06T15:00:00Z,x_public,^GSPC,long,underlying,,,8300,,,,,,365,large,0,pinned post; time of day approximate
+ba-195c,2038643430092673419,,x_public,BA,long,option,,,,,,C,195,2026-05-15,,large,0,"'bought $100 grand of the May 15 $195 calls', premium not posted"
+rvph-5c,1866156728309698908,,x_public,RVPH,long,option,,,,,,C,5,2024-12-20,,small,0,"'grabbed the December 20 $5 calls', premium not posted"
+rvph-8.5,1876665557942251529,,x_public,RVPH,long,underlying,,,8.5,,,,,,365,small,0,'going up 400%'
+rvph-3-5,1882117728552759597,,x_public,RVPH,long,underlying,,,3,5,,,,,60,small,0,'3-5 bucks in next 60 days'
+algs-42,1877028747171225789,,x_public,ALGS,long,underlying,,,42,,,,,,365,small,0,'see you at 42'
+basket-algs,1864781848070717807,,x_public,ALGS,long,underlying,,,,,,,,,365,small,0,Biotech Basket round 2 (no targets)
+basket-bivi,1864781848070717807,,x_public,BIVI,long,underlying,,,,,,,,,365,small,0,Biotech Basket round 2 (no targets)
+basket-cldi,1864781848070717807,,x_public,CLDI,long,underlying,,,,,,,,,365,small,0,Biotech Basket round 2 (no targets)
+basket-nxl,1864781848070717807,,x_public,NXL,long,underlying,,,,,,,,,365,small,0,Biotech Basket round 2 (no targets)
+cldi-060,1885348620234555838,,x_public,CLDI,long,underlying,,,,,,,,,365,small,0,'best risk reward in the entire stock market' (no target)
