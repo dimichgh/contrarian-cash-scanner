@@ -1,0 +1,122 @@
+name: Pre-close preview
+
+on:
+  schedule:
+    # Wanted: about 30 minutes before the close. GitHub starts scheduled runs late, often by hours
+    # (2-5 hours in October 2026), so the preview is scheduled every 20 minutes from 10:40am to
+    # 3:40pm New York time; the first copy GitHub starts between 3:00 and 3:58pm does it and every
+    # other copy stops after a few seconds.
+    - cron: "40 10 * * 1-5"
+      timezone: "America/New_York"
+    - cron: "*/20 11-15 * * 1-5"
+      timezone: "America/New_York"
+  workflow_dispatch:  # run it now, whatever the time (also the hook for an outside scheduler)
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: breakout-preview
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      ran: ${{ steps.when.outputs.go }}
+    env:
+      MONITOR_BRANCH: main
+      GH_TOKEN: ${{ github.token }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      SITE: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Is it preview time, and not done yet today?
+        id: when
+        run: |
+          now=$(TZ=America/New_York date +%H%M); today=$(TZ=America/New_York date +%F)
+          go=no
+          if [ "${{ github.event_name }}" = workflow_dispatch ]; then
+            go=yes
+          elif [ "$now" -ge 1500 ] && [ "$now" -lt 1558 ]; then
+            last=$(gh api "repos/${{ github.repository }}/commits?path=reports/preview.md&per_page=1" --jq '.[0].commit.message' || true)
+            case "$last" in
+              "monitor: pre-close preview $today 15:"*) echo "today's preview is done: $last" ;;
+              *) go=yes ;;
+            esac
+          fi
+          echo "New York $today $now: preview=$go"
+          echo "go=$go" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        if: steps.when.outputs.go == 'yes'
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        if: steps.when.outputs.go == 'yes'
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Preview (records nothing; commits only reports/preview.*)
+        if: steps.when.outputs.go == 'yes'
+        run: |
+          git config user.name "breakout-monitor[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          bash scripts/cloud_run.sh --preview | tee run_output.txt
+          if grep -q "PUSH FAILED" run_output.txt; then exit 1; fi
+
+      - name: Post the preview
+        if: steps.when.outputs.go == 'yes'
+        run: |
+          grep -v '^NOTIFY:' reports/preview.md > body.md
+          cat body.md >> "$GITHUB_STEP_SUMMARY"
+          # only when something is on track, or an open trade is at its target or stop
+          if ! grep -q '^NOTIFY: yes' reports/preview.md && [ "${{ github.event_name }}" = schedule ]; then
+            exit 0
+          fi
+          issue=$(gh issue list --label breakout-monitor --state open --json number --jq '.[0].number // empty')
+          [ -n "$issue" ] || exit 0
+          { cat body.md; echo; echo "[Pre-close]($SITE/preview.html) · [Dashboard]($SITE/) · [Run log]($RUN_URL)"; } > comment.md
+          gh issue comment "$issue" --body-file comment.md
+
+      - name: Report a failure
+        if: failure()
+        run: |
+          issue=$(gh issue list --label breakout-monitor --state open --json number --jq '.[0].number // empty')
+          [ -n "$issue" ] && gh issue comment "$issue" --body "The pre-close preview failed: $RUN_URL"
+
+  pages:
+    needs: preview
+    if: needs.preview.result == 'success' && needs.preview.outputs.ran == 'yes'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Build the site
+        run: python3 scripts/build_site.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

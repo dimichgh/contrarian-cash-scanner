@@ -2,27 +2,22 @@ name: Breakout monitor
 
 on:
   schedule:
-    # Two runs each weekday, on New York time (GitHub handles the switch between EDT and EST): a
-    # preview about 30 minutes before the close (today's live prices, nothing recorded) and the
-    # official run about 2 hours after it (final prices, the closing auction included).
-    # GitHub can start scheduled runs some minutes late, hence 3:22pm for a ~3:30pm preview.
-    - cron: "22 15 * * 1-5"  # preview
+    # The run after the close, on New York time. GitHub starts scheduled runs late, often by hours
+    # (2-5 hours in October 2026), so it is scheduled right after the close with a backup: the run
+    # only reads finished daily bars, so it is correct whenever it starts, and a second run that
+    # finds no new close stays quiet. The pre-close preview has its own workflow (preview.yml).
+    - cron: "20 16 * * 1-5"
       timezone: "America/New_York"
-    - cron: "4 18 * * 1-5"   # after the close
+    - cron: "20 19 * * 1-5"
       timezone: "America/New_York"
   workflow_dispatch:
     inputs:
-      mode:
-        description: "preview (before the close, records nothing) or final (after it); auto picks by New York time"
-        type: choice
-        options: [auto, preview, final]
-        default: auto
       rescan:
-        description: "Final run: run a full re-scan first"
+        description: "Run a full re-scan first"
         type: boolean
         default: false
       learn:
-        description: "Final run: re-fit the engine"
+        description: "Re-fit the engine"
         type: boolean
         default: false
   # report or site changes pushed by hand only redeploy the site (the bot's own pushes don't trigger runs)
@@ -47,8 +42,6 @@ jobs:
     if: github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    outputs:
-      mode: ${{ steps.when.outputs.mode }}
     env:
       MONITOR_BRANCH: main
       GH_TOKEN: ${{ github.token }}
@@ -58,51 +51,22 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Pick the run (preview, final or skip) from New York time
-        id: when
-        run: |
-          now=$(TZ=America/New_York date +%H%M); dow=$(TZ=America/New_York date +%u)
-          mode=skip
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            mode="${{ inputs.mode }}"
-            if [ "$mode" = auto ]; then
-              if [ "$dow" -le 5 ] && [ "$now" -ge 930 ] && [ "$now" -lt 1600 ]; then mode=preview; else mode=final; fi
-            fi
-          # scheduled: a start delayed past its window is skipped (a preview after the close is no preview)
-          elif [ "$now" -ge 1500 ] && [ "$now" -lt 1558 ]; then
-            mode=preview
-          elif [ "$now" -ge 1745 ] && [ "$now" -lt 1855 ]; then
-            mode=final
-          fi
-          echo "New York time $now: $mode"
-          echo "mode=$mode" >> "$GITHUB_OUTPUT"
-
       - uses: actions/checkout@v4
-        if: steps.when.outputs.mode != 'skip'
         with:
           ref: main
           fetch-depth: 0
 
       - uses: actions/setup-python@v5
-        if: steps.when.outputs.mode != 'skip'
         with:
           python-version: "3.11"
           cache: pip
 
       - name: Configure git
-        if: steps.when.outputs.mode != 'skip'
         run: |
           git config user.name "breakout-monitor[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Pre-close preview (records nothing; commits only reports/preview.*)
-        if: steps.when.outputs.mode == 'preview'
-        run: |
-          bash scripts/cloud_run.sh --preview | tee run_output.txt
-          if grep -q "PUSH FAILED" run_output.txt; then exit 1; fi
-
       - name: Run the monitor, commit and push its state
-        if: steps.when.outputs.mode == 'final'
         run: |
           args=()
           [ "${{ inputs.rescan }}" = "true" ] && args+=(--rescan)
@@ -111,18 +75,11 @@ jobs:
           if grep -q "PUSH FAILED" run_output.txt; then exit 1; fi
 
       - name: Post the summary
-        if: steps.when.outputs.mode != 'skip'
         run: |
-          if [ "${{ steps.when.outputs.mode }}" = preview ]; then
-            grep -v '^NOTIFY:' reports/preview.md > body.md
-            notify=$(grep -q '^NOTIFY: yes' reports/preview.md && echo yes || echo no)
-            links="[Pre-close]($SITE/preview.html) · [Dashboard]($SITE/) · [Run log]($RUN_URL)"
-          else
-            grep -v '^DASHBOARD:' reports/summary.md > body.md
-            # no new market data (weekend, holiday, rerun): stay quiet
-            notify=$(grep -q "No new session since the last run" body.md && echo no || echo yes)
-            links="[Dashboard]($SITE/) · [Pre-close]($SITE/preview.html) · [Full scan]($SITE/scan.html) · [Run log]($RUN_URL)"
-          fi
+          grep -v '^DASHBOARD:' reports/summary.md > body.md
+          # no new market data (weekend, holiday, the backup run after a done day): stay quiet
+          notify=$(grep -q "No new session since the last run" body.md && echo no || echo yes)
+          links="[Dashboard]($SITE/) · [Pre-close]($SITE/preview.html) · [Full scan]($SITE/scan.html) · [Run log]($RUN_URL)"
           cat body.md >> "$GITHUB_STEP_SUMMARY"
           if [ "$notify" = no ] && [ "${{ github.event_name }}" = "schedule" ]; then
             exit 0
@@ -154,7 +111,7 @@ jobs:
   # Kept as its own job so a Pages problem never fails the monitor run or its summary.
   pages:
     needs: run
-    if: always() && (needs.run.result == 'success' || needs.run.result == 'skipped') && needs.run.outputs.mode != 'skip'
+    if: always() && (needs.run.result == 'success' || needs.run.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency:  # one deploy at a time, in order, whichever run started it

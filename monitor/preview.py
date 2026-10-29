@@ -181,7 +181,7 @@ def summary(res: dict) -> str:
     if res["trades"]:
         lines += ["", "Open trades now: " + ", ".join(
             f"{r['t']} {r['change']:+.1f}%{' (' + r['flag'] + ')' if r['flag'] else ''}" for r in res["trades"])]
-    lines += ["", "Nothing here is recorded: the run after the close (about 6pm ET) decides on final prices."]
+    lines += ["", "Nothing here is recorded: the run after the close decides on final prices."]
     notify = bool(res["trigger"] or res["volume_short"] or res["near"] or flagged)
     return "\n".join(lines + ["", f"NOTIFY: {'yes' if notify else 'no'}"]) + "\n"
 

@@ -158,23 +158,21 @@ current rule and weights), `engine_history.jsonl` (one line per learning cycle),
 `reports/dashboard.html` (the monitor, every run) and `reports/scan_report.html` (the full scan,
 rebuilt at each weekly rescan). Both are self-contained: download one and open it in a browser.
 
-**Scheduled runs.** A GitHub Actions workflow (`.github/workflows/monitor.yml`) runs twice each
-weekday, on New York time, with no Claude usage:
+**Scheduled runs.** Two GitHub Actions workflows, on New York time, with no Claude usage:
 
-| Run | When | What it does |
+| Workflow | Scheduled | What it does |
 |---|---|---|
-| Pre-close preview | ~3:22pm ET | `python -m monitor preview`: today's live prices against the trigger rule, with today's volume projected to a full session. Lists names on track to trigger at the close, names crossing on thin volume so far, names within 1% under their level, and open trades at their target or stop. Records nothing; commits only `reports/preview.*` |
-| After the close | ~6:04pm ET | `python -m monitor daily`: final prices (closing auction included), stages, triggers, the trade ledger, alerts, weekly rescan and re-fit. Commits `state/` and the pages |
+| Pre-close preview (`preview.yml`) | every 20 min, 10:40am–3:40pm; the first copy that starts between 3:00 and 3:58pm runs | `python -m monitor preview`: today's live prices against the trigger rule, with today's volume projected to a full session. Lists names on track to trigger at the close, names crossing on thin volume so far, names within 1% under their level, and open trades at their target or stop. Records nothing; commits only `reports/preview.*` |
+| After the close (`monitor.yml`) | 4:20pm, backup 7:20pm | `python -m monitor daily`: final prices (closing auction included), stages, triggers, the trade ledger, alerts, weekly rescan and re-fit. Commits `state/` and the pages. Correct whenever it starts; a run that finds no new close stays quiet |
 
-Both are scheduled on New York time (`timezone: America/New_York`), so they stay put when the
-clocks change. A run that GitHub starts too late is skipped: the first step checks the New York
-time (preview 3:00–3:58pm, final 5:45–6:55pm). GitHub can start scheduled runs some minutes late. Both runs go through
-`scripts/cloud_run.sh` (`--preview` for the first). Each posts to the pinned "Breakout monitor:
-daily summaries" issue, so GitHub notifies you by email or on its mobile app: the preview only
-when something is on track or an open trade is at its target or stop, the final run when there is a
-new close. A failed run comments there too. Start a run by hand from the Actions tab (Run
-workflow): mode auto (preview while the market is open, final otherwise), preview or final, with
-optional re-scan or re-fit for the final run.
+Why so many preview slots: GitHub starts scheduled runs late, by 2–5 hours through October 2026, so
+one 3:22pm slot would almost always land after the close. Every other copy stops after a few
+seconds. For exact timing, an outside scheduler can start either workflow through GitHub's
+workflow-dispatch API. Both run through `scripts/cloud_run.sh` (`--preview` for the first) and post
+to the pinned "Breakout monitor: daily summaries" issue, so GitHub notifies you by email or on its
+mobile app: the preview only when something is on track or an open trade is at its target or stop,
+the after-close run when there is a new close. A failed run comments there too. Either can be started
+by hand from the Actions tab (Run workflow); the after-close run takes an optional re-scan or re-fit.
 
 The pages are also published to GitHub Pages after every run:
 `https://dimichgh.github.io/contrarian-cash-scanner/` (the monitor), `…/preview.html` (the latest
