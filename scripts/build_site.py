@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 PAGES = [  # (published file, source, nav label)
     ("index.html", ROOT / "reports" / "dashboard.html", "Breakout monitor"),
+    ("preview.html", ROOT / "reports" / "preview.html", "Pre-close"),
     ("scan.html", ROOT / "reports" / "scan_report.html", "Full scan"),
 ]
 SHELL = """<!doctype html>

@@ -2,17 +2,28 @@ name: Breakout monitor
 
 on:
   schedule:
-    # 21:23 UTC on weekdays: 5:23pm ET in summer, 4:23pm ET in winter; after the US close either way.
-    # GitHub can start scheduled runs some minutes late at busy times.
-    - cron: "23 21 * * 1-5"
+    # Two runs each weekday, on New York time: a preview about 30 minutes before the close (today's
+    # live prices, nothing recorded) and the official run about 2 hours after it (final prices, the
+    # closing auction included). GitHub's cron is UTC only, so each run is listed for daylight (EDT)
+    # and standard (EST) time; the "Pick the run" step keeps the copy that lands in its window.
+    # GitHub can start scheduled runs some minutes late, hence 3:22pm for a ~3:30pm preview.
+    - cron: "22 19 * * 1-5"  # preview, 3:22pm EDT
+    - cron: "22 20 * * 1-5"  # preview, 3:22pm EST
+    - cron: "4 22 * * 1-5"   # after the close, 6:04pm EDT
+    - cron: "4 23 * * 1-5"   # after the close, 6:04pm EST
   workflow_dispatch:
     inputs:
+      mode:
+        description: "preview (before the close, records nothing) or final (after it); auto picks by New York time"
+        type: choice
+        options: [auto, preview, final]
+        default: auto
       rescan:
-        description: "Run a full re-scan first"
+        description: "Final run: run a full re-scan first"
         type: boolean
         default: false
       learn:
-        description: "Re-fit the engine"
+        description: "Final run: re-fit the engine"
         type: boolean
         default: false
   # report or site changes pushed by hand only redeploy the site (the bot's own pushes don't trigger runs)
@@ -37,30 +48,61 @@ jobs:
     if: github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      mode: ${{ steps.when.outputs.mode }}
     env:
       MONITOR_BRANCH: main
       GH_TOKEN: ${{ github.token }}
       RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      SITE: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
     defaults:
       run:
         shell: bash
     steps:
+      - name: Pick the run (preview, final or skip) from New York time
+        id: when
+        run: |
+          now=$(TZ=America/New_York date +%H%M); dow=$(TZ=America/New_York date +%u)
+          mode=skip
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            mode="${{ inputs.mode }}"
+            if [ "$mode" = auto ]; then
+              if [ "$dow" -le 5 ] && [ "$now" -ge 930 ] && [ "$now" -lt 1600 ]; then mode=preview; else mode=final; fi
+            fi
+          elif [ "$now" -ge 1500 ] && [ "$now" -lt 1558 ]; then
+            mode=preview
+          elif [ "$now" -ge 1745 ] && [ "$now" -lt 1855 ]; then
+            mode=final
+          fi
+          echo "New York time $now: $mode"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v4
+        if: steps.when.outputs.mode != 'skip'
         with:
           ref: main
           fetch-depth: 0
 
       - uses: actions/setup-python@v5
+        if: steps.when.outputs.mode != 'skip'
         with:
           python-version: "3.11"
           cache: pip
 
       - name: Configure git
+        if: steps.when.outputs.mode != 'skip'
         run: |
           git config user.name "breakout-monitor[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      - name: Pre-close preview (records nothing; commits only reports/preview.*)
+        if: steps.when.outputs.mode == 'preview'
+        run: |
+          bash scripts/cloud_run.sh --preview | tee run_output.txt
+          if grep -q "PUSH FAILED" run_output.txt; then exit 1; fi
+
       - name: Run the monitor, commit and push its state
+        if: steps.when.outputs.mode == 'final'
         run: |
           args=()
           [ "${{ inputs.rescan }}" = "true" ] && args+=(--rescan)
@@ -69,11 +111,20 @@ jobs:
           if grep -q "PUSH FAILED" run_output.txt; then exit 1; fi
 
       - name: Post the summary
+        if: steps.when.outputs.mode != 'skip'
         run: |
-          grep -v '^DASHBOARD:' reports/summary.md > body.md
+          if [ "${{ steps.when.outputs.mode }}" = preview ]; then
+            grep -v '^NOTIFY:' reports/preview.md > body.md
+            notify=$(grep -q '^NOTIFY: yes' reports/preview.md && echo yes || echo no)
+            links="[Pre-close]($SITE/preview.html) · [Dashboard]($SITE/) · [Run log]($RUN_URL)"
+          else
+            grep -v '^DASHBOARD:' reports/summary.md > body.md
+            # no new market data (weekend, holiday, rerun): stay quiet
+            notify=$(grep -q "No new session since the last run" body.md && echo no || echo yes)
+            links="[Dashboard]($SITE/) · [Pre-close]($SITE/preview.html) · [Full scan]($SITE/scan.html) · [Run log]($RUN_URL)"
+          fi
           cat body.md >> "$GITHUB_STEP_SUMMARY"
-          # no new market data (weekend, holiday, rerun): stay quiet unless the run was started by hand
-          if grep -q "No new session since the last run" body.md && [ "${{ github.event_name }}" = "schedule" ]; then
+          if [ "$notify" = no ] && [ "${{ github.event_name }}" = "schedule" ]; then
             exit 0
           fi
           issue=$(gh issue list --label breakout-monitor --state open --json number --jq '.[0].number // empty')
@@ -81,15 +132,11 @@ jobs:
             gh label create breakout-monitor --color 2a78d6 --description "Daily breakout monitor summaries" 2>/dev/null || true
             url=$(gh issue create --title "Breakout monitor: daily summaries" --label breakout-monitor \
                   --assignee "${{ github.repository_owner }}" \
-                  --body "Each weekday run of the breakout monitor posts its summary here as a comment. Pages: reports/dashboard.html (every run) and reports/scan_report.html (weekly rescan).")
+                  --body "Each weekday the breakout monitor posts here: a pre-close preview when names are on track to trigger, and the summary after the close.")
             issue=${url##*/}
             gh issue pin "$issue" || true
           fi
-          {
-            cat body.md
-            echo
-            echo "[Dashboard](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/) · [Full scan](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/scan.html) · [Run log]($RUN_URL)"
-          } > comment.md
+          { cat body.md; echo; echo "$links"; } > comment.md
           gh issue comment "$issue" --body-file comment.md
 
       - name: Report a failure
@@ -107,7 +154,7 @@ jobs:
   # Kept as its own job so a Pages problem never fails the monitor run or its summary.
   pages:
     needs: run
-    if: always() && (needs.run.result == 'success' || needs.run.result == 'skipped')
+    if: always() && (needs.run.result == 'success' || needs.run.result == 'skipped') && needs.run.outputs.mode != 'skip'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency:  # one deploy at a time, in order, whichever run started it

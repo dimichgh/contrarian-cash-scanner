@@ -26,7 +26,9 @@ FORGET_AFTER = 120   # days a cached name may go unrequested before its file is 
 INDEX = C.BARS / "_index.json"
 
 
-def fetch_ohlcv(ticker: str, range_: str = "2y") -> pd.DataFrame | None:
+def fetch_ohlcv(ticker: str, range_: str = "2y", partial: bool = False) -> pd.DataFrame | None:
+    """Daily bars. With `partial`, a session still in progress keeps today's bar, filled from the
+    live quote, and df.attrs["live"] says how far into the session it is (the pre-close preview)."""
     sym = ticker.replace(".", "-")
     url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range={range_}&interval=1d"
     try:
@@ -40,11 +42,21 @@ def fetch_ohlcv(ticker: str, range_: str = "2y") -> pd.DataFrame | None:
     tz = meta.get("exchangeTimezoneName") or "America/New_York"
     df.index = df.index.tz_convert(tz).tz_localize(None).normalize()
     df = df[~df.index.duplicated(keep="last")]
-    end = meta.get("currentTradingPeriod", {}).get("regular", {}).get("end")
+    regular = meta.get("currentTradingPeriod", {}).get("regular", {})
+    start, end = regular.get("start"), regular.get("end")
+    live = None
     if end and len(df):
         session_day = pd.Timestamp(dt.datetime.fromtimestamp(end, ZoneInfo(tz)).date())
         if df.index[-1] == session_day:
-            if time.time() < end:
+            if time.time() < end and partial and start and time.time() >= start and meta.get("regularMarketPrice"):
+                # session in progress and asked for: today so far, from the live quote
+                last = df.index[-1]
+                for col, key in (("close", "regularMarketPrice"), ("volume", "regularMarketVolume"),
+                                 ("high", "regularMarketDayHigh"), ("low", "regularMarketDayLow")):
+                    if meta.get(key):
+                        df.loc[last, col] = meta[key]
+                live = {"session": str(session_day.date()), "minutes": round((time.time() - start) / 60, 1)}
+            elif time.time() < end:
                 # session still open: signals are on daily closes only
                 df = df.iloc[:-1]
             elif (pd.isna(df["close"].iloc[-1]) or pd.isna(df["volume"].iloc[-1])) and meta.get("regularMarketTime", 0) >= end:
@@ -63,6 +75,7 @@ def fetch_ohlcv(ticker: str, range_: str = "2y") -> pd.DataFrame | None:
     for col in ("high", "low", "open"):
         df[col] = df[col].fillna(df["close"])
     df["volume"] = df["volume"].fillna(0)
+    df.attrs["live"] = live
     return df if len(df) else None
 
 

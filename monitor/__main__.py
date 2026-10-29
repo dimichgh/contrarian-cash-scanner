@@ -3,6 +3,7 @@
   python -m monitor daily               # score the watchlist; rescans and relearns when due
   python -m monitor daily --rescan      # force a full fundamental re-scan first
   python -m monitor daily --learn       # force the engine to re-fit
+  python -m monitor preview             # before the close: who is on track to trigger (records nothing)
   python -m monitor add TICKER --note "why"
   python -m monitor remove TICKER
   python -m monitor list
@@ -25,6 +26,7 @@ def main(argv=None) -> int:
     d = sub.add_parser("daily", help="score the watchlist and write reports/")
     d.add_argument("--rescan", action="store_true", help="force a full re-scan")
     d.add_argument("--learn", action="store_true", help="force the engine to re-fit")
+    sub.add_parser("preview", help="before the close: today's live prices against the trigger rule")
     a = sub.add_parser("add", help="monitor a ticker by hand")
     a.add_argument("ticker")
     a.add_argument("--note", default="")
@@ -39,6 +41,10 @@ def main(argv=None) -> int:
         print(report.write(res))
         pages = [p for p in (C.REPORTS / "dashboard.html", C.REPORTS / "scan_report.html") if p.exists()]
         print("Pages: " + ", ".join(str(p.relative_to(C.ROOT)) for p in pages))
+        return 0
+    if args.cmd == "preview":
+        from . import preview
+        print(preview.write(preview.run()))
         return 0
     wl = W.load()
     if args.cmd == "add":

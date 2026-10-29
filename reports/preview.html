@@ -1,0 +1,132 @@
+<title>Pre-close Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Same visual system as the Breakout Monitor page: header, then one table per list. */
+:root {
+  --bg: #f4f6f9; --surface: #ffffff; --surface-2: #edf1f6; --ink: #10151f; --ink-2: #414b5e; --muted: #667085;
+  --rule: #dde2ea; --accent: #2a78d6; --accent-ink: #1c5cab; --accent-soft: #e2edfb;
+  --good: #0a8f0a; --good-soft: #e3f5e3; --warn: #c98a00; --warn-soft: #fcf1d6; --crit: #d03b3b; --crit-soft: #fbe6e6;
+  --shadow: 0 1px 2px rgba(16, 21, 31, .06), 0 4px 16px rgba(16, 21, 31, .05);
+  --display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0c1016; --surface: #141a22; --surface-2: #1a212b; --ink: #e7ebf1; --ink-2: #b6becc; --muted: #8b95a7;
+    --rule: #283040; --accent: #5598e7; --accent-ink: #86b6ef; --accent-soft: #15243a;
+    --good: #3fbf3f; --good-soft: #10261a; --warn: #f0b429; --warn-soft: #2a2211; --crit: #ef6b6b; --crit-soft: #2c1616;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0c1016; --surface: #141a22; --surface-2: #1a212b; --ink: #e7ebf1; --ink-2: #b6becc; --muted: #8b95a7;
+  --rule: #283040; --accent: #5598e7; --accent-ink: #86b6ef; --accent-soft: #15243a;
+  --good: #3fbf3f; --good-soft: #10261a; --warn: #f0b429; --warn-soft: #2a2211; --crit: #ef6b6b; --crit-soft: #2c1616;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 64px; display: grid; gap: 40px; }
+h1, h2 { font-family: var(--display); font-stretch: 85%; text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: clamp(2.1rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.02; }
+h2 { font-size: 1.4rem; font-weight: 700; line-height: 1.15; }
+p { margin: 0; }
+.eyebrow { font: 500 .75rem/1.4 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.lede { max-width: 72ch; color: var(--ink-2); font-size: 1.03rem; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.sub { color: var(--muted); font-size: .85rem; }
+section { display: grid; gap: 12px; min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow); }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+th { text-align: left; font: 600 .7rem/1.2 var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 10px 8px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th.r, td.r { text-align: right; }
+td { padding: 9px 8px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+.co { display: grid; gap: 1px; }
+.co b { font: 600 .92rem var(--mono); }
+.co span { color: var(--muted); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.dim { color: var(--muted); font-size: .78rem; }
+.ok { color: var(--good); font-weight: 600; }
+.short { color: var(--warn); font-weight: 600; }
+.flag { font-size: .78rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.flag.win { color: var(--good); background: var(--good-soft); }
+.flag.loss { color: var(--crit); background: var(--crit-soft); }
+.empty { padding: 16px; color: var(--muted); }
+.banner { padding: 12px 16px; border-radius: 10px; background: var(--warn-soft); color: var(--ink); font-size: .9rem; box-shadow: none; border: 0; }
+footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:14px">
+    <p class="eyebrow" id="clock"></p>
+    <h1>Pre-close Preview</h1>
+    <p class="lede">About 30 minutes before the close, today's prices so far are checked against the trigger rule, with today's volume projected to a full session. These are names that may trigger at the close. Nothing here is recorded: the run about two hours after the close decides on final prices, and that is what the Breakout monitor tab shows.</p>
+    <p class="panel banner" id="stale" hidden></p>
+  </header>
+
+  <section aria-labelledby="trig-h">
+    <h2 id="trig-h">On track to trigger at the close</h2>
+    <p class="sub" id="trig-sub"></p>
+    <div class="panel table-wrap"><table>
+      <thead><tr><th>Company</th><th class="r">Now</th><th class="r">Level</th><th class="r">Through</th><th class="r">Volume pace</th><th class="r">Readiness</th><th>If it closes here</th></tr></thead>
+      <tbody id="trig"></tbody></table></div>
+  </section>
+
+  <section aria-labelledby="short-h">
+    <h2 id="short-h">Crossing, but volume short so far</h2>
+    <p class="sub">Above the level after a stretch below it, but today's volume is not on pace for the rule. A heavy close can still make it.</p>
+    <div class="panel table-wrap"><table>
+      <thead><tr><th>Company</th><th class="r">Now</th><th class="r">Level</th><th class="r">Through</th><th class="r">Volume pace</th><th class="r">Readiness</th></tr></thead>
+      <tbody id="short"></tbody></table></div>
+  </section>
+
+  <section aria-labelledby="near-h">
+    <h2 id="near-h">Close to the level</h2>
+    <p class="sub" id="near-sub"></p>
+    <div class="panel table-wrap"><table>
+      <thead><tr><th>Company</th><th class="r">Now</th><th class="r">Level</th><th class="r">Needs</th><th class="r">Volume pace</th><th class="r">Readiness</th></tr></thead>
+      <tbody id="near"></tbody></table></div>
+  </section>
+
+  <section aria-labelledby="open-h">
+    <h2 id="open-h">Open trades now</h2>
+    <div class="panel table-wrap"><table>
+      <thead><tr><th>Company</th><th>Triggered</th><th class="r">Entry → now</th><th class="r">Change</th><th>Stop → target</th><th></th></tr></thead>
+      <tbody id="open"></tbody></table></div>
+  </section>
+
+  <footer>Prices: Yahoo Finance live quotes on top of the daily bars. Volume pace projects today's volume so far to a full session with a typical intraday volume curve, so it is an estimate. Not investment advice.</footer>
+</div>
+
+<script>
+const D = {"time":"2026-10-29 12:38","session":"2026-10-29","live":{"session":"2026-10-29","minutes":188.0},"rule":{"pivot":"50-day average","vol_mult":1.2,"min_below":10},"trigger":[],"volume_short":[{"t":"DECK","close":82.83,"level":82.79,"gap":0.04,"vol_ratio":0.63,"vol_need":1.2,"ready":43,"strong":false,"below_days":14,"stop_px":76.95,"target_px":92.46,"kind":"volume_short","name":"Deckers Outdoor Corporation"},{"t":"CARG","close":32.56,"level":32.45,"gap":0.35,"vol_ratio":0.45,"vol_need":1.2,"ready":32,"strong":false,"below_days":20,"stop_px":29.84,"target_px":37.02,"kind":"volume_short","name":"CarGurus, Inc."},{"t":"UFPI","close":81.8,"level":80.88,"gap":1.13,"vol_ratio":1.12,"vol_need":1.2,"ready":31,"strong":false,"below_days":19,"stop_px":76.29,"target_px":90.81,"kind":"volume_short","name":"UFP Industries, Inc."},{"t":"SNY","close":42.5,"level":42.21,"gap":0.69,"vol_ratio":1.02,"vol_need":1.2,"ready":19,"strong":false,"below_days":20,"stop_px":40.57,"target_px":45.65,"kind":"volume_short","name":"Sanofi SA Sponsored ADR"}],"near":[{"t":"FIS","close":36.98,"level":37.02,"gap":-0.1,"vol_ratio":0.57,"vol_need":1.2,"ready":23,"strong":false,"below_days":18,"stop_px":34.31,"target_px":41.34,"kind":"near","name":"Fidelity National Information Services, Inc."},{"t":"PEP","close":132.87,"level":133.57,"gap":-0.52,"vol_ratio":0.53,"vol_need":1.2,"ready":20,"strong":false,"below_days":16,"stop_px":127.1,"target_px":142.31,"kind":"near","name":"PepsiCo, Inc."},{"t":"PHIN","close":61.92,"level":62.29,"gap":-0.59,"vol_ratio":0.88,"vol_need":1.2,"ready":6,"strong":false,"below_days":20,"stop_px":57.89,"target_px":68.51,"kind":"near","name":"PHINIA Inc."},{"t":"COO","close":60.28,"level":60.66,"gap":-0.62,"vol_ratio":0.25,"vol_need":1.2,"ready":6,"strong":false,"below_days":20,"stop_px":54.49,"target_px":69.75,"kind":"near","name":"Cooper Companies, Inc."},{"t":"HRL","close":20.73,"level":20.87,"gap":-0.63,"vol_ratio":0.26,"vol_need":1.2,"ready":10,"strong":false,"below_days":19,"stop_px":19.4,"target_px":22.92,"kind":"near","name":"Hormel Foods Corporation"},{"t":"CRUS","close":113.31,"level":114.3,"gap":-0.87,"vol_ratio":0.33,"vol_need":1.2,"ready":45,"strong":false,"below_days":18,"stop_px":105.45,"target_px":126.18,"kind":"near","name":"Cirrus Logic, Inc."}],"trades":[{"t":"CROX","date":"2026-10-15","entry":124.77,"close":149.49,"change":19.8,"stop_px":113.19,"target_px":143.72,"sessions":10,"flag":"at target"},{"t":"ADT","date":"2026-10-28","entry":7.41,"close":9.9,"change":33.7,"stop_px":6.9,"target_px":8.24,"sessions":1,"flag":"at target"},{"t":"AEO","date":"2026-09-28","entry":17.31,"close":20.01,"change":15.6,"stop_px":15.26,"target_px":20.67,"sessions":23,"flag":""},{"t":"ACI","date":"2026-10-08","entry":12.34,"close":12.69,"change":2.8,"stop_px":10.69,"target_px":15.03,"sessions":15,"flag":""},{"t":"BBWI","date":"2026-10-14","entry":18.95,"close":22.18,"change":17.0,"stop_px":16.7,"target_px":22.64,"sessions":11,"flag":""},{"t":"ERIC","date":"2026-10-15","entry":10.71,"close":11.07,"change":3.4,"stop_px":9.9,"target_px":12.03,"sessions":10,"flag":""},{"t":"ADBE","date":"2026-10-22","entry":270.55,"close":245.9,"change":-9.1,"stop_px":244.72,"target_px":312.81,"sessions":5,"flag":""},{"t":"ALGN","date":"2026-10-22","entry":155.51,"close":155.31,"change":-0.1,"stop_px":144.34,"target_px":173.8,"sessions":5,"flag":""},{"t":"FBIN","date":"2026-10-22","entry":43.79,"close":43.49,"change":-0.7,"stop_px":40.24,"target_px":49.61,"sessions":5,"flag":""},{"t":"PYPL","date":"2026-10-27","entry":56.09,"close":57.2,"change":2.0,"stop_px":51.28,"target_px":63.96,"sessions":2,"flag":""},{"t":"LCII","date":"2026-10-28","entry":97.59,"close":98.8,"change":1.2,"stop_px":89.36,"target_px":111.06,"sessions":1,"flag":""}],"missing":["UDMY"],"clock":"Oct 29, 12:38pm ET, 202 minutes before the close: prices so far, volume projected to a full session","near_pct":0.01};
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const sgn = (x, d = 1) => x == null ? "n/a" : (x > 0 ? "+" : "") + x.toFixed(d) + "%";
+const px = (x) => "$" + x.toFixed(2);
+const need = D.rule.vol_mult;
+$("#clock").textContent = D.clock;
+const today = new Date().toLocaleDateString("en-CA", {timeZone: "America/New_York"});
+if (D.closed) { $("#stale").hidden = false; $("#stale").textContent = "No trading session on " + D.session + "."; }
+else if (D.session !== today) { $("#stale").hidden = false; $("#stale").textContent = `This preview is from ${D.session}. Today's appears about 30 minutes before the close.`; }
+$("#trig-sub").textContent = `A close above the ${D.rule.pivot} after ${D.rule.min_below}+ of the prior 20 sessions below it, on at least ${need}x average volume (projected).`;
+$("#near-sub").textContent = `Within ${Math.round(D.near_pct * 100)}% under the level, with the rest of the rule in place: a late push could make it a trigger.`;
+const co = (r) => `<td><div class="co"><b>${esc(r.t)}</b><span>${esc(r.name)}</span></div></td>`;
+const pace = (r) => `<td class="r num"><span class="${r.vol_ratio >= need ? "ok" : "short"}">${r.vol_ratio.toFixed(1)}x</span> <span class="dim">/ ${need}x</span></td>`;
+const ready = (r) => `<td class="r num">${r.ready}${r.strong ? "" : ' <span class="dim">weak</span>'}</td>`;
+const fill = (id, rows, cols, html, msg) => { $(id).innerHTML = rows.length ? rows.map(html).join("") : `<tr><td colspan="${cols}" class="empty">${msg}</td></tr>`; };
+fill("#trig", D.trigger, 7, (r) => `<tr>${co(r)}<td class="r num">${px(r.close)}</td><td class="r num">${px(r.level)}</td><td class="r num">${sgn(r.gap)}</td>${pace(r)}${ready(r)}
+  <td class="num" style="white-space:nowrap">stop ${px(r.stop_px)} · target ${px(r.target_px)}</td></tr>`, "None so far today.");
+fill("#short", D.volume_short, 6, (r) => `<tr>${co(r)}<td class="r num">${px(r.close)}</td><td class="r num">${px(r.level)}</td><td class="r num">${sgn(r.gap)}</td>${pace(r)}${ready(r)}</tr>`, "None.");
+fill("#near", D.near, 6, (r) => `<tr>${co(r)}<td class="r num">${px(r.close)}</td><td class="r num">${px(r.level)}</td><td class="r num">${sgn(-r.gap)}</td>${pace(r)}${ready(r)}</tr>`, "None.");
+fill("#open", D.trades, 6, (r) => `<tr><td class="num"><b>${esc(r.t)}</b></td><td class="num">${r.date} <span class="dim">day ${r.sessions}</span></td>
+  <td class="r num" style="white-space:nowrap">${px(r.entry)} → ${px(r.close)}</td><td class="r num"><b>${sgn(r.change)}</b></td>
+  <td class="num" style="white-space:nowrap">${px(r.stop_px)} → ${px(r.target_px)}</td>
+  <td>${r.flag ? `<span class="flag ${r.flag === "at target" ? "win" : "loss"}">${r.flag} now</span>` : ""}</td></tr>`, "No open trades.");
+</script>

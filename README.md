@@ -158,17 +158,27 @@ current rule and weights), `engine_history.jsonl` (one line per learning cycle),
 `reports/dashboard.html` (the monitor, every run) and `reports/scan_report.html` (the full scan,
 rebuilt at each weekly rescan). Both are self-contained: download one and open it in a browser.
 
-**Scheduled runs.** A GitHub Actions workflow (`.github/workflows/monitor.yml`) runs the monitor
-every weekday at 21:23 UTC (5:23pm ET in summer, 4:23pm ET in winter), with no Claude usage. It
-calls `scripts/cloud_run.sh`, which runs the monitor, commits `state/` and the pages to `main` and
-prints the summary. The summary goes to the run's page and, when there is a new close, to a comment
-on the pinned "Breakout monitor: daily summaries" issue, so GitHub notifies you by email or on its
-mobile app. A failed run comments there too. Start a run by hand from the Actions tab (Run
-workflow), with optional re-scan or re-fit.
+**Scheduled runs.** A GitHub Actions workflow (`.github/workflows/monitor.yml`) runs twice each
+weekday, on New York time, with no Claude usage:
+
+| Run | When | What it does |
+|---|---|---|
+| Pre-close preview | ~3:22pm ET | `python -m monitor preview`: today's live prices against the trigger rule, with today's volume projected to a full session. Lists names on track to trigger at the close, names crossing on thin volume so far, names within 1% under their level, and open trades at their target or stop. Records nothing; commits only `reports/preview.*` |
+| After the close | ~6:04pm ET | `python -m monitor daily`: final prices (closing auction included), stages, triggers, the trade ledger, alerts, weekly rescan and re-fit. Commits `state/` and the pages |
+
+GitHub's cron is UTC only, so each run is scheduled for both daylight and standard time and the
+first step keeps the copy that lands in its New York window (preview 3:00–3:58pm, final
+5:45–6:55pm). GitHub can start scheduled runs some minutes late. Both runs go through
+`scripts/cloud_run.sh` (`--preview` for the first). Each posts to the pinned "Breakout monitor:
+daily summaries" issue, so GitHub notifies you by email or on its mobile app: the preview only
+when something is on track or an open trade is at its target or stop, the final run when there is a
+new close. A failed run comments there too. Start a run by hand from the Actions tab (Run
+workflow): mode auto (preview while the market is open, final otherwise), preview or final, with
+optional re-scan or re-fit for the final run.
 
 The pages are also published to GitHub Pages after every run:
-`https://dimichgh.github.io/contrarian-cash-scanner/` (the monitor) and `…/scan.html` (the full
-scan). `scripts/build_site.py` wraps the committed `reports/*.html` into the site. One-time setup:
+`https://dimichgh.github.io/contrarian-cash-scanner/` (the monitor), `…/preview.html` (the latest
+pre-close preview) and `…/scan.html` (the full scan). `scripts/build_site.py` wraps the committed `reports/*.html` into the site. One-time setup:
 Settings → Pages → Source: "GitHub Actions". The site is public, like the repo.
 
 To run it yourself instead: `bash scripts/cloud_run.sh` (or `python -m monitor daily` without the

@@ -444,3 +444,40 @@ def test_open_trade_under_its_level_is_a_retest(spy):
     assert T.stage_on(f, st, 290, trade, P) == ("RETEST", lvl)
     closed = dict(trade, exit_date=str(b.index[288].date()), status="timed out")
     assert T.stage_on(f, st, 290, closed, P)[0] == st["stage"].iloc[290]  # trade over: price stage, today's level
+
+
+def test_preview_volume_projection():
+    from monitor.preview import project, session_share
+    assert session_share(0) == 0 and session_share(390) == 1 and 0.75 < session_share(360) < 0.9
+    xs = [session_share(m) for m in range(0, 391, 15)]
+    assert xs == sorted(xs)
+    b = bars(np.linspace(10, 11, 30), np.full(30, 1e6))
+    b.attrs["live"] = {"session": "x", "minutes": 195}
+    pb = project(b)
+    assert pb["volume"].iloc[-1] == pytest.approx(1e6 / session_share(195)) and pb["volume"].iloc[-2] == 1e6
+    b.attrs["live"] = None  # session over: the bar is final, nothing to project
+    assert project(b)["volume"].iloc[-1] == 1e6
+
+
+def test_preview_classify(spy):
+    from monitor.preview import classify
+    p = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10, min_ready=0)
+    m = {"features": C.FEATURES, "coef": [0.0] * len(C.FEATURES), "intercept": 0.0,
+         "mean": [0.0] * len(C.FEATURES), "std": [1.0] * len(C.FEATURES), "quantiles": list(np.linspace(0, 1, 101))}
+    eng = {"label": C.LABEL, "model": m, "trigger": p}
+    def last_day(close_today, vol_today):
+        b = base_then_breakout(n_up=1)  # the breakout day is the last bar
+        b.loc[b.index[-1], ["close", "high", "low", "open"]] = close_today
+        b.loc[b.index[-1], "volume"] = vol_today
+        f = features(b, spy)
+        return classify("X", f, stages(f, p), eng, busy=False), f
+    r, _ = last_day(62.0, 2e6)
+    assert r["kind"] == "trigger" and r["vol_ratio"] >= 1.2 and r["stop_px"] < 62 < r["target_px"]
+    assert last_day(62.0, 1e6)[0]["kind"] == "volume_short"
+    _, f = last_day(59.0, 2e6)
+    lvl = float(f["sma50"].iloc[-1])
+    r, _ = last_day(lvl * 0.995, 2e6)  # half a percent under the level
+    assert r["kind"] == "near"
+    assert last_day(lvl * 0.97, 2e6)[0] is None  # too far under
+    f = features(base_then_breakout(n_up=1), spy)
+    assert classify("X", f, stages(f, p), eng, busy=True) is None  # a trade is already open
