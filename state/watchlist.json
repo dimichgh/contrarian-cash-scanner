@@ -134,7 +134,7 @@
   },
   "scan_rank": 15,
   "scanned": "2026-10-27",
-  "hold": false
+  "hold": true
  },
  "AEO": {
   "ticker": "AEO",
@@ -1890,7 +1890,7 @@
   },
   "scan_rank": 12,
   "scanned": "2026-10-27",
-  "hold": false
+  "hold": true
  },
  "LDOS": {
   "ticker": "LDOS",
