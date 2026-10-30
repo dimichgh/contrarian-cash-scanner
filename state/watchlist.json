@@ -1537,7 +1537,7 @@
   },
   "scan_rank": 20,
   "scanned": "2026-10-27",
-  "hold": true
+  "hold": false
  },
  "GIB": {
   "ticker": "GIB",
@@ -2302,7 +2302,7 @@
   },
   "scan_rank": 62,
   "scanned": "2026-10-27",
-  "hold": false
+  "hold": true
  },
  "OTEX": {
   "ticker": "OTEX",
