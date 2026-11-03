@@ -1,11 +1,6 @@
 Breakout monitor · close of 2026-11-02 · engine v5
 
-5 new signals:
-▲ TRIGGERED (strong) CARG $33.79: closed 4.6% above the 50-day average ($32.29), volume 1.3x its average; stop $31.07, target $38.24 · quality 96, readiness 69
-▲ TRIGGERED (strong) ZG $32.90: closed 2.8% above the 50-day average ($32.00), volume 3.5x its average; stop $28.94, target $39.38 · quality 82, readiness 82
-◆ SETUP AUPH $16.14: 2.0% under the trigger level $16.48 (50-day average), lows held 120 sessions; if it triggers there: stop $15.38, target $18.29 · readiness 88
-◆ SETUP JD $26.30: 2.4% under the trigger level $26.95 (50-day average), lows held 90 sessions; if it triggers there: stop $25.36, target $29.56 · readiness 82
-◆ SETUP CRUS $111.48: 2.3% under the trigger level $114.09 (50-day average), lows held 15 sessions; if it triggers there: stop $106.33, target $126.87 · readiness 69
+No new session since the last run.
 
 Nearest the trigger: PYPL +5.7% vs $55.63 (readiness 93), NVO -1.6% vs $41.11 (readiness 89), AUPH -2.0% vs $16.48 (readiness 88), MTCH -0.5% vs $42.28 (readiness 84), SNY +7.9% vs $42.22 (readiness 83), UFPI +2.8% vs $80.88 (readiness 83), JD -2.4% vs $26.95 (readiness 82), PINS -1.3% vs $20.58 (readiness 82)
 Highest readiness: RNG 98 (above), OTEX 96 (above), EPAM 95 (above), SONY 95 (above), DOX 94 (above), GTX 93 (falling), KT 93 (falling), PYPL 93 (triggered)
@@ -14,14 +9,12 @@ Open trades: CARG +0.0% in 0d (quality 96 strong, S&P +0.0%, best +0.0%; stop $3
 Closed this week: STNE stopped out -27.8% on Oct 26, TIMB stopped out -13.0% on Oct 26, VIV stopped out -10.0% on Oct 26, BBWI hit target +20.2% on Oct 29, CROX hit target +20.4% on Oct 29, ADT hit target +33.2% on Oct 29
 
 Watchlist: 90 names · triggered 7 · setup 6 · target 3 · running 5 · retest 1 · above 32 · basing 10 · failed 4 · falling 22
-Added: ABEV, LOGI, NTES, RSI, CSTM, PARR, KT, AA, SNDK, GTX, RNG
-Dropped: AOS, BLKB, COLM, COO, CTVA, DOO, GSK, HRL, INFY, VIV
 No price data: UDMY
 Engine: readiness AUC 0.531 on the held-out year (expert prior alone 0.521); trigger: close above the 50-day average on at least 1.2x average volume, after 10+ of the prior 20 sessions below it; strong when trigger quality is 50+ — 30% reached their target before their stop vs 30% for any day (2019 past triggers)
 Trigger quality: AUC 0.578 on the held-out year's 461 triggers; the 198 at quality 50+ hit target 38% of the time (avg +1.8%) vs 31% for all of them.
 Past triggers that hit target took a median 18 sessions (middle half 11–26); stops came in a median 13. 30% hit target, 47% stopped, 23% timed out.
 Live triggers so far: 18: 3 hit target, 2 stopped out, 0 timed out, 13 open; closed ones averaged +10.2%.
-Prices: 261 update, 54 download, 1 missing
-Engine re-fit: v4 → v5 (new weights; changed: prior strength, trigger quality)
+Prices: 91 update, 1 missing
+No new session since 2026-11-02; alerts already sent
 
-DASHBOARD: publish
+DASHBOARD: skip
