@@ -4,6 +4,7 @@
   python -m monitor daily --rescan      # force a full fundamental re-scan first
   python -m monitor daily --learn       # force the engine to re-fit
   python -m monitor preview             # before the close: who is on track to trigger (records nothing)
+  python -m monitor backtest            # rebuild the backtest page (also done with each weekly re-fit)
   python -m monitor add TICKER --note "why"
   python -m monitor remove TICKER
   python -m monitor list
@@ -27,6 +28,7 @@ def main(argv=None) -> int:
     d.add_argument("--rescan", action="store_true", help="force a full re-scan")
     d.add_argument("--learn", action="store_true", help="force the engine to re-fit")
     sub.add_parser("preview", help="before the close: today's live prices against the trigger rule")
+    sub.add_parser("backtest", help="replay five years of triggers as a $100k account: reports/backtest.html")
     a = sub.add_parser("add", help="monitor a ticker by hand")
     a.add_argument("ticker")
     a.add_argument("--note", default="")
@@ -45,6 +47,13 @@ def main(argv=None) -> int:
     if args.cmd == "preview":
         from . import preview
         print(preview.write(preview.run()))
+        return 0
+    if args.cmd == "backtest":
+        from . import backtest
+        data = backtest.run(today)
+        out = backtest.write(data)
+        print(f"{len(data['trades'])} trades from {data['dates'][0]} to {data['dates'][-1]} on {data['universe']['all']} names "
+              f"({data['universe']['wl']} on the watchlist): {out.relative_to(C.ROOT)}")
         return 0
     wl = W.load()
     if args.cmd == "add":

@@ -1,0 +1,730 @@
+<title>Backtest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Same visual system as the Breakout Monitor page; chart colors are the validated categorical slots. */
+:root {
+  --bg: #f4f6f9; --surface: #ffffff; --surface-2: #edf1f6; --ink: #10151f; --ink-2: #414b5e; --muted: #667085;
+  --rule: #dde2ea; --accent: #2a78d6; --accent-ink: #1c5cab; --accent-soft: #e2edfb;
+  --warn-soft: #fcf1d6;
+  --grid: #e9ecf1; --axis: #c5cbd5;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s8: #e34948;
+  --shadow: 0 1px 2px rgba(16, 21, 31, .06), 0 4px 16px rgba(16, 21, 31, .05);
+  --display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0c1016; --surface: #141a22; --surface-2: #1a212b; --ink: #e7ebf1; --ink-2: #b6becc; --muted: #8b95a7;
+    --rule: #283040; --accent: #5598e7; --accent-ink: #86b6ef; --accent-soft: #15243a; --warn-soft: #2a2211;
+    --grid: #212936; --axis: #3a4455;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0c1016; --surface: #141a22; --surface-2: #1a212b; --ink: #e7ebf1; --ink-2: #b6becc; --muted: #8b95a7;
+  --rule: #283040; --accent: #5598e7; --accent-ink: #86b6ef; --accent-soft: #15243a; --warn-soft: #2a2211;
+  --grid: #212936; --axis: #3a4455;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 64px; display: grid; gap: 36px; }
+@media (max-width: 600px) { .wrap { padding-inline: 16px; } }
+h1, h2 { font-family: var(--display); font-stretch: 85%; text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: clamp(2.1rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.02; }
+h2 { font-size: 1.4rem; font-weight: 700; line-height: 1.15; }
+h3 { font: 600 .75rem/1.3 var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0; }
+p { margin: 0; }
+.eyebrow { font: 500 .75rem/1.4 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.lede { max-width: 76ch; color: var(--ink-2); font-size: 1.03rem; }
+.sub { color: var(--muted); font-size: .85rem; max-width: 92ch; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+td.num { white-space: nowrap; }
+section { display: grid; gap: 14px; min-width: 0; }
+.sec-head { display: grid; gap: 6px; }
+.sec-head p { color: var(--ink-2); max-width: 88ch; }
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow); min-width: 0; }
+.banner { padding: 12px 16px; border-radius: 10px; background: var(--warn-soft); color: var(--ink); font-size: .9rem; border: 0; box-shadow: none; }
+.headline { font-size: 1.12rem; color: var(--ink); max-width: 80ch; }
+.headline b { font-weight: 600; }
+
+/* controls: one block above everything it scopes */
+.controls { padding: 14px 16px; display: grid; gap: 12px; }
+.crow { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.crow > .lab { font: 600 .7rem/1.2 var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); min-width: 64px; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.seg button, .chip { font: 500 .84rem/1 var(--body); color: var(--ink-2); background: var(--surface-2); border: 1px solid transparent;
+  border-radius: 999px; padding: 7px 11px; cursor: pointer; }
+.seg button:hover, .chip:hover { border-color: var(--rule); color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.chip { display: inline-flex; gap: 7px; align-items: center; }
+.chip[aria-pressed="false"] { opacity: .55; text-decoration: line-through; text-decoration-color: var(--muted); }
+.chip .k { font: 500 .74rem var(--mono); color: var(--muted); }
+label.f { display: inline-flex; gap: 6px; align-items: center; font-size: .84rem; color: var(--ink-2); }
+select, input[type="date"], input[type="number"], input[type="search"] { font: 500 .84rem var(--body); color: var(--ink); background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 8px; padding: 6px 8px; }
+input[type="number"] { width: 110px; }
+.mini-btn { font: 500 .78rem var(--body); color: var(--accent-ink); background: none; border: 0; cursor: pointer; padding: 4px 2px; }
+.mini-btn:hover { text-decoration: underline; }
+
+/* tiles */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.tile { padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+.tile .l { font-size: .8rem; color: var(--muted); }
+.tile .v { font: 600 1.55rem/1.15 var(--body); }
+.tile .d { font-size: .8rem; color: var(--ink-2); }
+
+/* charts */
+.card { padding: 14px 16px 10px; display: grid; gap: 10px; }
+.card-head { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; justify-content: space-between; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .84rem; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.key { display: inline-block; width: 16px; height: 0; border-top: 2px solid; border-radius: 2px; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
+.dot.ring { background: transparent; border: 1.5px solid var(--muted); }
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart svg:focus { outline: none; }
+.chart svg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.grid { stroke: var(--grid); stroke-width: 1; }
+.base { stroke: var(--axis); stroke-width: 1; }
+.tick { fill: var(--muted); font: 400 11px var(--mono); }
+.axl { fill: var(--muted); font: 500 11px var(--body); }
+.endl { fill: var(--ink-2); font: 500 11.5px var(--body); }
+.endl tspan.v { fill: var(--ink); font-weight: 600; }
+.ln { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.cross { stroke: var(--muted); stroke-width: 1; }
+.fitln { stroke: var(--ink-2); stroke-width: 1.5; fill: none; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; box-shadow: var(--shadow);
+  padding: 8px 10px; font-size: .8rem; min-width: 150px; z-index: 5; display: none; }
+.tip .h { color: var(--muted); font: 500 .74rem var(--mono); margin-bottom: 4px; }
+.tip .r { display: flex; gap: 8px; align-items: center; white-space: nowrap; line-height: 1.7; }
+.tip .r b { font: 600 .82rem var(--mono); min-width: 64px; text-align: right; }
+.tip .r span:last-child { color: var(--ink-2); }
+.stack { display: grid; gap: 4px; }
+.stack .cap { font-size: .78rem; color: var(--muted); }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 900px) { .two { grid-template-columns: 1fr; } }
+.picker { display: grid; gap: 8px; padding-top: 4px; }
+.picker .grp { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.picker .grp > span { font-size: .74rem; color: var(--muted); min-width: 92px; }
+.pick { font: 500 .8rem/1 var(--body); color: var(--ink-2); background: var(--surface-2); border: 1px solid transparent; border-radius: 999px;
+  padding: 6px 10px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.pick:hover { border-color: var(--rule); }
+.pick[aria-pressed="true"] { background: var(--surface); border-color: var(--axis); color: var(--ink); font-weight: 600; }
+.pick:disabled { opacity: .4; cursor: not-allowed; }
+
+/* tables */
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .86rem; }
+caption { text-align: left; padding: 10px 10px 4px; color: var(--muted); font-size: .82rem; caption-side: top; }
+th { text-align: left; font: 600 .68rem/1.2 var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+  padding: 9px 8px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th button { all: unset; cursor: pointer; }
+th button:hover { color: var(--ink); }
+th.r, td.r { text-align: right; }
+td { padding: 8px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+tr.click { cursor: pointer; }
+tr.click:hover td, tr.click.on td { background: var(--surface-2); }
+.co { display: grid; gap: 1px; }
+.co b { font: 600 .9rem var(--mono); }
+.co span { color: var(--muted); font-size: .76rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.dim { color: var(--muted); font-size: .78rem; }
+.more { display: block; width: 100%; padding: 10px; font: 500 .84rem var(--body); color: var(--accent-ink); background: none; border: 0;
+  border-top: 1px solid var(--rule); cursor: pointer; }
+.more:hover { background: var(--surface-2); }
+.empty { padding: 16px; color: var(--muted); }
+details.tv summary { cursor: pointer; color: var(--accent-ink); font-size: .84rem; padding: 4px 0; }
+.note { padding: 16px 20px; color: var(--ink-2); font-size: .88rem; }
+.note ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+footer { color: var(--muted); font-size: .8rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:14px">
+    <p class="eyebrow" id="eyebrow"></p>
+    <h1>Backtest: trading every trigger</h1>
+    <p class="lede">A simulated account that buys each trigger at the close the day it fires and sells it the way the monitor follows a trade: at the first close at its target or its stop, or after 40 sessions. Change the period, the trades taken and the sizing below; every number and chart on the page follows.</p>
+    <p class="panel banner" id="bias"></p>
+  </header>
+
+  <div class="panel controls" role="group" aria-label="Backtest settings">
+    <div class="crow"><span class="lab">Period</span><div class="seg" id="presets"></div>
+      <label class="f">From <input type="date" id="from"></label><label class="f">to <input type="date" id="to"></label></div>
+    <div class="crow"><span class="lab">Trades</span>
+      <div class="seg" id="universe"></div><div class="seg" id="take"></div></div>
+    <div class="crow"><span class="lab">Sizing</span>
+      <label class="f">Starting capital <input type="number" id="capital" min="1000" step="1000" value="100000"></label>
+      <label class="f">Each position <select id="pos"><option value="0.05">5%</option><option value="0.1" selected>10%</option><option value="0.15">15%</option><option value="0.2">20%</option><option value="0.25">25%</option></select> of the account</label>
+      <label class="f">At most <select id="max"><option>5</option><option selected>10</option><option>15</option><option>20</option></select> positions</label>
+      <label class="f">Cost <select id="cost"><option value="0">none</option><option value="0.0005" selected>0.05%</option><option value="0.001">0.1%</option><option value="0.0025">0.25%</option></select> per buy and per sell</label></div>
+    <div class="crow"><span class="lab">Sectors</span><div class="seg" id="sectors"></div>
+      <button type="button" class="mini-btn" id="sec-all">All</button><button type="button" class="mini-btn" id="sec-none">None</button></div>
+  </div>
+
+  <p class="headline" id="headline"></p>
+  <div class="tiles" id="tiles"></div>
+
+  <section aria-labelledby="eq-h">
+    <div class="sec-head">
+      <h2 id="eq-h">The account against the market</h2>
+      <p>Every line starts at the beginning of the period. In dollars, each index shows what the same starting capital would have become in it. Below: how far each was under its own high, and how much of the account was invested.</p>
+    </div>
+    <div class="panel card">
+      <div class="card-head">
+        <div class="legend" id="legend"></div>
+        <div class="seg" id="unit"></div>
+      </div>
+      <div class="stack"><div class="chart" id="c-main"></div></div>
+      <div class="stack"><span class="cap">Under the high (drawdown)</span><div class="chart" id="c-dd"></div></div>
+      <div class="stack"><span class="cap">Invested, share of the account</span><div class="chart" id="c-inv"></div></div>
+      <div class="picker" id="picker"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="corr-h">
+    <div class="sec-head">
+      <h2 id="corr-h">How the account moved with each index</h2>
+      <p>Correlation of the account's returns with each index over the period (1 = moved together, 0 = unrelated), the account's beta to it, and the account's average month when that index rose and when it fell. Click a row to put the index on the chart.</p>
+    </div>
+    <div class="panel table-wrap"><table>
+      <thead><tr id="corr-head"></tr></thead><tbody id="corr"></tbody></table></div>
+  </section>
+
+  <section aria-labelledby="cmp-h">
+    <div class="sec-head">
+      <h2 id="cmp-h">Wins and losses against the market</h2>
+      <p>Each dot is one period: the index's return across, the account's up. Dots in the lower left are periods both lost; the upper left, the account gained while the index fell.</p>
+    </div>
+    <div class="panel controls">
+      <div class="crow"><span class="lab">Compare</span><label class="f">with <select id="cmp"></select></label><div class="seg" id="freq"></div></div>
+    </div>
+    <div class="two">
+      <div class="panel card"><div class="legend" id="sc-stats" style="display:grid;gap:4px"></div><div class="chart" id="c-scatter"></div></div>
+      <div class="panel card"><div class="legend" id="col-legend"></div><div class="chart" id="c-cols"></div>
+        <details class="tv"><summary>Show as a table</summary><div class="table-wrap"><table><thead><tr><th>Period</th><th class="r">Account</th><th class="r" id="tv-idx">Index</th><th class="r">Difference</th></tr></thead><tbody id="tv"></tbody></table></div></details>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="tr-h">
+    <div class="sec-head">
+      <h2 id="tr-h">The trades, against their sectors</h2>
+      <p>Every trade the account took, set against its sector's index (or the S&amp;P 500) over exactly the days it was held. A trade that only rose with its sector shows up on the diagonal; one that beat it sits above.</p>
+    </div>
+    <div class="panel controls">
+      <div class="crow"><span class="lab">Show</span>
+        <label class="f">Sector <select id="f-sector"></select></label>
+        <label class="f">Outcome <select id="f-out"><option value="all">All</option><option value="hit">Hit target</option><option value="stop">Stopped out</option><option value="time">Timed out</option><option value="open">Still open</option></select></label>
+        <label class="f"><input type="search" id="f-q" placeholder="Ticker or name" aria-label="Search trades"></label>
+        <span class="lab" style="min-width:auto">Across</span><div class="seg" id="tx"></div></div>
+    </div>
+    <div class="panel card"><div class="legend" id="tsc-legend"></div><div class="chart" id="c-trades"></div></div>
+    <div class="panel table-wrap"><table><caption>By sector: the trades taken, and their sector's index over the same days. Correlation is between each trade's return and its index's return over the days it was held. Click a sector to show only its trades.</caption>
+      <thead><tr><th>Sector</th><th>Index</th><th class="r">Trades</th><th class="r">Hit target</th><th class="r">Avg trade</th><th class="r">Index, same days</th><th class="r">Trade minus index</th><th class="r">Correlation</th><th class="r">P&amp;L</th></tr></thead>
+      <tbody id="bysec"></tbody></table></div>
+    <div class="panel table-wrap"><table>
+      <caption id="tr-cap"></caption>
+      <thead><tr id="tr-head"></tr></thead><tbody id="trades"></tbody></table>
+      <button type="button" class="more" id="tr-more" hidden></button></div>
+  </section>
+
+  <section aria-labelledby="how-h">
+    <div class="sec-head"><h2 id="how-h">How the simulation works</h2></div>
+    <div class="panel note"><ul id="how"></ul></div>
+  </section>
+
+  <footer>Prices: Yahoo Finance daily closes, without dividends, for the stocks and the indexes alike. A simulation of past signals, not a record of real trades; not investment advice.</footer>
+</div>
+
+<script>
+const D = /*__DATA__*/null;
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const N = D.dates.length, SPX = "^GSPC";
+const B = Object.fromEntries(D.bench.map((b) => [b.id, b]));
+const nameOf = (id) => B[id] ? B[id].name : id;
+const pct = (x, d = 1) => x == null || !isFinite(x) ? "n/a" : (x > 0 ? "+" : x < 0 ? "−" : "") + Math.abs(x * 100).toFixed(d) + "%";
+const pp = (x) => x == null || !isFinite(x) ? "n/a" : (x > 0 ? "+" : x < 0 ? "−" : "") + Math.abs(x * 100).toFixed(1) + " pts";
+const r2 = (x) => x == null || !isFinite(x) ? "n/a" : (x < 0 ? "−" : "") + Math.abs(x).toFixed(2);
+const money = (x) => (x < 0 ? "−$" : "$") + Math.abs(Math.round(x)).toLocaleString("en-US");
+const kmoney = (x) => { const a = Math.abs(x); const s = x < 0 ? "−$" : "$";
+  return a >= 1e6 ? s + (a / 1e6).toFixed(a >= 1e7 ? 1 : 2) + "M" : a >= 1e4 ? s + Math.round(a / 1e3) + "K" : s + Math.round(a).toLocaleString("en-US"); };
+const md = (iso, y = true) => new Date(iso + "T12:00:00").toLocaleDateString("en-US", y ? {month: "short", day: "numeric", year: "numeric"} : {month: "short", day: "numeric"});
+const OUT = {hit: "Hit target", stop: "Stopped out", time: "Timed out", open: "Still open", nodata: "No data (closed at last price)"};
+const OUTCOL = {hit: "var(--s1)", stop: "var(--s2)", time: "var(--s3)"};
+const SLOTS = ["var(--s2)", "var(--s3)", "var(--s4)", "var(--s5)", "var(--s6)", "var(--s7)", "var(--s8)"];  // the account is --s1
+
+// ---- state ----------------------------------------------------------------------------------
+const sectorsAll = [...new Set(D.trades.map((t) => t.s))].sort((a, b) =>
+  D.trades.filter((t) => t.s === b).length - D.trades.filter((t) => t.s === a).length);
+const S = {from: 0, to: N - 1, preset: "all", universe: "wl", take: "all", capital: 100000, pos: 0.1, max: 10, cost: 0.0005,
+  sectors: new Set(sectorsAll), unit: "pct", picked: new Map(), cmp: SPX, freq: "month", tx: "sector",
+  fSector: "all", fOut: "all", q: "", sortK: "i0", sortDir: -1, allTrades: false, corrK: "cm", corrDir: -1};
+// colors follow the index, never its rank: an index keeps its slot until it is taken off the chart
+function pick(id) {
+  if (S.picked.has(id)) return true;
+  const used = new Set(S.picked.values());
+  const free = SLOTS.find((c) => !used.has(c));
+  if (!free) return false;
+  S.picked.set(id, free); return true;
+}
+function unpick(id) { S.picked.delete(id); }
+pick(SPX); if (B["^RUT"]) pick("^RUT");
+
+// ---- simulation ------------------------------------------------------------------------------
+function simulate() {
+  const {from, to, capital, pos, max, cost} = S;
+  const qmin = D.min_quality;
+  const ok = (t) => (S.universe === "all" || t.w) && S.sectors.has(t.s) && t.i0 >= from && t.i0 < to
+    && (S.take === "all" || (t.q != null && t.q >= qmin));
+  const byDay = new Map();
+  for (const t of D.trades) if (ok(t)) { if (!byDay.has(t.i0)) byDay.set(t.i0, []); byDay.get(t.i0).push(t); }
+  for (const v of byDay.values()) v.sort((a, b) => (b.q ?? -1) - (a.q ?? -1) || (a.t < b.t ? -1 : 1));
+  const px = (t, d) => t.px * (1 + t.p[d - t.i0] / 1e4);
+  const eq = new Float64Array(N), inv = new Float64Array(N), npos = new Int16Array(N);
+  let cash = capital, open = [];
+  const taken = [];
+  let skipSlots = 0, skipCash = 0;
+  for (let d = from; d <= to; d++) {
+    const keep = [];
+    for (const p of open) {
+      if (p.t.i1 === d && p.t.o !== "open") {  // sold at today's close
+        p.proceeds = p.sh * px(p.t, d) * (1 - cost); p.exit = d; cash += p.proceeds;
+      } else keep.push(p);
+    }
+    open = keep;
+    for (const t of byDay.get(d) || []) {
+      if (open.length >= max) { skipSlots++; continue; }
+      const e = cash + open.reduce((a, p) => a + p.sh * px(p.t, d), 0);
+      const want = e * pos, alloc = Math.min(want, cash);
+      if (alloc < want * 0.5) { skipCash++; continue; }
+      cash -= alloc;
+      const p = {t, d0: d, sh: alloc * (1 - cost) / t.px, basis: alloc, exit: null};
+      open.push(p); taken.push(p);
+    }
+    const held = open.reduce((a, p) => a + p.sh * px(p.t, d), 0);
+    eq[d] = cash + held; inv[d] = held / eq[d]; npos[d] = open.length;
+  }
+  for (const p of taken) {  // what each trade did for the account, to its exit or the period's end
+    const end = p.exit ?? to;
+    p.end = end;
+    p.value = p.exit != null ? p.proceeds : p.sh * px(p.t, end);
+    p.pnl = p.value - p.basis;
+    p.ret = px(p.t, end) / p.t.px - 1;
+    p.status = p.exit != null ? p.t.o : "open";
+    p.spx = B[SPX] ? B[SPX].c[end] / B[SPX].c[p.d0] - 1 : null;
+    p.etf = B[p.t.e] ? B[p.t.e].c[end] / B[p.t.e].c[p.d0] - 1 : null;
+  }
+  return {eq, inv, npos, taken, skipSlots, skipCash};
+}
+
+// ---- statistics ------------------------------------------------------------------------------
+const mean = (a) => a.reduce((x, y) => x + y, 0) / (a.length || 1);
+function corr(a, b) {
+  const n = a.length; if (n < 3) return null;
+  const ma = mean(a), mb = mean(b); let c = 0, va = 0, vb = 0;
+  for (let i = 0; i < n; i++) { c += (a[i] - ma) * (b[i] - mb); va += (a[i] - ma) ** 2; vb += (b[i] - mb) ** 2; }
+  return va > 0 && vb > 0 ? c / Math.sqrt(va * vb) : null;
+}
+function beta(a, b) {
+  const n = a.length; if (n < 3) return null;
+  const ma = mean(a), mb = mean(b); let c = 0, vb = 0;
+  for (let i = 0; i < n; i++) { c += (a[i] - ma) * (b[i] - mb); vb += (b[i] - mb) ** 2; }
+  return vb > 0 ? c / vb : null;
+}
+const weekKey = D.dates.map((iso) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); });
+function periodEnds(freq) {
+  const key = freq === "month" ? (d) => D.dates[d].slice(0, 7) : freq === "week" ? (d) => weekKey[d] : null;
+  const ends = [];
+  for (let d = S.from + 1; d <= S.to; d++) if (!key || d === S.to || key(d) !== key(d + 1)) ends.push(d);
+  return ends;
+}
+const rets = (v, ends) => ends.map((e, i) => v[e] / v[i ? ends[i - 1] : S.from] - 1);
+function drawdown(v) {
+  const out = new Float64Array(N); let peak = -Infinity;
+  for (let d = S.from; d <= S.to; d++) { peak = Math.max(peak, v[d]); out[d] = v[d] / peak - 1; }
+  return out;
+}
+const minOver = (v) => { let m = 0; for (let d = S.from; d <= S.to; d++) m = Math.min(m, v[d]); return m; };
+
+// ---- chart helpers ---------------------------------------------------------------------------
+function niceTicks(lo, hi, n) {
+  const span = hi - lo || Math.abs(hi) || 1, step0 = span / n, mag = 10 ** Math.floor(Math.log10(step0)), e = step0 / mag;
+  const step = (e >= 7.5 ? 10 : e >= 3.5 ? 5 : e >= 1.5 ? 2 : 1) * mag;
+  const out = []; for (let v = Math.floor(lo / step) * step; v <= hi + step * 1e-6; v += step) out.push(+v.toFixed(12));
+  if (out[out.length - 1] < hi - step * 1e-6) out.push(out[out.length - 1] + step);
+  return out;
+}
+function monthTicks(from, to, width) {
+  const perMonth = width / Math.max(1, to - from) * 21;
+  const k = [1, 2, 3, 6, 12].find((k) => k * perMonth >= 58) || 12;
+  const out = [];
+  for (let d = from + 1; d <= to; d++) {
+    if (D.dates[d].slice(0, 7) === D.dates[d - 1].slice(0, 7)) continue;
+    const m = +D.dates[d].slice(5, 7) - 1;
+    if (m % k) continue;
+    out.push([d, m === 0 ? D.dates[d].slice(0, 4) : new Date(D.dates[d] + "T12:00:00").toLocaleDateString("en-US", {month: "short"})]);
+  }
+  return out;
+}
+function tipAt(tip, box, x, y, html) {
+  tip.innerHTML = html; tip.style.display = "block";
+  const w = tip.offsetWidth, W = box.clientWidth;
+  tip.style.left = (x + 14 + w > W ? Math.max(0, x - 14 - w) : x + 14) + "px";
+  tip.style.top = Math.max(0, y - 10) + "px";
+}
+const row = (col, val, name, dot) => `<div class="r">${dot ? `<span class="dot" style="background:${col}"></span>` : `<span class="key" style="border-color:${col}"></span>`}<b>${val}</b><span>${esc(name)}</span></div>`;
+
+// Line chart over days [from, to]. One y-axis; every series in the same unit.
+function lineChart(box, cfg) {
+  const W = Math.max(300, box.clientWidth), H = cfg.height, from = S.from, to = S.to;
+  const m = {l: 56, r: cfg.rm, t: 10, b: 24};  // charts stacked on one time axis share this margin, so their days line up
+  const ends = cfg.ends && cfg.rm >= 150;
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  let lo = Infinity, hi = -Infinity;
+  for (const s of cfg.series) for (let d = from; d <= to; d++) { if (s.v[d] < lo) lo = s.v[d]; if (s.v[d] > hi) hi = s.v[d]; }
+  if (cfg.zero) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+  if (cfg.lo != null) lo = cfg.lo; if (cfg.hi != null) hi = cfg.hi;
+  if (!isFinite(lo)) { lo = 0; hi = 1; }
+  const ticks = niceTicks(lo, hi, cfg.nt || 5); lo = ticks[0]; hi = ticks[ticks.length - 1];
+  const X = (d) => m.l + (to > from ? (d - from) / (to - from) * pw : 0), Y = (v) => m.t + (hi - v) / (hi - lo || 1) * ph;
+  let g = "";
+  for (const t of ticks) g += `<line class="${Math.abs(t) < 1e-12 && cfg.zero ? "base" : "grid"}" x1="${m.l}" x2="${m.l + pw}" y1="${Y(t)}" y2="${Y(t)}"/><text class="tick" x="${m.l - 8}" y="${Y(t) + 4}" text-anchor="end">${cfg.fmt(t, true)}</text>`;
+  for (const [d, lab] of monthTicks(from, to, pw)) g += `<text class="tick" x="${X(d)}" y="${H - 6}" text-anchor="middle">${lab}</text>`;
+  for (const s of cfg.series) {
+    let p = "";
+    for (let d = from; d <= to; d++) p += (d === from ? "M" : "L") + X(d).toFixed(1) + "," + Y(s.v[d]).toFixed(1);
+    if (cfg.area) g += `<path d="${p}L${X(to)},${Y(0)}L${X(from)},${Y(0)}Z" style="fill:${s.col};opacity:.1"/>`;
+    g += `<path class="ln" d="${p}" style="stroke:${s.col}"/>`;
+  }
+  if (ends) {  // direct labels at the line ends, unless they would collide (the legend carries identity then)
+    const ys = cfg.series.map((s) => ({s, y: Y(s.v[to])})).sort((a, b) => a.y - b.y);
+    if (ys.every((e, i) => !i || e.y - ys[i - 1].y >= 15))
+      for (const {s, y} of ys) g += `<text class="endl" x="${m.l + pw + 8}" y="${y + 4}"><tspan class="v">${cfg.fmt(s.v[to])}</tspan> ${esc(s.name.replace(" (small caps)", "").slice(0, 18))}</text>`;
+  }
+  g += `<line class="cross" id="x" y1="${m.t}" y2="${m.t + ph}" style="display:none"/>`;
+  cfg.series.forEach((s, i) => { g += `<circle data-i="${i}" r="4" style="fill:${s.col};stroke:var(--surface);stroke-width:2;display:none"/>`; });
+  g += `<rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" fill="transparent"/>`;
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" tabindex="0" role="img" aria-label="${esc(cfg.label)}">${g}</svg><div class="tip"></div>`;
+  const svg = box.firstChild, tip = box.lastChild, cross = svg.querySelector("#x"), dots = [...svg.querySelectorAll("circle")];
+  const api = {
+    set(d, showTip) {
+      if (d == null) { cross.style.display = "none"; dots.forEach((c) => c.style.display = "none"); tip.style.display = "none"; return; }
+      const x = X(d);
+      cross.setAttribute("x1", x); cross.setAttribute("x2", x); cross.style.display = "";
+      dots.forEach((c, i) => { c.setAttribute("cx", x); c.setAttribute("cy", Y(cfg.series[i].v[d])); c.style.display = ""; });
+      if (!showTip) { tip.style.display = "none"; return; }
+      const rows = cfg.series.map((s) => row(s.col, cfg.fmt(s.v[d]), s.name)).join("");
+      tipAt(tip, box, x, m.t, `<div class="h">${md(D.dates[d])}</div>${rows}${cfg.extra ? cfg.extra(d) : ""}`);
+    },
+  };
+  const at = (ev) => { const r = svg.getBoundingClientRect(); const x = (ev.clientX - r.left) * (W / r.width);
+    return Math.max(from, Math.min(to, Math.round(from + (x - m.l) / pw * (to - from)))); };
+  svg.addEventListener("pointermove", (ev) => cfg.sync(at(ev), api));
+  svg.addEventListener("pointerleave", () => cfg.sync(null, api));
+  let kd = null;
+  svg.addEventListener("keydown", (ev) => {
+    if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+    ev.preventDefault(); kd = kd == null ? to : Math.max(from, Math.min(to, kd + (ev.key === "ArrowRight" ? 1 : -1))); cfg.sync(kd, api);
+  });
+  svg.addEventListener("blur", () => { kd = null; cfg.sync(null, api); });
+  return api;
+}
+
+// Scatter with a least-squares line; the nearest point within 24px answers the pointer.
+function scatter(box, cfg) {
+  const W = Math.max(300, box.clientWidth), H = cfg.height;
+  const m = {l: 52, r: 14, t: 18, b: 40}, pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const pts = cfg.pts;
+  const ext = (k) => { let lo = 0, hi = 0; for (const p of pts) { lo = Math.min(lo, p[k]); hi = Math.max(hi, p[k]); } const pad = (hi - lo) * .05 || .01; return [lo - pad, hi + pad]; };
+  let [x0, x1] = ext("x"), [y0, y1] = ext("y");
+  const xt = niceTicks(x0, x1, 5), yt = niceTicks(y0, y1, 5);
+  x0 = xt[0]; x1 = xt[xt.length - 1]; y0 = yt[0]; y1 = yt[yt.length - 1];
+  const X = (v) => m.l + (v - x0) / (x1 - x0) * pw, Y = (v) => m.t + (y1 - v) / (y1 - y0) * ph;
+  let g = "";
+  for (const t of yt) g += `<line class="${Math.abs(t) < 1e-12 ? "base" : "grid"}" x1="${m.l}" x2="${m.l + pw}" y1="${Y(t)}" y2="${Y(t)}"/><text class="tick" x="${m.l - 8}" y="${Y(t) + 4}" text-anchor="end">${cfg.fmt(t)}</text>`;
+  for (const t of xt) g += `<line class="${Math.abs(t) < 1e-12 ? "base" : "grid"}" y1="${m.t}" y2="${m.t + ph}" x1="${X(t)}" x2="${X(t)}"/><text class="tick" x="${X(t)}" y="${m.t + ph + 16}" text-anchor="middle">${cfg.fmt(t)}</text>`;
+  g += `<text class="axl" x="${m.l + pw / 2}" y="${H - 4}" text-anchor="middle">${esc(cfg.xl)}</text><text class="axl" x="${m.l}" y="10">${esc(cfg.yl)}</text>`;
+  if (cfg.diag) g += `<line class="base" x1="${X(Math.max(x0, y0))}" y1="${Y(Math.max(x0, y0))}" x2="${X(Math.min(x1, y1))}" y2="${Y(Math.min(x1, y1))}" style="stroke-dasharray:0"/>`;
+  if (pts.length >= 3) {
+    const b = beta(pts.map((p) => p.y), pts.map((p) => p.x));
+    if (b != null) { const a = mean(pts.map((p) => p.y)) - b * mean(pts.map((p) => p.x));
+      g += `<line class="fitln" x1="${X(x0)}" y1="${Y(a + b * x0)}" x2="${X(x1)}" y2="${Y(a + b * x1)}"/>`; }
+  }
+  for (const p of pts) g += p.col ? `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="4.5" style="fill:${p.col};stroke:var(--surface);stroke-width:2"/>`
+    : `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="4" style="fill:var(--surface);stroke:var(--muted);stroke-width:1.5"/>`;
+  g += `<circle id="hl" r="7" style="fill:none;stroke:var(--ink);stroke-width:1.5;display:none"/><rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" fill="transparent"/>`;
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(cfg.label)}">${g}</svg><div class="tip"></div>`;
+  const svg = box.firstChild, tip = box.lastChild, hl = svg.querySelector("#hl");
+  svg.addEventListener("pointermove", (ev) => {
+    const r = svg.getBoundingClientRect(), mx = (ev.clientX - r.left) * (W / r.width), my = (ev.clientY - r.top) * (H / r.height);
+    let best = null, bd = 24 * 24;
+    for (const p of pts) { const dd = (X(p.x) - mx) ** 2 + (Y(p.y) - my) ** 2; if (dd < bd) { bd = dd; best = p; } }
+    if (!best) { hl.style.display = "none"; tip.style.display = "none"; return; }
+    hl.setAttribute("cx", X(best.x)); hl.setAttribute("cy", Y(best.y)); hl.style.display = "";
+    tipAt(tip, box, X(best.x), Y(best.y) - 20, best.tip);
+  });
+  svg.addEventListener("pointerleave", () => { hl.style.display = "none"; tip.style.display = "none"; });
+}
+
+// Grouped columns, one group per period; the band is the hover target.
+function columns(box, cfg) {
+  const W = Math.max(300, box.clientWidth), H = cfg.height;
+  const m = {l: 52, r: 8, t: 12, b: 26}, pw = W - m.l - m.r, ph = H - m.t - m.b;
+  let lo = 0, hi = 0;
+  for (const s of cfg.series) for (const v of s.v) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+  const yt = niceTicks(lo, hi, 5); lo = yt[0]; hi = yt[yt.length - 1];
+  const Y = (v) => m.t + (hi - v) / (hi - lo || 1) * ph, n = cfg.cats.length, band = pw / Math.max(1, n), k = cfg.series.length;
+  const bw = Math.max(1, Math.min(24, (band * .78 - 2 * (k - 1)) / k));
+  let g = "";
+  for (const t of yt) g += `<line class="${Math.abs(t) < 1e-12 ? "base" : "grid"}" x1="${m.l}" x2="${m.l + pw}" y1="${Y(t)}" y2="${Y(t)}"/><text class="tick" x="${m.l - 8}" y="${Y(t) + 4}" text-anchor="end">${cfg.fmt(t)}</text>`;
+  // labels on calendar months: every k months, January as its year
+  const perMonth = cfg.monthly ? band : band * 4.35, every = [1, 2, 3, 6, 12].find((e) => e * perMonth >= 46) || 12;
+  const labelOf = (i) => {
+    const iso = cfg.cats[i].iso, mo = +iso.slice(5, 7) - 1;
+    if (!cfg.monthly && i && cfg.cats[i - 1].iso.slice(0, 7) === iso.slice(0, 7)) return null;  // a week labels its month once
+    if (mo % every) return null;
+    return mo === 0 ? iso.slice(0, 4) : new Date(iso + "T12:00:00").toLocaleDateString("en-US", {month: "short"});
+  };
+  cfg.cats.forEach((c, i) => {
+    const x = m.l + i * band + (band - (bw * k + 2 * (k - 1))) / 2;
+    cfg.series.forEach((s, j) => {
+      const v = s.v[i], y0 = Y(0), y1 = Y(v), bx = x + j * (bw + 2), r = Math.min(4, bw / 2, Math.abs(y1 - y0));
+      const p = v >= 0 ? `M${bx},${y0}V${y1 + r}Q${bx},${y1} ${bx + r},${y1}H${bx + bw - r}Q${bx + bw},${y1} ${bx + bw},${y1 + r}V${y0}Z`
+        : `M${bx},${y0}V${y1 - r}Q${bx},${y1} ${bx + r},${y1}H${bx + bw - r}Q${bx + bw},${y1} ${bx + bw},${y1 - r}V${y0}Z`;
+      g += `<path d="${p}" style="fill:${s.col}"/>`;
+    });
+    const tl = labelOf(i);
+    if (tl) g += `<text class="tick" x="${m.l + i * band + band / 2}" y="${H - 6}" text-anchor="middle">${tl}</text>`;
+  });
+  g += `<rect id="band" y="${m.t}" height="${ph}" width="${band}" style="fill:var(--ink);opacity:.05;display:none"/><rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" fill="transparent"/>`;
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(cfg.label)}">${g}</svg><div class="tip"></div>`;
+  const svg = box.firstChild, tip = box.lastChild, hb = svg.querySelector("#band");
+  svg.addEventListener("pointermove", (ev) => {
+    const r = svg.getBoundingClientRect(), mx = (ev.clientX - r.left) * (W / r.width);
+    const i = Math.floor((mx - m.l) / band);
+    if (i < 0 || i >= n) { hb.style.display = "none"; tip.style.display = "none"; return; }
+    hb.setAttribute("x", m.l + i * band); hb.style.display = "";
+    tipAt(tip, box, m.l + (i + .5) * band, m.t, `<div class="h">${esc(cfg.cats[i].long)}</div>` + cfg.series.map((s) => row(s.col, cfg.fmt(s.v[i], 1), s.name)).join(""));
+  });
+  svg.addEventListener("pointerleave", () => { hb.style.display = "none"; tip.style.display = "none"; });
+}
+
+// ---- controls --------------------------------------------------------------------------------
+function seg(id, opts, get, set) {
+  const box = $(id);
+  box.innerHTML = opts.map(([v, l]) => `<button type="button" data-v="${esc(v)}">${esc(l)}</button>`).join("");
+  const mark = () => box.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === String(get()))));
+  box.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; set(b.dataset.v); mark(); render(); });
+  mark(); return mark;
+}
+const dayOf = (iso, after) => { let i = D.dates.findIndex((x) => x >= iso); if (i < 0) i = N - 1; return after && D.dates[i] > iso ? Math.max(0, i - 1) : i; };
+const years = [...new Set(D.dates.map((d) => d.slice(0, 4)))].filter((y) => D.dates.filter((d) => d.startsWith(y)).length >= 120);
+const ago = (months) => { const d = new Date(D.dates[N - 1] + "T12:00:00"); d.setMonth(d.getMonth() - months); return dayOf(d.toISOString().slice(0, 10)); };
+const PRESETS = [["all", "All"], ...years.map((y) => [y, y === D.dates[N - 1].slice(0, 4) ? y + " so far" : y]), ["12m", "Last 12 months"], ["6m", "Last 6 months"]];
+function applyPreset(v) {
+  S.preset = v;
+  if (v === "all") { S.from = 0; S.to = N - 1; }
+  else if (v === "12m") { S.from = ago(12); S.to = N - 1; }
+  else if (v === "6m") { S.from = ago(6); S.to = N - 1; }
+  else { S.from = Math.max(0, dayOf(v + "-01-01") - 1); S.to = dayOf(v + "-12-31", true); }  // from the prior year's last close
+}
+const markPreset = seg("#presets", PRESETS, () => S.preset, applyPreset);
+const fromIn = $("#from"), toIn = $("#to");
+fromIn.min = toIn.min = D.dates[0]; fromIn.max = toIn.max = D.dates[N - 1];
+const onDates = () => {
+  const f = dayOf(fromIn.value || D.dates[0]), t = dayOf(toIn.value || D.dates[N - 1], true);
+  if (t - f < 10) return;
+  S.from = f; S.to = t; S.preset = "custom"; markPreset(); render();
+};
+fromIn.addEventListener("change", onDates); toIn.addEventListener("change", onDates);
+seg("#universe", [["wl", `Watchlist (${D.universe.wl} names)`], ["all", `Watchlist + scan universe (${D.universe.all})`]], () => S.universe, (v) => S.universe = v);
+seg("#take", [["all", "Every trigger"], ["strong", `Strong only (quality ${D.min_quality}+)`]], () => S.take, (v) => S.take = v);
+seg("#unit", [["pct", "% change"], ["usd", "$ value"]], () => S.unit, (v) => S.unit = v);
+seg("#freq", [["week", "Weekly"], ["month", "Monthly"]], () => S.freq, (v) => S.freq = v);
+seg("#tx", [["sector", "its sector's index"], ["spx", "S&P 500"]], () => S.tx, (v) => S.tx = v);
+$("#capital").addEventListener("change", (e) => { const v = +e.target.value; if (v >= 1000) { S.capital = v; render(); } });
+$("#pos").addEventListener("change", (e) => { S.pos = +e.target.value; render(); });
+$("#max").addEventListener("change", (e) => { S.max = +e.target.value; render(); });
+$("#cost").addEventListener("change", (e) => { S.cost = +e.target.value; render(); });
+function drawSectors() {
+  const n = (s) => D.trades.filter((t) => t.s === s && (S.universe === "all" || t.w)).length;
+  $("#sectors").innerHTML = sectorsAll.filter((s) => n(s)).map((s) => `<button type="button" class="chip" data-s="${esc(s)}" aria-pressed="${S.sectors.has(s)}">${esc(s)} <span class="k">${n(s)}</span></button>`).join("");
+}
+$("#sectors").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; const s = b.dataset.s;
+  S.sectors.has(s) ? S.sectors.delete(s) : S.sectors.add(s); render(); });
+$("#sec-all").addEventListener("click", () => { S.sectors = new Set(sectorsAll); render(); });
+$("#sec-none").addEventListener("click", () => { S.sectors = new Set(); render(); });
+$("#cmp").innerHTML = ["Market", "International", "Sector"].map((g) => `<optgroup label="${g}">` + D.bench.filter((b) => b.group === g).map((b) => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join("") + "</optgroup>").join("");
+$("#cmp").value = S.cmp;
+$("#cmp").addEventListener("change", (e) => {
+  S.cmp = e.target.value;
+  if (!pick(S.cmp)) { const old = [...S.picked.keys()].find((k) => k !== SPX) || [...S.picked.keys()][0]; unpick(old); pick(S.cmp); }
+  render();
+});
+$("#f-sector").addEventListener("change", (e) => { S.fSector = e.target.value; render(); });
+$("#f-out").addEventListener("change", (e) => { S.fOut = e.target.value; render(); });
+$("#f-q").addEventListener("input", (e) => { S.q = e.target.value.trim().toUpperCase(); render(); });
+$("#tr-more").addEventListener("click", () => { S.allTrades = !S.allTrades; render(); });
+$("#picker").addEventListener("click", (e) => { const b = e.target.closest("button.pick"); if (!b) return;
+  S.picked.has(b.dataset.id) ? unpick(b.dataset.id) : pick(b.dataset.id); render(); });
+$("#corr").addEventListener("click", (e) => { const tr = e.target.closest("tr[data-id]"); if (!tr) return;
+  S.picked.has(tr.dataset.id) ? unpick(tr.dataset.id) : pick(tr.dataset.id); render(); });
+$("#corr-head").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return;
+  if (S.corrK === b.dataset.k) S.corrDir = -S.corrDir; else { S.corrK = b.dataset.k; S.corrDir = b.dataset.k === "name" ? 1 : -1; } render(); });
+$("#tr-head").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return;
+  if (S.sortK === b.dataset.k) S.sortDir = -S.sortDir; else { S.sortK = b.dataset.k; S.sortDir = ["t", "s"].includes(b.dataset.k) ? 1 : -1; } render(); });
+
+// ---- render ----------------------------------------------------------------------------------
+let charts = [];
+const sync = (d, src) => charts.forEach((c) => c.set(d, c === src));
+function render() {
+  const sim = simulate();
+  const {from, to, capital} = S;
+  fromIn.value = D.dates[from]; toIn.value = D.dates[to];
+  drawSectors();
+  const eq = sim.eq, acct = new Float64Array(N);
+  const usd = S.unit === "usd";
+  for (let d = from; d <= to; d++) acct[d] = usd ? eq[d] : eq[d] / capital - 1;
+  const idxVal = (id) => { const c = B[id].c, v = new Float64Array(N); for (let d = from; d <= to; d++) v[d] = usd ? capital * c[d] / c[from] : c[d] / c[from] - 1; return v; };
+  const idxLevel = (id) => { const c = B[id].c, v = new Float64Array(N); for (let d = from; d <= to; d++) v[d] = c[d]; return v; };
+  const picked = [...S.picked.entries()].filter(([id]) => B[id]);
+  const series = [{name: "Account", col: "var(--s1)", v: acct}, ...picked.map(([id, col]) => ({name: nameOf(id), col, v: idxVal(id)}))];
+
+  // headline and tiles
+  const spx = B[SPX].c, ret = eq[to] / capital - 1, sret = spx[to] / spx[from] - 1, yrs = (to - from) / 252;
+  const closed = sim.taken.filter((p) => p.exit != null), hits = closed.filter((p) => p.t.o === "hit").length;
+  const dd = drawdown(eq), sdd = drawdown(spx), mdd = minOver(dd), smdd = minOver(sdd);
+  const daily = periodEnds(null), ar = rets(eq, daily), sr = rets(spx, daily);
+  const avgInv = mean(Array.from(sim.inv.slice(from, to + 1)));
+  $("#headline").innerHTML = sim.taken.length
+    ? `From <b>${money(capital)}</b> on ${md(D.dates[from])}, the account ends at <b>${money(eq[to])}</b> on ${md(D.dates[to])}: <b>${pct(ret)}</b>, against <b>${pct(sret)}</b> for the S&amp;P 500 (${pp(ret - sret)}). It took ${sim.taken.length} trade${sim.taken.length === 1 ? "" : "s"}` +
+      (sim.skipSlots + sim.skipCash ? ` and passed on ${sim.skipSlots + sim.skipCash} more because all ${S.max} positions were in use${sim.skipCash ? " or cash was short" : ""}.` : ".")
+    : "No trade matches these settings in this period.";
+  const sh = (a) => { const s = Math.sqrt(mean(a.map((x) => x * x)) - mean(a) ** 2); return s > 0 ? mean(a) / s * Math.sqrt(252) : null; };
+  const tiles = [
+    ["Account at the end", money(eq[to]), `${pct(ret)}${yrs >= 1 ? ` · ${pct((eq[to] / capital) ** (1 / yrs) - 1)} a year` : ""}`],
+    ["S&P 500, same period", pct(sret), `${ret >= sret ? "Account ahead by" : "Account behind by"} ${pp(Math.abs(ret - sret)).replace(/^[+−]/, "")}`],
+    ["Worst drop from a high", pct(mdd), `S&P 500: ${pct(smdd)}`],
+    ["Trades taken", String(sim.taken.length), closed.length ? `${pct(hits / closed.length, 0)} of ${closed.length} closed hit the target · avg ${pct(mean(closed.map((p) => p.ret)))}` : "none closed yet"],
+    ["Invested on average", pct(avgInv, 0).replace("+", ""), `${(mean(Array.from(sim.npos.slice(from, to + 1)))).toFixed(1)} positions; the rest in cash`],
+    ["Moves with the S&P 500", r2(corr(ar, sr)), `daily correlation · beta ${r2(beta(ar, sr))} · Sharpe ${r2(sh(ar))} vs ${r2(sh(sr))}`],
+  ];
+  $("#tiles").innerHTML = tiles.map(([l, v, d]) => `<div class="panel tile"><span class="l">${esc(l)}</span><span class="v">${esc(v)}</span><span class="d">${esc(d)}</span></div>`).join("");
+
+  // main charts, crosshair shared
+  $("#legend").innerHTML = series.map((s) => `<span><span class="key" style="border-color:${s.col}"></span>${esc(s.name)}</span>`).join("");
+  const fmtMain = usd ? (v) => kmoney(v) : (v, axis) => axis ? pct(v, 0) : pct(v);
+  const extra = (d) => `<div class="r" style="color:var(--muted)">${sim.npos[d]} position${sim.npos[d] === 1 ? "" : "s"} · ${pct(sim.inv[d], 0).replace("+", "")} invested</div>`;
+  const ddSeries = [{name: "Account", col: "var(--s1)", v: dd}, ...picked.map(([id, col]) => ({name: nameOf(id), col, v: drawdown(idxLevel(id))}))];
+  const rm = series.length <= 4 && $("#c-main").clientWidth >= 640 ? 150 : 12;
+  charts = [
+    lineChart($("#c-main"), {height: 340, series, fmt: fmtMain, zero: !usd, ends: true, rm, sync, extra, label: "Account and indexes over the period"}),
+    lineChart($("#c-dd"), {height: 150, series: ddSeries, fmt: (v, axis) => axis ? pct(v, 0) : pct(v), zero: true, hi: 0, nt: 3, rm, sync, label: "Drawdown"}),
+    lineChart($("#c-inv"), {height: 100, series: [{name: "Invested", col: "var(--s1)", v: sim.inv}], fmt: (v) => pct(v, 0).replace("+", ""), lo: 0, hi: 1, nt: 2, area: true, rm, sync, extra, label: "Share invested"}),
+  ];
+  const full = S.picked.size >= SLOTS.length;
+  $("#picker").innerHTML = ["Market", "International", "Sector"].map((g) => `<div class="grp"><span>${g}</span>` +
+    D.bench.filter((b) => b.group === g).map((b) => { const on = S.picked.has(b.id);
+      return `<button type="button" class="pick" data-id="${esc(b.id)}" aria-pressed="${on}"${!on && full ? " disabled" : ""}>${on ? `<span class="key" style="border-color:${S.picked.get(b.id)}"></span>` : ""}${esc(b.name)}</button>`; }).join("") + "</div>").join("") +
+    `<p class="sub">Up to ${SLOTS.length} indexes at a time, each keeping its color while it is shown.</p>`;
+
+  // correlation table
+  const weekly = periodEnds("week"), monthly = periodEnds("month");
+  const aw = rets(eq, weekly), am = rets(eq, monthly);
+  const enough = (a, n) => a.length >= n;
+  const rowsC = D.bench.map((b) => {
+    const bd = rets(b.c, daily), bw = rets(b.c, weekly), bm = rets(b.c, monthly);
+    const up = am.filter((_, i) => bm[i] > 0), dn = am.filter((_, i) => bm[i] < 0);
+    return {id: b.id, name: b.name, group: b.group, ret: b.c[to] / b.c[from] - 1, cd: corr(ar, bd),
+      cw: enough(aw, 10) ? corr(aw, bw) : null, cm: enough(am, 6) ? corr(am, bm) : null, beta: beta(ar, bd),
+      up: up.length ? mean(up) : null, nu: up.length, dn: dn.length ? mean(dn) : null, nd: dn.length};
+  });
+  const ck = S.corrK;
+  rowsC.sort((a, b) => ck === "name" ? S.corrDir * a.name.localeCompare(b.name) : S.corrDir * ((a[ck] ?? -9) - (b[ck] ?? -9)));
+  const H = [["name", "Index", ""], ["ret", "Its return", "r"], ["cd", "Daily", "r"], ["cw", "Weekly", "r"], ["cm", "Monthly", "r"], ["beta", "Beta", "r"], ["up", "Its up months", "r"], ["dn", "Its down months", "r"]];
+  $("#corr-head").innerHTML = H.map(([k, l, c]) => `<th class="${c}" ${k === "cd" ? 'title="Correlation of daily returns"' : ""}><button type="button" data-k="${k}">${l}${S.corrK === k ? (S.corrDir > 0 ? " ↑" : " ↓") : ""}</button></th>`).join("");
+  $("#corr").innerHTML = rowsC.map((r) => { const col = S.picked.get(r.id);
+    return `<tr class="click" data-id="${esc(r.id)}" title="${S.picked.has(r.id) ? "Take off the chart" : "Put on the chart"}">
+      <td>${col ? `<span class="key" style="border-color:${col};margin-right:8px"></span>` : '<span style="display:inline-block;width:24px"></span>'}${esc(r.name)} <span class="dim">${esc(r.group.toLowerCase())}</span></td>
+      <td class="r num">${pct(r.ret)}</td><td class="r num">${r2(r.cd)}</td><td class="r num">${r2(r.cw)}</td><td class="r num">${r2(r.cm)}</td><td class="r num">${r2(r.beta)}</td>
+      <td class="r num">${pct(r.up)} <span class="dim">${r.nu}</span></td><td class="r num">${pct(r.dn)} <span class="dim">${r.nd}</span></td></tr>`; }).join("");
+
+  // period scatter and columns against one index
+  const ends = S.freq === "month" ? monthly : weekly, ac = rets(eq, ends), bc = rets(B[S.cmp].c, ends);
+  const cmpCol = S.picked.get(S.cmp) || "var(--s2)", per = S.freq === "month" ? "month" : "week";
+  const lab = (e) => S.freq === "month" ? new Date(D.dates[e] + "T12:00:00").toLocaleDateString("en-US", {month: "short", year: "numeric"}) : "Week of " + md(weekKey[e]);
+  const both = ac.map((a, i) => [a, bc[i]]);
+  const nn = (f) => both.filter(([a, b]) => f(a, b)).length;
+  $("#sc-stats").innerHTML = `<span>${both.length} ${per}s · correlation <b class="num">${r2(corr(ac, bc))}</b> · beta <b class="num">${r2(beta(ac, bc))}</b></span>
+    <span class="dim">both down ${nn((a, b) => a < 0 && b < 0)} · account up, index down ${nn((a, b) => a > 0 && b < 0)} · account down, index up ${nn((a, b) => a < 0 && b > 0)} · both up ${nn((a, b) => a > 0 && b > 0)}</span>`;
+  scatter($("#c-scatter"), {height: 330, pts: both.map(([a, b], i) => ({x: b, y: a, col: "var(--s1)",
+    tip: `<div class="h">${esc(lab(ends[i]))}</div>${row("var(--s1)", pct(a), "Account", true)}${row(cmpCol, pct(b), nameOf(S.cmp), true)}`})),
+    fmt: (v) => pct(v, Math.abs(v) < .1 && v !== 0 ? 1 : 0), xl: `${nameOf(S.cmp)}, ${per}ly return`, yl: `Account, ${per}ly return`, label: "Account against the index by period"});
+  $("#col-legend").innerHTML = `<span><span class="key" style="border-color:var(--s1)"></span>Account</span><span><span class="key" style="border-color:${cmpCol}"></span>${esc(nameOf(S.cmp))}</span><span class="dim">by ${per}</span>`;
+  const cats = ends.map((e) => ({iso: S.freq === "month" ? D.dates[e] : weekKey[e], long: lab(e)}));
+  columns($("#c-cols"), {height: 330, cats, monthly: S.freq === "month", series: [{name: "Account", col: "var(--s1)", v: ac}, {name: nameOf(S.cmp), col: cmpCol, v: bc}],
+    fmt: (v, d) => pct(v, d ?? (Math.abs(v) < .1 && v !== 0 ? 1 : 0)), label: "Account and index returns by period"});
+  $("#tv-idx").textContent = nameOf(S.cmp);
+  $("#tv").innerHTML = both.map(([a, b], i) => `<tr><td>${esc(lab(ends[i]))}</td><td class="r num">${pct(a)}</td><td class="r num">${pct(b)}</td><td class="r num">${pp(a - b)}</td></tr>`).reverse().join("");
+
+  // trades
+  const secs = [...new Set(sim.taken.map((p) => p.t.s))].sort();
+  if (S.fSector !== "all" && !secs.includes(S.fSector)) S.fSector = "all";
+  $("#f-sector").innerHTML = `<option value="all">All sectors</option>` + secs.map((s) => `<option${s === S.fSector ? " selected" : ""}>${esc(s)}</option>`).join("");
+  const shown = sim.taken.filter((p) => (S.fSector === "all" || p.t.s === S.fSector) && (S.fOut === "all" || p.status === S.fOut)
+    && (!S.q || p.t.t.includes(S.q) || p.t.n.toUpperCase().includes(S.q)));
+  const xOf = (p) => S.tx === "spx" ? p.spx : p.etf;
+  $("#tsc-legend").innerHTML = Object.entries(OUTCOL).map(([k, c]) => `<span><span class="dot" style="background:${c}"></span>${OUT[k]}</span>`).join("") +
+    `<span><span class="dot ring"></span>Still open</span><span class="dim">${shown.length} trades · correlation ${r2(corr(shown.map((p) => p.ret), shown.map(xOf)))} · dark line: the fit; light line: trade = index</span>`;
+  scatter($("#c-trades"), {height: 360, diag: true, pts: shown.filter((p) => xOf(p) != null).map((p) => ({x: xOf(p), y: p.ret, col: OUTCOL[p.status] || null,
+    tip: `<div class="h">${esc(p.t.t)} · ${md(D.dates[p.d0])} → ${p.exit != null ? md(D.dates[p.exit]) : "open"}</div>${row(OUTCOL[p.status] || "var(--muted)", pct(p.ret), OUT[p.status] || p.status, true)}` +
+      `${row("var(--muted)", pct(xOf(p)), S.tx === "spx" ? "S&P 500, same days" : nameOf(p.t.e) + ", same days", true)}`})),
+    fmt: (v) => pct(v, 0), xl: S.tx === "spx" ? "S&P 500 over the days held" : "Its sector's index over the days held", yl: "The trade", label: "Trades against their sector index"});
+  const bySec = secs.map((s) => { const ps = sim.taken.filter((p) => p.t.s === s), cl = ps.filter((p) => p.exit != null);
+    return {s, etf: ps[0].t.e, n: ps.length, hit: cl.length ? cl.filter((p) => p.t.o === "hit").length / cl.length : null, avg: mean(ps.map((p) => p.ret)),
+      idx: mean(ps.map((p) => p.etf ?? 0)), c: ps.length >= 8 ? corr(ps.map((p) => p.ret), ps.map((p) => p.etf ?? 0)) : null, pnl: ps.reduce((a, p) => a + p.pnl, 0)}; })
+    .sort((a, b) => b.pnl - a.pnl);
+  $("#bysec").innerHTML = bySec.map((r) => `<tr class="click${S.fSector === r.s ? " on" : ""}" data-s="${esc(r.s)}"><td>${esc(r.s)}</td><td class="dim">${esc(nameOf(r.etf))}</td><td class="r num">${r.n}</td>
+    <td class="r num">${pct(r.hit, 0).replace("+", "")}</td><td class="r num">${pct(r.avg)}</td><td class="r num">${pct(r.idx)}</td><td class="r num">${pp(r.avg - r.idx)}</td><td class="r num">${r2(r.c)}</td><td class="r num">${money(r.pnl)}</td></tr>`).join("")
+    || '<tr><td colspan="9" class="empty">No trades.</td></tr>';
+  const TH = [["t", "Company", ""], ["s", "Sector", ""], ["i0", "Bought", ""], ["end", "Sold", ""], ["q", "Quality", "r"], ["basis", "Size", "r"], ["ret", "Return", "r"], ["pnl", "P&L", "r"], ["spx", "S&P 500", "r"], ["etf", "Sector index", "r"]];
+  $("#tr-head").innerHTML = TH.map(([k, l, c]) => `<th class="${c}"><button type="button" data-k="${k}">${l}${S.sortK === k ? (S.sortDir > 0 ? " ↑" : " ↓") : ""}</button></th>`).join("");
+  const val = (p, k) => k === "t" ? p.t.t : k === "s" ? p.t.s : k === "i0" ? p.d0 : k === "q" ? (p.t.q ?? -1) : p[k] ?? -9;
+  shown.sort((a, b) => { const x = val(a, S.sortK), y = val(b, S.sortK); return (x < y ? -1 : x > y ? 1 : 0) * S.sortDir; });
+  const lim = S.allTrades ? shown.length : 60;
+  $("#tr-cap").textContent = `${shown.length} trade${shown.length === 1 ? "" : "s"}${S.fSector !== "all" || S.fOut !== "all" || S.q ? " matching the filters" : ""}. Return is the stock's price change to the exit (or the period's end while open); P&L is the account's dollars after costs.`;
+  $("#trades").innerHTML = shown.slice(0, lim).map((p) => `<tr><td><div class="co"><b>${esc(p.t.t)}</b><span>${esc(p.t.n)}</span></div></td><td>${esc(p.t.s)}</td>
+    <td class="num" style="white-space:nowrap">${D.dates[p.d0]}</td><td class="num" style="white-space:nowrap">${p.exit != null ? D.dates[p.exit] + ` <span class="dim">${p.exit - p.d0}d · ${esc((OUT[p.status] || "").toLowerCase())}</span>` : '<span class="dim">open, ' + (p.end - p.d0) + "d</span>"}</td>
+    <td class="r num">${p.t.q ?? '<span class="dim">n/a</span>'}</td><td class="r num">${money(p.basis)}</td><td class="r num"><b>${pct(p.ret)}</b></td><td class="r num">${money(p.pnl)}</td>
+    <td class="r num">${pct(p.spx)}</td><td class="r num">${pct(p.etf)} <span class="dim">${esc(p.t.e)}</span></td></tr>`).join("") || '<tr><td colspan="10" class="empty">No trades match.</td></tr>';
+  $("#tr-more").hidden = shown.length <= 60;
+  $("#tr-more").textContent = S.allTrades ? "Show the first 60" : `Show all ${shown.length}`;
+}
+$("#bysec").addEventListener("click", (e) => { const tr = e.target.closest("tr[data-s]"); if (!tr) return; S.fSector = S.fSector === tr.dataset.s ? "all" : tr.dataset.s; render(); });
+
+// ---- static text -----------------------------------------------------------------------------
+$("#eyebrow").textContent = `Daily closes ${md(D.dates[0])} – ${md(D.dates[N - 1])} · engine v${D.version} · built ${md(D.built)}`;
+$("#bias").textContent = "Read with care: the watchlist and the scan are today's picks, stocks chosen now for high cash yields near their lows. Replaying them over past years tests the trigger on names known now to have fallen, not on what a screen at the time would have picked, and the trigger rule and target sizes are today's settings, tuned on these same years.";
+const L = D.label;
+$("#how").innerHTML = [
+  `Each trigger (${esc(D.rule.charAt(0).toLowerCase() + D.rule.slice(1))}) is bought at that day's close. It is sold at the first close at its target (+${L.up}× the stock's normal ${L.horizon}-day swing) or its stop (−${L.down}×), or at the close ${L.horizon} sessions later. One trade per name at a time, as the monitor follows them.`,
+  "Each new position gets the chosen share of the account's value at that close, paid from cash. When more names trigger than there are free positions, the highest-quality ones are bought first; a trigger is passed over when the positions are full or the cash left is under half a position.",
+  `Trigger quality here is walk-forward: every quarter the score is refitted on the triggers whose outcome was already known, and it rates only the triggers after that. Ratings start ${D.rated_from != null ? md(D.dates[D.rated_from]) : "once enough triggers have resolved"}; "strong only" skips unrated triggers. The ${D.min_quality}+ bar itself was picked on the latest held-out year.`,
+  "Costs are charged on every buy and every sell. Shares are fractional, fills are at the close, and cash earns nothing. Returns are price changes without dividends, for the stocks and the indexes alike.",
+  "Indexes: S&P 500, Dow Jones, Nasdaq Composite and Russell 2000 are the indexes themselves; the others are the ETFs that track them. Each stock's sector index is the sector ETF for its sector (gold and silver miners against the miners' ETF, telecoms against the telecom ETF).",
+].map((x) => `<li>${x}</li>`).join("");
+
+render();
+let rz, lastW = $(".wrap").clientWidth;  // redraw the charts for a new width only
+new ResizeObserver(() => { const w = $(".wrap").clientWidth; if (w === lastW) return; lastW = w; clearTimeout(rz); rz = setTimeout(render, 120); }).observe($(".wrap"));
+</script>

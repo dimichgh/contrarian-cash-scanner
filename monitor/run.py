@@ -7,6 +7,7 @@ import json
 import numpy as np
 import pandas as pd
 
+from . import backtest as BT
 from . import config as C
 from . import learn as L
 from . import trades as T
@@ -251,6 +252,7 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
     if did_learn:
         scan = W.load_scan()
         fetch += list(scan["name"]) if scan is not None else []
+        fetch += [t for t, _, _ in BT.BENCH]  # the backtest page's indexes, rebuilt with each re-fit
     got: dict = {}
     bars = fetch_many(fetch + ["SPY"], "5y" if did_learn else "2y", today=today, stats=got)
     if "SPY" not in bars:
@@ -346,6 +348,15 @@ def daily(force_rescan: bool = False, force_learn: bool = False, today: dt.date 
                 stages={**prev, **{r["t"]: r["stage"] for r in rows}}, record=record)
     C.LAST_RUN.write_text(json.dumps(last, indent=1) + "\n")
     W.save(wl)
+    if did_learn:
+        try:
+            bench = {t: bars[t] for t, _, _ in BT.BENCH if t in bars}
+            universe = {t: b for t, b in bars.items() if t != "SPY" and t not in bench}
+            bt = BT.build(universe, spy, eng, wl, W.load_scan(), names, bench)
+            BT.write(bt)
+            notes.append(f"Backtest page rebuilt: {len(bt['trades'])} trades since {bt['dates'][0]}")
+        except Exception as e:  # the backtest must not stop the monitor
+            notes.append(f"Backtest not rebuilt ({e.__class__.__name__}: {e})")
     return {"as_of": as_of, "rows": rows, "alerts": new_alerts, "recent_alerts": alerts[-40:], "added": added,
             "trades": ledger, "closes": {t: float(f["close"].iloc[-1]) for t, (f, _) in scored.items()},
             "dropped": dropped, "missing": missing, "engine": eng, "record": record, "notes": notes,

@@ -534,3 +534,75 @@ def test_quality_decides_strong_and_earlier_trades_are_rated_once():
     assert T.rate(ledger, {"X": (hi, None)}, eng) == []  # rated once, not again
     eng["quality"]["active"] = False
     assert T.rate([{"t": "X", "date": "2024-03-01"}], {"X": (hi, None)}, eng) == []
+
+
+def test_backtest_follows_trades_like_the_ledger(spy):
+    from monitor import backtest as BT
+    from monitor import trades as T
+    b = base_then_breakout()
+    f = features(b, spy)
+    p = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10, min_ready=0)
+    eng = _eng(p)
+    trades, rows = BT.follow_all("X", b, spy, p, C.LABEL, spy.index)
+    ledger = T.follow("X", f, stages(f, p), spy, b.index[280], eng)
+    t = next(x for x in trades if spy.index[x["i0"]] == b.index[280])
+    assert t["o"] == "hit" and ledger["status"] == "hit target"
+    assert t["i1"] - t["i0"] == ledger["resolved_in"] and t["px"] == ledger["entry"]
+    assert len(t["p"]) == t["i1"] - t["i0"] + 1 and t["p"][0] == 0
+    assert t["p"][-1] / 1e4 == pytest.approx(ledger["exit_px"] / ledger["entry"] - 1, abs=2e-4)
+    assert len(rows) >= len(trades) and all(r["known"] is None or r["known"] >= r["i0"] for r in rows)
+
+
+def test_backtest_open_and_stale_trades(spy):
+    from monitor import backtest as BT
+    b = base_then_breakout(n_up=1)  # the trigger is the last bar: its trade cannot resolve yet
+    p = dict(C.TRIGGER, vol_mult=1.2, min_below=5, min_low_age=10, min_ready=0)
+    trades, rows = BT.follow_all("X", b, spy, p, C.LABEL, spy.index[:len(b)])
+    assert [t["o"] for t in trades] == ["open"] and rows[-1]["known"] is None
+    assert trades[0]["i1"] == len(b) - 1 and trades[0]["p"] == [0]
+    # a day behind the calendar: held to its end at the last close
+    trades, _ = BT.follow_all("X", b, spy, p, C.LABEL, spy.index[:len(b) + 2])
+    assert trades[0]["o"] == "open" and trades[0]["i1"] == len(b) + 1 and trades[0]["p"] == [0, 0, 0]
+    # bars that stopped weeks ago: closed at the last price
+    trades, _ = BT.follow_all("X", b, spy, p, C.LABEL, spy.index[:len(b) + BT.STALE + 5])
+    assert trades[0]["o"] == "nodata" and trades[0]["i1"] == len(b) - 1
+
+
+def test_walk_forward_quality_sees_only_outcomes_known_before_its_quarter():
+    from monitor import backtest as BT
+    rng = np.random.default_rng(1)
+    n = 1200
+    rows = pd.DataFrame(rng.normal(size=(n, len(C.FEATURES))), columns=C.FEATURES)
+    rows["t"] = [f"T{i}" for i in range(n)]
+    rows["i0"] = np.sort(rng.integers(0, 900, n))
+    rows["known"] = rows["i0"] + 20
+    rows["y"] = (rows["f_low_age"] + rng.normal(size=n) > 0).astype(float)
+    q = BT.walk_forward_quality(rows, 300, 899, 3.0)
+    assert q and min(i for _, i in q) >= 300 and all(0 <= v <= 100 for v in q.values())
+    # outcomes not yet known at a quarter's start cannot change that quarter's ratings
+    r = 300 + BT.REFIT
+    later = rows.copy()
+    later.loc[later["known"] >= r, "y"] = 1 - later.loc[later["known"] >= r, "y"]
+    q2 = BT.walk_forward_quality(later, 300, 899, 3.0)
+    first = {k: v for k, v in q.items() if 300 + BT.REFIT <= k[1] < 300 + 2 * BT.REFIT}
+    assert first and first == {k: q2[k] for k in first}
+    hi = [rows.loc[i, "y"] for i in rows.index if q.get((rows.loc[i, "t"], int(rows.loc[i, "i0"])), -1) >= 67]
+    lo = [rows.loc[i, "y"] for i in rows.index if 0 <= q.get((rows.loc[i, "t"], int(rows.loc[i, "i0"])), -1) < 33]
+    assert np.mean(hi) > np.mean(lo)  # and it learns the signal
+
+
+def test_backtest_build_page_data(spy):
+    from monitor import backtest as BT
+    n = 400
+    idx = pd.bdate_range("2022-01-03", periods=n)
+    spy_long = pd.Series(np.linspace(400, 450, n), index=idx)
+    b = base_then_breakout(n_up=n - 280)
+    bench = {"^GSPC": bars(np.linspace(4000, 4500, n)), "XLK": bars(np.linspace(100, 130, n))}
+    data = BT.build({"AAA": b}, spy_long, _eng(P), {"AAA": {"name": "Aaa Inc", "sector": "Technology Services"}},
+                    None, ["AAA"], bench)
+    assert len(data["dates"]) == n - BT.WARMUP and [x["id"] for x in data["bench"]] == ["^GSPC", "XLK"]
+    assert all(len(x["c"]) == len(data["dates"]) for x in data["bench"])
+    t = data["trades"][0]
+    assert t["s"] == "Technology Services" and t["e"] == "XLK" and t["w"] == 1 and t["n"] == "Aaa Inc"
+    assert 0 <= t["i0"] <= t["i1"] < len(data["dates"]) and len(t["p"]) == t["i1"] - t["i0"] + 1
+    assert BT.page(data).count("/*__DATA__*/") == 0

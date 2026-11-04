@@ -77,6 +77,7 @@ own rules every week.
                                              # (rescan days also rebuild reports/scan_report.html)
 .venv/bin/python -m monitor daily --rescan   # force a full re-scan first (runs weekly on its own)
 .venv/bin/python -m monitor daily --learn    # force a re-fit of the engine (runs weekly on its own)
+.venv/bin/python -m monitor backtest         # rebuild reports/backtest.html (also done with each weekly re-fit)
 .venv/bin/python -m monitor add PEP --note "buy zone 120–125"
 .venv/bin/python -m monitor remove XOP
 .venv/bin/python -m monitor list
@@ -158,6 +159,26 @@ that reached their target usually got there (the middle half of their times, re-
 learning cycle), and whether the trade is early, in that window or late. Setup names show the stop
 and target they would get if they triggered at their level.
 
+**Backtest.** `reports/backtest.html` replays every trigger of the last four years (after a year of
+warm-up bars) as a simulated account: $100,000 to start, each trade bought at the trigger-day close
+and sold the way the ledger follows it (first close at its target or stop, or 40 sessions later, one
+trade per name at a time). The account itself is simulated in the browser, so the page can change
+the period (each year, the last 6 or 12 months, or any dates), the names traded (the watchlist, or
+the watchlist plus the scan's whole universe), every trigger or strong ones only, the sectors traded,
+the starting capital, the position size, the number of positions and the cost per buy and sell. When
+more names trigger than there are free positions, the highest-quality ones are bought first. For
+"strong only", trigger quality is walk-forward: refitted each quarter on the outcomes known by then,
+it rates only the triggers after that.
+
+The page sets the account beside the S&P 500, Dow, Nasdaq, Russell 2000 (small caps), Russell 1000
+Value, developed and emerging markets, and 13 sector indexes (any 7 at a time, in % or in $). It
+also shows the drawdown and the share invested on the same time axis, and a table of the account's
+correlation and beta with every index (daily, weekly and monthly) with its average month when that
+index rose and when it fell. A period scatter and month-by-month (or week-by-week) columns compare
+the account with any one index. Every trade is set against its sector's index over the exact days it
+was held, with totals by sector, plus a sortable, filterable table of the trades. Mind the selection bias the page warns about: the
+names are today's picks (high cash yields near their lows), replayed over the years that put them there.
+
 **Prices** are cached in `state/bars/` (one CSV per name, committed with the state). A run downloads
 only the last month of each name from Yahoo and merges it in; a name is downloaded in full the first
 time, every 60 days, when a longer history is needed, or when the overlap shows a split. If Yahoo
@@ -168,8 +189,9 @@ the cache alone, without any download: `MONITOR_OFFLINE=1 .venv/bin/python -m mo
 current rule and weights), `engine_history.jsonl` (one line per learning cycle), `alerts.jsonl`,
 `history/YYYY-MM.csv` (daily calls), `trades.jsonl` (every trade), `bars/` (cached prices) and
 `scan_latest.csv`. The pages are committed too:
-`reports/dashboard.html` (the monitor, every run) and `reports/scan_report.html` (the full scan,
-rebuilt at each weekly rescan). Both are self-contained: download one and open it in a browser.
+`reports/dashboard.html` (the monitor, every run), `reports/scan_report.html` (the full scan,
+rebuilt at each weekly rescan) and `reports/backtest.html` (rebuilt at each weekly re-fit). Each is
+self-contained: download one and open it in a browser.
 
 **Scheduled runs.** Two GitHub Actions workflows, on New York time, with no Claude usage:
 
@@ -189,7 +211,7 @@ by hand from the Actions tab (Run workflow); the after-close run takes an option
 
 The pages are also published to GitHub Pages after every run:
 `https://dimichgh.github.io/contrarian-cash-scanner/` (the monitor), `…/preview.html` (the latest
-pre-close preview) and `…/scan.html` (the full scan). `scripts/build_site.py` wraps the committed `reports/*.html` into the site. One-time setup:
+pre-close preview), `…/scan.html` (the full scan) and `…/backtest.html` (the backtest). `scripts/build_site.py` wraps the committed `reports/*.html` into the site. One-time setup:
 Settings → Pages → Source: "GitHub Actions". The site is public, like the repo.
 
 To run it yourself instead: `bash scripts/cloud_run.sh` (or `python -m monitor daily` without the
