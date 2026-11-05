@@ -819,7 +819,7 @@
   },
   "scan_rank": 6,
   "scanned": "2026-11-03",
-  "hold": false
+  "hold": true
  },
  "CSTM": {
   "ticker": "CSTM",
@@ -1422,7 +1422,7 @@
   },
   "scan_rank": 34,
   "scanned": "2026-11-03",
-  "hold": false
+  "hold": true
  },
  "FOUR": {
   "ticker": "FOUR",
@@ -2502,7 +2502,7 @@
   },
   "scan_rank": 36,
   "scanned": "2026-11-03",
-  "hold": false
+  "hold": true
  },
  "OSK": {
   "ticker": "OSK",
@@ -3038,7 +3038,7 @@
   },
   "scan_rank": 42,
   "scanned": "2026-11-03",
-  "hold": false
+  "hold": true
  },
  "SNDK": {
   "ticker": "SNDK",
