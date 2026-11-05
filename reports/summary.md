@@ -1,13 +1,6 @@
 Breakout monitor · close of 2026-11-04 · engine v5
 
-7 new signals:
-▲ TRIGGERED (strong) FMS $23.19: closed 3.9% above the 50-day average ($22.33), volume 2.3x its average; stop $21.61, target $25.78 · quality 81, readiness 62
-△ TRIGGERED (weak: quality under the learned bar) CRUS $115.99: closed 1.6% above the 50-day average ($114.20), volume 1.6x its average; stop $107.96, target $129.13 · quality 47, readiness 71
-△ TRIGGERED (weak: quality under the learned bar) NVO $42.18: closed 3.3% above the 50-day average ($40.84), volume 2.1x its average; stop $39.14, target $47.16 · quality 41, readiness 82
-△ TRIGGERED (weak: quality under the learned bar) SFD $19.72: closed 0.9% above the 50-day average ($19.54), volume 1.8x its average; stop $18.46, target $21.78 · quality 20, readiness 55
-◆ SETUP VSNT $33.98: 0.4% under the trigger level $34.12 (50-day average), lows held 17 sessions; if it triggers there: stop $31.73, target $38.01 · readiness 70
-✓ TARGET SNY $47.47: reached its target: +10.1% from the 2026-10-29 trigger at $43.13 in 4 sessions (target $46.39) · readiness 65
-✓ TARGET AEO $21.36: reached its target: +23.4% from the 2026-09-28 trigger at $17.31 in 27 sessions (target $20.67) · readiness 35
+No new session since the last run.
 
 Nearest the trigger: NVO +3.3% vs $40.84 (readiness 82), JD +3.0% vs $26.91 (readiness 75), OSK +2.5% vs $139.85 (readiness 73), CRUS +1.6% vs $114.20 (readiness 71), UFPI +6.7% vs $80.88 (readiness 71), VSNT -0.4% vs $34.12 (readiness 70), FMS +3.9% vs $22.33 (readiness 62), SFD +0.9% vs $19.54 (readiness 55)
 Highest readiness: RNG 97 (above), SONY 92 (above), EPAM 91 (above), OTEX 91 (above), GTX 90 (falling), BWA 88 (falling), MBLY 86 (falling), KT 85 (falling)
@@ -22,5 +15,6 @@ Trigger quality: AUC 0.578 on the held-out year's 461 triggers; the 198 at quali
 Past triggers that hit target took a median 18 sessions (middle half 11–26); stops came in a median 13. 30% hit target, 47% stopped, 23% timed out.
 Live triggers so far: 23: 5 hit target, 2 stopped out, 0 timed out, 16 open; closed ones averaged +12.0%.
 Prices: 91 update, 1 missing
+No new session since 2026-11-04; alerts already sent
 
-DASHBOARD: publish
+DASHBOARD: skip
