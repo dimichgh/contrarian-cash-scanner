@@ -1,9 +1,6 @@
 Breakout monitor · close of 2026-11-05 · engine v5
 
-3 new signals:
-◆ SETUP RNG $74.33: 3.0% under the trigger level $76.66 (50-day average), lows held 120 sessions; if it triggers there: stop $68.23, target $90.46 · readiness 99
-● RUNNING UFPI $82.97: move confirmed: 5 sessions after the trigger, 2.6% above the $80.88 level (+1.8% from the entry), 50-day average falling 1.7%/2wk · readiness 86
-● RUNNING LCII $102.51: move confirmed: 6 sessions after the trigger, 13.7% above the $90.13 level (+5.0% from the entry), 50-day average falling 1.7%/2wk · readiness 80
+No new session since the last run.
 
 Nearest the trigger: RNG -3.0% vs $76.66 (readiness 99), JD +6.4% vs $26.91 (readiness 89), VSNT -0.1% vs $34.02 (readiness 88), TTD -2.0% vs $13.07 (readiness 87), AUPH -1.6% vs $16.48 (readiness 86), FMS +6.0% vs $22.33 (readiness 83), SFD +0.3% vs $19.54 (readiness 82), CARG +12.0% vs $32.29 (readiness 68)
 Highest readiness: RNG 99 (setup), BWA 96 (falling), GTX 96 (falling), OTEX 96 (above), SONY 96 (above), KT 95 (falling), MBLY 95 (falling), SBLK 95 (basing)
@@ -18,5 +15,6 @@ Trigger quality: AUC 0.578 on the held-out year's 461 triggers; the 198 at quali
 Past triggers that hit target took a median 18 sessions (middle half 11–26); stops came in a median 13. 30% hit target, 47% stopped, 23% timed out.
 Live triggers so far: 23: 5 hit target, 2 stopped out, 0 timed out, 16 open; closed ones averaged +12.0%.
 Prices: 91 update, 1 missing
+No new session since 2026-11-05; alerts already sent
 
-DASHBOARD: publish
+DASHBOARD: skip
