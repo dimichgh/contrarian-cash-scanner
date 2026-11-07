@@ -1,8 +1,6 @@
 Breakout monitor · close of 2026-11-06 · engine v5
 
-2 new signals:
-◆ SETUP GFI $39.17: 0.2% under the trigger level $39.25 (50-day average), lows held 78 sessions; if it triggers there: stop $34.42, target $47.14 · readiness 82
-✕ FAILED ADBE $239.30: breakout failed: stopped out at $239.30 (-11.6%) on 2026-11-06; now 6.5% under the $255.92 level · readiness 90
+No new session since the last run.
 
 Nearest the trigger: VSNT -0.6% vs $33.90 (readiness 90), TTD -1.0% vs $13.07 (readiness 88), JD +8.2% vs $26.91 (readiness 87), AUPH -0.1% vs $16.48 (readiness 86), GFI -0.2% vs $39.25 (readiness 82), FMS +4.8% vs $22.33 (readiness 81), GAP -3.8% vs $22.32 (readiness 75), CARG +4.5% vs $32.29 (readiness 68)
 Highest readiness: RNG 99 (basing), GTX 96 (falling), BWA 95 (falling), SBLK 95 (basing), SONY 95 (above), APTV 94 (falling), KT 94 (above), F 93 (falling)
@@ -17,5 +15,6 @@ Trigger quality: AUC 0.578 on the held-out year's 461 triggers; the 198 at quali
 Past triggers that hit target took a median 18 sessions (middle half 11–26); stops came in a median 13. 30% hit target, 47% stopped, 23% timed out.
 Live triggers so far: 23: 5 hit target, 3 stopped out, 0 timed out, 15 open; closed ones averaged +9.1%.
 Prices: 91 update, 1 missing
+No new session since 2026-11-06; alerts already sent
 
-DASHBOARD: publish
+DASHBOARD: skip
