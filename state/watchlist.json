@@ -164,7 +164,7 @@
   },
   "scan_rank": 24,
   "scanned": "2026-11-03",
-  "hold": true
+  "hold": false
  },
  "ADT": {
   "ticker": "ADT",
