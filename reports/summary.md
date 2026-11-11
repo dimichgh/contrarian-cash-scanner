@@ -1,8 +1,6 @@
 Breakout monitor · close of 2026-11-10 · engine v6
 
-2 new signals:
-△ TRIGGERED (weak: quality under the learned bar) CHTR $125.86: closed 3.6% above the 50-day average ($121.54) on 2026-11-05, volume 1.6x its average; stop $110.55, target $150.92 · quality 10, readiness 27
-● RUNNING JD $28.31: move confirmed: 5 sessions after the trigger, 5.2% above the $26.91 level (+5.2% from the entry), 50-day average falling 1.3%/2wk · readiness 67
+No new session since the last run.
 
 Nearest the trigger: TTD +17.9% vs $13.08 (readiness 99), AUPH -1.1% vs $16.49 (readiness 92), FMS +1.8% vs $22.33 (readiness 82), CRUS +5.2% vs $114.20 (readiness 72), GAP -1.4% vs $22.29 (readiness 67), CHTR +10.3% vs $121.54 (readiness 54), TIMB +1.3% vs $18.43 (readiness 37), NTES +7.2% vs $119.47 (readiness 35)
 Highest readiness: TDC 99 (above), TTD 99 (triggered), DXC 98 (above), EPAM 97 (above), ACN 96 (above), OTEX 95 (above), AUPH 92 (setup), YETI 90 (above)
@@ -17,5 +15,6 @@ Trigger quality: AUC 0.561 on the held-out year's 2330 triggers; the 526 at qual
 Past triggers that hit target took a median 19 sessions (middle half 12–28); stops came in a median 14. 30% hit target, 47% stopped, 23% timed out.
 Live triggers so far: 32: 7 hit target, 3 stopped out, 0 timed out, 22 open; closed ones averaged +10.3%.
 Prices: 96 update, 1 missing
+No new session since 2026-11-10; alerts already sent
 
-DASHBOARD: publish
+DASHBOARD: skip
