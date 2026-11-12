@@ -1,12 +1,6 @@
 Breakout monitor · close of 2026-11-11 · engine v6
 
-6 new signals:
-△ TRIGGERED (weak: quality under the learned bar) MGM $33.47: closed 1.0% above the 50-day average ($33.15), volume 0.8x its average; stop $30.62, target $38.14 · quality 10, readiness 3
-✓ TARGET TTD $15.98: reached its target: +20.8% from the 2026-11-04 trigger at $13.23 in 5 sessions (target $15.44) · readiness 99
-● RUNNING CRUS $121.75: move confirmed: 5 sessions after the trigger, 6.6% above the $114.20 level (+5.0% from the entry), 50-day average rising 0.5%/2wk · readiness 66
-● RUNNING NVO $41.09: move confirmed: 5 sessions after the trigger, 0.6% above the $40.84 level (-2.6% from the entry), 50-day average falling 2.8%/2wk · readiness 38
-● RUNNING NTES $122.13: move confirmed: 5 sessions after the trigger, 2.2% above the $119.47 level (+0.7% from the entry), 50-day average falling 0.4%/2wk · readiness 35
-● RUNNING EEFT $70.49: move confirmed: 5 sessions after the trigger, 6.0% above the $66.49 level (-0.2% from the entry), 50-day average falling 0.4%/2wk · readiness 20
+No new session since the last run.
 
 Nearest the trigger: AUPH -1.7% vs $16.49 (readiness 84), CHTR +12.2% vs $121.54 (readiness 63), GAP -3.3% vs $22.28 (readiness 55), MTCH -0.9% vs $42.01 (readiness 48), IT -2.0% vs $197.03 (readiness 47), RNG -2.4% vs $76.96 (readiness 45), TIMB +6.0% vs $18.43 (readiness 24), VSNT +7.0% vs $33.78 (readiness 22)
 Highest readiness: TDC 98 (above), EPAM 96 (above), DXC 95 (above), ACN 94 (above), OTEX 92 (above), YETI 87 (above), AUPH 84 (setup), FMS 81 (retest)
@@ -21,5 +15,6 @@ Trigger quality: AUC 0.561 on the held-out year's 2330 triggers; the 526 at qual
 Past triggers that hit target took a median 19 sessions (middle half 12–28); stops came in a median 14. 30% hit target, 47% stopped, 23% timed out.
 Live triggers so far: 33: 8 hit target, 3 stopped out, 0 timed out, 22 open; closed ones averaged +11.2%.
 Prices: 96 update, 1 missing
+No new session since 2026-11-11; alerts already sent
 
-DASHBOARD: publish
+DASHBOARD: skip
