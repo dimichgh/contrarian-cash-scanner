@@ -2576,7 +2576,7 @@
   },
   "scan_rank": 102,
   "scanned": "2026-11-10",
-  "hold": false,
+  "hold": true,
   "missed_on": "2026-11-10"
  },
  "MMS": {
