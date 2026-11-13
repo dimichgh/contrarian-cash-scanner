@@ -1588,7 +1588,7 @@
   },
   "scan_rank": 101,
   "scanned": "2026-11-10",
-  "hold": true,
+  "hold": false,
   "missed_on": "2026-11-10"
  },
  "FOUR": {
@@ -1656,7 +1656,7 @@
   },
   "scan_rank": null,
   "scanned": "2026-10-27",
-  "hold": true,
+  "hold": false,
   "missed_on": "2026-11-10"
  },
  "G": {
@@ -1796,7 +1796,7 @@
   },
   "scan_rank": 64,
   "scanned": "2026-11-10",
-  "hold": true,
+  "hold": false,
   "missed_on": "2026-11-10"
  },
  "GIB": {
