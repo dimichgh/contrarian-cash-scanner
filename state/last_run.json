@@ -1,7 +1,7 @@
 {
  "rescan": "2026-11-10",
  "as_of": "2026-11-12",
- "run": "2026-11-13T01:51+00:00",
+ "run": "2026-11-13T06:48+00:00",
  "stages": {
   "BLKB": "ABOVE",
   "DXC": "ABOVE",
@@ -104,7 +104,7 @@
   "VSNT": "TRIGGERED",
   "RNG": "SETUP",
   "GTX": "FALLING",
-  "KT": "TRIGGERED",
+  "KT": "RETEST",
   "RSI": "FALLING",
   "NTES": "RUNNING",
   "SNDK": "FALLING",
