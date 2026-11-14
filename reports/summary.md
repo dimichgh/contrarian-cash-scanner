@@ -1,9 +1,6 @@
 Breakout monitor · close of 2026-11-13 · engine v6
 
-3 new signals:
-△ TRIGGERED (weak: quality under the learned bar) LOGI $102.33: closed 0.4% above the 50-day average ($101.88), volume 1.1x its average; stop $92.47, target $118.46 · quality 44, readiness 8
-◆ SETUP TALO $16.26: 3.9% under the trigger level $16.92 (50-day average), lows held 120 sessions; if it triggers there: stop $15.35, target $19.49 · readiness 27
-● RUNNING KT $18.97: move confirmed: 5 sessions after the trigger, 0.9% above the $18.80 level (+0.2% from the entry), 50-day average falling 1.0%/2wk · readiness 16
+No new session since the last run.
 
 Nearest the trigger: RNG -2.1% vs $77.00 (readiness 67), TIMB +3.5% vs $18.43 (readiness 43), XOP -2.9% vs $190.26 (readiness 42), MTCH -0.8% vs $41.98 (readiness 39), IT -2.5% vs $197.04 (readiness 33), TALO -3.9% vs $16.92 (readiness 27), VSNT +6.4% vs $33.78 (readiness 27), MPC -2.2% vs $423.94 (readiness 18)
 Highest readiness: TDC 96 (above), EPAM 92 (above), ACN 89 (above), DXC 86 (above), OTEX 86 (above), AUPH 75 (basing), FMS 75 (failed), LDOS 68 (above)
@@ -18,5 +15,6 @@ Trigger quality: AUC 0.561 on the held-out year's 2330 triggers; the 526 at qual
 Past triggers that hit target took a median 19 sessions (middle half 12–28); stops came in a median 14. 30% hit target, 47% stopped, 23% timed out.
 Live triggers so far: 34: 8 hit target, 6 stopped out, 0 timed out, 20 open; closed ones averaged +6.6%.
 Prices: 96 update, 1 missing
+No new session since 2026-11-13; alerts already sent
 
-DASHBOARD: publish
+DASHBOARD: skip
