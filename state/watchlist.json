@@ -4564,7 +4564,7 @@
   },
   "scan_rank": 105,
   "scanned": "2026-11-17",
-  "hold": true,
+  "hold": false,
   "missed_on": "2026-11-17"
  },
  "ZIM": {
@@ -4601,7 +4601,7 @@
   },
   "scan_rank": 73,
   "scanned": "2026-11-17",
-  "hold": false
+  "hold": true
  },
  "ZTS": {
   "ticker": "ZTS",
