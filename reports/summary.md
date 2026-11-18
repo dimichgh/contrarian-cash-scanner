@@ -1,10 +1,6 @@
 Breakout monitor · close of 2026-11-17 · engine v7
 
-4 new signals:
-▲ TRIGGERED (strong) ZIM $29.69: closed 1.1% above the 50-day average ($29.36), volume 0.9x its average; stop $27.73, target $32.90 · quality 98, readiness 77
-◆ SETUP OTEX $23.86: 2.6% under the trigger level $24.50 (50-day average), lows held 104 sessions; if it triggers there: stop $22.64, target $27.54 · readiness 87
-◆ SETUP LDOS $128.25: 0.3% under the trigger level $128.70 (50-day average), lows held 101 sessions; if it triggers there: stop $119.30, target $144.02 · readiness 85
-✕ FAILED ZG $28.54: breakout failed: stopped out at $28.54 (-13.3%) on 2026-11-17; now 10.8% under the $32.00 level · readiness 28
+No new session since the last run.
 
 Nearest the trigger: OTEX -2.6% vs $24.50 (readiness 87), LDOS -0.3% vs $128.70 (readiness 85), ZIM +1.1% vs $29.36 (readiness 77), CTSH -3.9% vs $62.46 (readiness 63), PBH +1.9% vs $47.32 (readiness 15), MGM +0.6% vs $33.15 (readiness 10)
 Highest readiness: ACN 97 (above), TDC 97 (above), BLKB 96 (above), EPAM 94 (above), OTEX 87 (setup), DXC 86 (above), FMS 85 (failed), LDOS 85 (setup)
@@ -19,5 +15,6 @@ Trigger quality: AUC 0.544 on the held-out year's 2354 triggers; the 727 at qual
 Past triggers that hit target took a median 19 sessions (middle half 12–28); stops came in a median 13. 30% hit target, 47% stopped, 22% timed out.
 Live triggers so far: 37: 8 hit target, 7 stopped out, 0 timed out, 22 open; closed ones averaged +5.3%.
 Prices: 109 update, 1 missing
+No new session since 2026-11-17; alerts already sent
 
-DASHBOARD: publish
+DASHBOARD: skip
