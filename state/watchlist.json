@@ -2295,7 +2295,7 @@
   },
   "scan_rank": 13,
   "scanned": "2026-11-17",
-  "hold": true
+  "hold": false
  },
  "KGC": {
   "ticker": "KGC",
@@ -2363,7 +2363,7 @@
   },
   "scan_rank": null,
   "scanned": "2026-11-10",
-  "hold": true,
+  "hold": false,
   "missed_on": "2026-11-17"
  },
  "LCII": {
@@ -3018,7 +3018,7 @@
   },
   "scan_rank": 54,
   "scanned": "2026-11-17",
-  "hold": true
+  "hold": false
  },
  "OSK": {
   "ticker": "OSK",
