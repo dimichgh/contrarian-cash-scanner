@@ -164,7 +164,7 @@
   },
   "scan_rank": 29,
   "scanned": "2026-11-17",
-  "hold": true
+  "hold": false
  },
  "ADT": {
   "ticker": "ADT",
@@ -1363,7 +1363,7 @@
   },
   "scan_rank": 72,
   "scanned": "2026-11-17",
-  "hold": true
+  "hold": false
  },
  "ENS": {
   "ticker": "ENS",
@@ -2638,7 +2638,7 @@
   },
   "scan_rank": 37,
   "scanned": "2026-11-17",
-  "hold": true,
+  "hold": false,
   "dropped": "2026-11-10",
   "readded": "2026-11-17"
  },
@@ -2947,7 +2947,7 @@
   },
   "scan_rank": 83,
   "scanned": "2026-11-17",
-  "hold": true,
+  "hold": false,
   "missed_on": "2026-11-17"
  },
  "NVO": {
@@ -2982,7 +2982,7 @@
   },
   "scan_rank": 103,
   "scanned": "2026-11-17",
-  "hold": true,
+  "hold": false,
   "missed_on": "2026-11-17"
  },
  "OGC": {
