@@ -1,11 +1,8 @@
 Breakout monitor · close of 2026-11-20 · engine v7
 
-3 new signals:
-◆ SETUP T $22.31: 3.9% under the trigger level $23.21 (50-day average), lows held 100 sessions; if it triggers there: stop $21.26, target $26.39 · readiness 93
-✕ FAILED ERIC $9.77: breakout failed: stopped out at $9.77 (-8.8%) on 2026-11-20; now 1.4% under the $9.91 level · readiness 82
-✕ FAILED DECK $77.94: breakout failed: stopped out at $77.94 (-8.3%) on 2026-11-20; now 5.6% under the $82.52 level · readiness 68
+No new session since the last run.
 
-Nearest the trigger: ACN -0.2% vs $221.71 (readiness 98), BLKB -0.6% vs $49.11 (readiness 98), T -3.9% vs $23.21 (readiness 93), PBH +4.9% vs $47.32 (readiness 40)
+Nearest the trigger: ACN -0.2% vs $221.71 (readiness 98), BLKB -0.6% vs $49.11 (readiness 98), T -3.9% vs $23.21 (readiness 92), PBH +4.9% vs $47.32 (readiness 40)
 Highest readiness: PYPL 99 (retest), ACN 98 (setup), BLKB 98 (setup), EPAM 98 (above), TDC 98 (above), ZIM 97 (retest), OSK 96 (retest), MMS 95 (above)
 
 Open trades: ZIM -1.2% in 3d (quality 98 strong, S&P -5.8%, best +0.8%; stop $27.73; target $32.90 usually hit Dec 3–Dec 25 (day 3 of a typical 12–28, early)), PBH +3.4% in 4d (quality 25 weak, S&P -6.8%, best +5.5%; stop $42.57; target $56.89 usually hit Dec 2–Dec 24 (day 4 of a typical 12–28, early)), LOGI -5.0% in 5d (quality 44 weak, S&P -8.6%, best +0.0%; stop $92.47; target $118.46 usually hit Dec 1–Dec 23 (day 5 of a typical 12–28, early)), MGM -3.3% in 7d (quality 10 weak, S&P -9.2%, best +0.8%; stop $30.62; target $38.14 usually hit Nov 27–Dec 21 (day 7 of a typical 12–28, early)), TIMB -1.0% in 9d (quality 34 weak, S&P -8.4%, best +5.9%; stop $16.75; target $21.20 usually hit Nov 25–Dec 17 (day 9 of a typical 12–28, early)), VSNT -4.0% in 9d (quality 38 weak, S&P -8.4%, best +5.1%; stop $32.66; target $39.07 usually hit Nov 25–Dec 17 (day 9 of a typical 12–28, early)), CHTR +2.3% in 11d (quality 10 weak, S&P -5.9%, best +10.6%; stop $110.55; target $150.92 usually hit Nov 23–Dec 15 (day 11 of a typical 12–28, early)), CRUS -4.6% in 12d (quality 47 weak, S&P -10.0%, best +5.0%; stop $107.96; target $129.13 usually hit Nov 20–Dec 14 (day 12 of a typical 12–28, in window)), SFD -3.0% in 12d (quality 20 weak, S&P -10.0%, best +0.0%; stop $18.46; target $21.78 usually hit Nov 20–Dec 14 (day 12 of a typical 12–28, in window)), CARG -5.9% in 14d (quality 96 strong, S&P -8.3%, best +8.1%; stop $31.07; target $38.24 usually hit Nov 18–Dec 10 (day 14 of a typical 12–28, in window)), CMCSA +4.3% in 14d (quality 39 weak, S&P -8.3%, best +7.2%; stop $22.21; target $26.59 usually hit Nov 18–Dec 10 (day 14 of a typical 12–28, in window)), FOUR -9.5% in 14d (quality 44 weak, S&P -8.3%, best +7.0%; stop $36.88; target $50.56 usually hit Nov 18–Dec 10 (day 14 of a typical 12–28, in window)), OSK -6.7% in 15d (quality 90 strong, S&P -8.7%, best +4.0%; stop $130.49; target $155.40 usually hit Nov 17–Dec 9 (day 15 of a typical 12–28, in window)), UFPI -2.9% in 16d (quality 55 weak, S&P -10.3%, best +5.9%; stop $76.08; target $90.45 usually hit Nov 16–Dec 8 (day 16 of a typical 12–28, in window)), LCII +1.1% in 17d (quality 3 weak, S&P -10.7%, best +6.9%; stop $89.36; target $111.06 usually hit Nov 13–Dec 7 (day 17 of a typical 12–28, in window)), PYPL -5.0% in 18d (quality 92 strong, S&P -10.4%, best +7.3%; stop $51.28; target $63.96 usually hit Nov 12–Dec 4 (day 18 of a typical 12–28, in window)), ACI -2.0% in 31d (quality 69 strong, S&P -10.9%, best +13.3%; stop $10.69; target $15.03 usually hit Oct 26–Nov 17 (day 31 of a typical 12–28, late))
@@ -18,5 +15,6 @@ Trigger quality: AUC 0.544 on the held-out year's 2354 triggers; the 727 at qual
 Past triggers that hit target took a median 19 sessions (middle half 12–28); stops came in a median 13. 30% hit target, 47% stopped, 22% timed out.
 Live triggers so far: 37: 8 hit target, 14 stopped out, 0 timed out, 15 open; closed ones averaged +0.7%.
 Prices: 109 update, 1 missing
+No new session since 2026-11-20; alerts already sent
 
-DASHBOARD: publish
+DASHBOARD: skip
