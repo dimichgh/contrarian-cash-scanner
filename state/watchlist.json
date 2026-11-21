@@ -1157,7 +1157,7 @@
   },
   "scan_rank": 16,
   "scanned": "2026-11-17",
-  "hold": true
+  "hold": false
  },
  "DINO": {
   "ticker": "DINO",
@@ -1460,7 +1460,7 @@
   },
   "scan_rank": 125,
   "scanned": "2026-11-17",
-  "hold": true,
+  "hold": false,
   "missed_on": "2026-11-17"
  },
  "EXPE": {
