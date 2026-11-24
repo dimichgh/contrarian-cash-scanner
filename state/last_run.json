@@ -1,7 +1,7 @@
 {
  "rescan": "2026-11-24",
  "as_of": "2026-11-23",
- "run": "2026-11-24T05:21+00:00",
+ "run": "2026-11-24T09:57+00:00",
  "stages": {
   "BLKB": "ABOVE",
   "DXC": "ABOVE",
@@ -152,12 +152,12 @@
  },
  "record": {
   "snapshots": {
-   "resolved": 63,
-   "open": 3375,
-   "hit_rate": 0.571,
-   "hit_rate_ready80": 0.667,
-   "n_ready80": 15,
-   "auc": 0.568
+   "resolved": 51,
+   "open": 3387,
+   "hit_rate": 0.549,
+   "hit_rate_ready80": 0.615,
+   "n_ready80": 13,
+   "auc": 0.536
   },
   "triggers": {
    "resolved": 1,

@@ -1,10 +1,6 @@
 Breakout monitor · close of 2026-11-23 · engine v8
 
-4 new signals:
-△ TRIGGERED (weak: quality under the learned bar) EEFT $67.11: closed 1.7% above the 50-day average ($65.97), volume 1.1x its average; stop $61.52, target $76.25 · quality 65, readiness 43
-◆ SETUP GAP $21.75: 1.4% under the trigger level $22.05 (50-day average), lows held 97 sessions; if it triggers there: stop $19.62, target $26.00 · readiness 70
-◆ SETUP MTCH $40.33: 3.3% under the trigger level $41.73 (50-day average), lows held 120 sessions; if it triggers there: stop $38.35, target $47.28 · readiness 54
-● RUNNING PBH $49.86: move confirmed: 5 sessions after the trigger, 5.4% above the $47.32 level (+3.9% from the entry), 50-day average falling 1.1%/2wk · readiness 19
+No new session since the last run.
 
 Nearest the trigger: ZIM +2.0% vs $29.36 (readiness 91), LDOS -3.7% vs $128.23 (readiness 90), T -3.6% vs $23.13 (readiness 76), GAP -1.4% vs $22.05 (readiness 70), MTCH -3.3% vs $41.73 (readiness 54), EEFT +1.7% vs $65.97 (readiness 43)
 Highest readiness: ACN 97 (above), INFY 97 (above), BLKB 95 (above), PYPL 94 (retest), INTU 93 (basing), TDC 93 (above), ZIM 91 (triggered), LDOS 90 (setup)
@@ -13,15 +9,12 @@ Open trades: EEFT +0.0% in 0d (quality 65 weak, S&P +0.0%, best +0.0%; stop $61.
 Closed this week: ERIC stopped out -8.8% on Nov 20, DECK stopped out -8.3% on Nov 20, ZG stopped out -13.3% on Nov 17, JD stopped out -7.4% on Nov 18, EEFT stopped out -8.4% on Nov 19, NTES stopped out -13.5% on Nov 19, NVO stopped out -7.8% on Nov 19, KT stopped out -7.0% on Nov 18, OGC stopped out -12.3% on Nov 18, LTM stopped out -10.7% on Nov 19, ADBE stopped out -9.9% on Nov 19
 
 Watchlist: 114 names · triggered 2 · setup 4 · target 10 · running 11 · retest 7 · above 12 · basing 22 · failed 17 · falling 29
-Added: INTU, CHRD, INFY, CRM, SIG, PEGA, VLO, PBF, CVI, MAT, DLO, BP, FSM, PBR
-Dropped: EPAM, ERIC, FMS, GFI, KT, NTES, NVO, ZG
 No price data: UDMY
 Engine: readiness AUC 0.521 on the held-out year (expert prior alone 0.524); trigger: close above the 50-day average, after 5+ of the prior 20 sessions below it; strong when trigger quality is 67+ — 30% reached their target before their stop vs 31% for any day (10418 past triggers)
 Trigger quality: AUC 0.550 on the held-out year's 2335 triggers; the 618 at quality 67+ hit target 36% of the time (avg +1.4%) vs 33% for all of them.
 Past triggers that hit target took a median 19 sessions (middle half 12–28); stops came in a median 13. 30% hit target, 47% stopped, 23% timed out.
 Live triggers so far: 38: 8 hit target, 14 stopped out, 0 timed out, 16 open; closed ones averaged +0.7%.
-Prices: 313 update, 18 download, 1 missing
-Engine re-fit: v7 → v8 (new weights)
-Backtest page rebuilt: 4414 trades since 2022-11-23
+Prices: 115 update, 1 missing
+No new session since 2026-11-23; alerts already sent
 
-DASHBOARD: publish
+DASHBOARD: skip
