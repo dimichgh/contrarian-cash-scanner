@@ -1,11 +1,6 @@
 Breakout monitor · close of 2026-11-24 · engine v8
 
-5 new signals:
-▲ TRIGGERED (strong) LDOS $128.37: closed 0.1% above the 50-day average ($128.21), volume 1.0x its average; stop $118.85, target $143.95 · quality 85, readiness 90
-▲ TRIGGERED (strong) DECK $84.29: closed 2.0% above the 50-day average ($82.66), volume 0.9x its average; stop $77.15, target $95.97 · quality 81, readiness 57
-▲ TRIGGERED (strong) GAP $22.64: closed 2.4% above the 50-day average ($22.10), volume 1.6x its average; stop $20.18, target $26.67 · quality 74, readiness 86
-◆ SETUP MMS $59.25: 1.6% under the trigger level $60.24 (50-day average), lows held 41 sessions; if it triggers there: stop $55.72, target $67.59 · readiness 90
-● RUNNING ZIM $30.49: move confirmed: 5 sessions after the trigger, 3.8% above the $29.36 level (+2.7% from the entry), 50-day average rising 0.5%/2wk · readiness 96
+No new session since the last run.
 
 Nearest the trigger: LDOS +0.1% vs $128.21 (readiness 90), MMS -1.6% vs $60.24 (readiness 90), GAP +2.4% vs $22.10 (readiness 86), CTSH -2.0% vs $62.22 (readiness 75), T -0.8% vs $23.05 (readiness 75), MTCH -3.7% vs $41.64 (readiness 61), DECK +2.0% vs $82.66 (readiness 57), EEFT +2.6% vs $65.97 (readiness 53)
 Highest readiness: INFY 98 (above), ACN 97 (above), INTU 96 (basing), BLKB 95 (above), TDC 93 (above), DXC 90 (above), LDOS 90 (triggered), MMS 90 (setup)
@@ -20,5 +15,6 @@ Trigger quality: AUC 0.550 on the held-out year's 2335 triggers; the 618 at qual
 Past triggers that hit target took a median 19 sessions (middle half 12–28); stops came in a median 13. 30% hit target, 47% stopped, 23% timed out.
 Live triggers so far: 41: 8 hit target, 14 stopped out, 0 timed out, 19 open; closed ones averaged +0.7%.
 Prices: 115 update, 1 missing
+No new session since 2026-11-24; alerts already sent
 
-DASHBOARD: publish
+DASHBOARD: skip
