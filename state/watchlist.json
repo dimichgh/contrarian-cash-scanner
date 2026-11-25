@@ -1295,7 +1295,7 @@
   },
   "scan_rank": 25,
   "scanned": "2026-11-24",
-  "hold": false
+  "hold": true
  },
  "DINO": {
   "ticker": "DINO",
@@ -2029,7 +2029,7 @@
   },
   "scan_rank": 109,
   "scanned": "2026-11-24",
-  "hold": false,
+  "hold": true,
   "missed_on": "2026-11-24"
  },
  "GEN": {
@@ -2644,7 +2644,7 @@
   },
   "scan_rank": 32,
   "scanned": "2026-11-24",
-  "hold": false
+  "hold": true
  },
  "LEA": {
   "ticker": "LEA",
