@@ -1188,7 +1188,7 @@
   },
   "scan_rank": 41,
   "scanned": "2026-11-24",
-  "hold": false,
+  "hold": true,
   "dropped": "2026-10-27",
   "readded": "2026-11-10"
  },
@@ -2817,7 +2817,7 @@
   },
   "scan_rank": 5,
   "scanned": "2026-11-24",
-  "hold": false
+  "hold": true
  },
  "LTM": {
   "ticker": "LTM",
