@@ -1,8 +1,6 @@
 Breakout monitor · close of 2026-11-25 · engine v8
 
-2 new signals:
-▲ TRIGGERED (strong) CTSH $63.32: closed 1.7% above the 50-day average ($62.25), volume 0.8x its average; stop $56.95, target $73.74 · quality 97, readiness 76
-△ TRIGGERED (weak: quality under the learned bar) LRN $79.90: closed 1.6% above the 50-day average ($78.65), volume 0.9x its average; stop $73.88, target $89.75 · quality 61, readiness 34
+No new session since the last run.
 
 Nearest the trigger: GAP +5.0% vs $22.10 (readiness 92), LDOS +1.9% vs $128.21 (readiness 89), OTEX -3.1% vs $24.48 (readiness 87), T -0.1% vs $23.00 (readiness 80), CTSH +1.7% vs $62.25 (readiness 76), DECK +3.5% vs $82.66 (readiness 66), MTCH -1.2% vs $41.59 (readiness 62), EEFT +4.7% vs $65.97 (readiness 53)
 Highest readiness: INFY 99 (above), ACN 96 (above), BLKB 95 (above), INTU 95 (basing), TDC 95 (above), ZTS 95 (above), SONY 94 (above), GAP 92 (triggered)
@@ -17,5 +15,6 @@ Trigger quality: AUC 0.550 on the held-out year's 2335 triggers; the 618 at qual
 Past triggers that hit target took a median 19 sessions (middle half 12–28); stops came in a median 13. 30% hit target, 47% stopped, 23% timed out.
 Live triggers so far: 43: 8 hit target, 14 stopped out, 0 timed out, 21 open; closed ones averaged +0.7%.
 Prices: 115 update, 1 missing
+No new session since 2026-11-25; alerts already sent
 
-DASHBOARD: publish
+DASHBOARD: skip
