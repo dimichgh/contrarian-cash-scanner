@@ -1684,7 +1684,7 @@
    "entry": 12.15,
    "note": "Chairman bought, quants long; base $17–18"
   },
-  "hold": false,
+  "hold": true,
   "name": "Ford Motor Company",
   "sector": "Consumer Durables",
   "thesis": {
@@ -2505,7 +2505,7 @@
   },
   "scan_rank": 58,
   "scanned": "2026-11-24",
-  "hold": false
+  "hold": true
  },
  "KGC": {
   "ticker": "KGC",
@@ -2850,7 +2850,7 @@
   },
   "scan_rank": 54,
   "scanned": "2026-11-24",
-  "hold": false,
+  "hold": true,
   "dropped": "2026-11-10",
   "readded": "2026-11-17"
  },
@@ -2920,7 +2920,7 @@
   },
   "scan_rank": 80,
   "scanned": "2026-11-24",
-  "hold": true
+  "hold": false
  },
  "MBLY": {
   "ticker": "MBLY",
@@ -3095,7 +3095,7 @@
   },
   "scan_rank": 69,
   "scanned": "2026-11-24",
-  "hold": false
+  "hold": true
  },
  "NICE": {
   "ticker": "NICE",
@@ -3267,7 +3267,7 @@
   },
   "scan_rank": 38,
   "scanned": "2026-11-24",
-  "hold": false
+  "hold": true
  },
  "OSK": {
   "ticker": "OSK",
@@ -3696,7 +3696,7 @@
   },
   "scan_rank": 50,
   "scanned": "2026-11-24",
-  "hold": false
+  "hold": true
  },
  "PLNT": {
   "ticker": "PLNT",
@@ -4352,7 +4352,7 @@
    "entry": 24.0,
    "note": "3-year target $28–32; preferred entry $19–20"
   },
-  "hold": false,
+  "hold": true,
   "name": "AT&T Inc",
   "sector": "Communications",
   "thesis": {
