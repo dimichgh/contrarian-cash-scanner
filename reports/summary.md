@@ -1,15 +1,6 @@
 Breakout monitor · close of 2026-11-27 · engine v8
 
-9 new signals:
-▲ TRIGGERED (strong) MTCH $42.57: closed 2.4% above the 50-day average ($41.57), volume 0.4x its average; stop $39.10, target $48.25 · quality 93, readiness 41
-▲ TRIGGERED (strong) PINS $20.32: closed 2.2% above the 50-day average ($19.88), volume 0.7x its average; stop $17.86, target $24.34 · quality 78, readiness 17
-▲ TRIGGERED (strong) F $12.33: closed 1.3% above the 50-day average ($12.17), volume 0.5x its average; stop $11.50, target $13.69 · quality 75, readiness 34
-▲ TRIGGERED (strong) T $23.21: closed 1.1% above the 50-day average ($22.95), volume 0.4x its average; stop $21.26, target $26.40 · quality 68, readiness 68
-△ TRIGGERED (weak: quality under the learned bar) JD $27.35: closed 2.7% above the 50-day average ($26.64), volume 1.0x its average; stop $25.48, target $30.41 · quality 60, readiness 19
-△ TRIGGERED (weak: quality under the learned bar) LTM $49.41: closed 2.5% above the 50-day average ($48.19), volume 1.0x its average; stop $44.48, target $57.48 · quality 59, readiness 26
-△ TRIGGERED (weak: quality under the learned bar) OGC $26.49: closed 0.4% above the 50-day average ($26.39), volume 0.8x its average; stop $23.34, target $31.64 · quality 53, readiness 47
-✓ TARGET CHTR $153.87: reached its target: +22.3% from the 2026-11-05 trigger at $125.86 in 15 sessions (target $150.92) · readiness 75
-● RUNNING LOGI $103.46: move confirmed: 9 sessions after the trigger, 1.6% above the $101.88 level (+1.1% from the entry), 50-day average falling 0.1%/2wk · readiness 34
+No new session since the last run.
 
 Nearest the trigger: GAP +7.1% vs $22.10 (readiness 84), LDOS +2.8% vs $128.21 (readiness 84), OTEX -2.2% vs $24.49 (readiness 80), CTSH +1.9% vs $62.25 (readiness 72), T +1.1% vs $22.95 (readiness 68), DECK +5.2% vs $82.66 (readiness 52), SBLK -2.3% vs $28.62 (readiness 50), OGC +0.4% vs $26.39 (readiness 47)
 Highest readiness: INFY 98 (above), INTU 92 (basing), ACN 91 (above), SONY 91 (above), ZTS 91 (above), TDC 90 (above), BLKB 88 (above), MMS 87 (above)
@@ -24,5 +15,6 @@ Trigger quality: AUC 0.550 on the held-out year's 2335 triggers; the 618 at qual
 Past triggers that hit target took a median 19 sessions (middle half 12–28); stops came in a median 13. 30% hit target, 47% stopped, 23% timed out.
 Live triggers so far: 50: 9 hit target, 14 stopped out, 0 timed out, 27 open; closed ones averaged +1.7%.
 Prices: 115 update, 1 missing
+No new session since 2026-11-27; alerts already sent
 
-DASHBOARD: publish
+DASHBOARD: skip
